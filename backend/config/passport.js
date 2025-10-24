@@ -36,8 +36,8 @@ passport.use(new GoogleStrategy({
       email: profile.emails[0].value,
       profilePicture: profile.photos && profile.photos[0] ? profile.photos[0].value : undefined,
       googleProfile: profile._json,
-      isVerified: true, // Google users are automatically verified
-      role: 'farmer' // Default role, can be updated later
+      isVerified: true,
+      role: 'farmer'
     });
 
     return done(null, user);

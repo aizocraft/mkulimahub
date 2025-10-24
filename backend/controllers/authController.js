@@ -374,28 +374,50 @@ exports.googleAuth = passport.authenticate('google', {
 });
 
 exports.googleCallback = (req, res, next) => {
-  passport.authenticate('google', { session: false }, (err, user, info) => {
-    if (err) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
-    }
-    
-    if (!user) {
-      return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
-    }
+  passport.authenticate('google', { session: false }, async (err, user, info) => {
+    try {
+      if (err) {
+        console.error('Google OAuth error:', err);
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+      }
+      
+      if (!user) {
+        console.error('Google OAuth failed: No user returned');
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+      }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        id: user._id, 
-        role: user.role,
-        email: user.email
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+      // Check if this is a new user
+      const isNewUser = user.isNewUser === true;
 
-    // Redirect to frontend with token
-    res.redirect(`${process.env.CLIENT_URL}/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify(generateUserResponse(user)))}`);
+      // Generate JWT token
+      const token = jwt.sign(
+        { 
+          id: user._id, 
+          role: user.role,
+          email: user.email
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      console.log('Google OAuth successful for user:', user.email, 'isNewUser:', isNewUser);
+
+      // Clear the new user flag after first login
+      if (isNewUser) {
+        user.isNewUser = false;
+        await user.save();
+      }
+
+      // Redirect to frontend with token and user info
+      const userResponse = generateUserResponse(user);
+      const redirectUrl = `${process.env.CLIENT_URL}/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify(userResponse))}&isNewUser=${isNewUser}`;
+      
+      console.log('Redirecting to:', redirectUrl);
+      res.redirect(redirectUrl);
+    } catch (error) {
+      console.error('Error in Google callback:', error);
+      res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+    }
   })(req, res, next);
 };
 
@@ -410,6 +432,53 @@ exports.checkEmail = async (req, res, next) => {
       success: true,
       exists: !!user,
       isGoogleAuth: user?.googleId ? true : false
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update current user's role (allow farmer/expert switching)
+exports.updateMyRole = async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    
+    // Validate role
+    if (!role || !['farmer', 'expert'].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Valid role (farmer, expert) is required. Admin role can only be assigned by administrators.'
+      });
+    }
+
+    // Get current user
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Check if user is trying to switch to their current role
+    if (currentUser.role === role) {
+      return res.status(400).json({
+        success: false,
+        message: `You are already a ${role}`
+      });
+    }
+
+    // Update user role
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { role },
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Role updated to ${role} successfully`,
+      user: generateUserResponse(user)
     });
   } catch (error) {
     next(error);

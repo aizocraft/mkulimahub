@@ -20,5 +20,5 @@ router.get('/profile', authController.getProfile);
 router.put('/profile', authController.updateProfile);
 router.put('/change-password', authController.changePassword);
 router.put('/deactivate', authController.deactivateAccount);
-
+router.put('/profile/role', auth, authController.updateMyRole);
 module.exports = router;

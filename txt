@@ -1,0 +1,8 @@
+Render
+
+https://mkulimahub.onrender.com - Link
+srv-d3tsnhre5dus7398aff0 - Service ID
+
+
+VITE_API_URL=https://mkulimahub.onrender.com 
+mkulimahub.vercel.app

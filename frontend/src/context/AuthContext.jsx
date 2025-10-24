@@ -7,7 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeAuth = () => {
       try {
         const storedUser = localStorage.getItem('user');
         const storedToken = localStorage.getItem('token');
@@ -15,10 +15,15 @@ export const AuthProvider = ({ children }) => {
         if (storedUser && storedToken) {
           setUser(JSON.parse(storedUser));
         }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
       } finally {
         setIsLoading(false);
       }
     };
+    
     initializeAuth();
   }, []);
 
@@ -34,6 +39,11 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+    setUser(userData);
+  };
+
   const isAuthenticated = () => {
     return user !== null;
   };
@@ -43,6 +53,7 @@ export const AuthProvider = ({ children }) => {
       user, 
       login, 
       logout, 
+      updateUser,
       isAuthenticated,
       isLoading 
     }}>

@@ -66,6 +66,10 @@ const userSchema = new mongoose.Schema(
       subCounty: String,
       zipCode: String
     },
+    isNewUser: {
+  type: Boolean,
+  default: false
+},
     // Expert-specific fields
     expertise: {
       type: [String],

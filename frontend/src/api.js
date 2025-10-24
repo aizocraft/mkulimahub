@@ -6,10 +6,11 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 // Axios instance
 const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // enable cookies if needed
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Request interceptor to add auth token
@@ -46,6 +47,7 @@ export const authAPI = {
   updateProfile: (userData) => api.put('/auth/profile', userData),
   changePassword: (passwordData) => api.put('/auth/change-password', passwordData),
   deactivateAccount: () => api.put('/auth/deactivate'),
+  updateMyRole: (roleData) => api.put('/auth/profile/role', roleData),
 
   // Google OAuth
   getGoogleAuthUrl: () => `${API_BASE_URL}/auth/google`,
@@ -57,7 +59,7 @@ export const userAPI = {
   getAllUsers: (params = {}) => api.get('/users', { params }),
   getUserById: (id) => api.get(`/users/${id}`),
   createUser: (userData) => api.post('/users', userData),
-  updateUserRole: (id, role) => api.put(`/users/${id}/role`, { role }),
+  updateUserRole: (id, roleData) => api.put(`/users/${id}/role`, roleData),
   updateUserProfile: (id, userData) => api.put(`/users/${id}/profile`, userData),
   deleteUser: (id) => api.delete(`/users/${id}`),
   toggleVerification: (id) => api.put(`/users/${id}/verify`),

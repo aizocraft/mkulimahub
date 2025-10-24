@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Overview from './expert/Overview';
@@ -150,12 +152,6 @@ const ExpertDashboard = () => {
                   <span className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">
                     Welcome back, <span className="font-semibold text-purple-600 dark:text-purple-400">{user?.name || 'Expert'}</span>
                   </span>
-                  {user?.isActive && (
-                    <span className="inline-flex items-center text-xs text-green-600 dark:text-green-400">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></div>
-                      Online
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -201,50 +197,16 @@ const ExpertDashboard = () => {
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-2">
-                {/* Notifications */}
-                <button 
-                  className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 relative group"
-                  title="Notifications"
-                >
-                  <Bell size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800"></div>
-                </button>
-
-                {/* Theme Toggle */}
-                <button 
-                  onClick={toggleTheme}
-                  className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 group"
-                  aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                  title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                >
-                  <div className="relative w-5 h-5">
-                    <Sun 
-                      size={20} 
-                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                        theme === 'light' 
-                          ? 'rotate-0 scale-100 text-orange-500' 
-                          : 'rotate-90 scale-0 text-gray-400'
-                      }`} 
-                    />
-                    <Moon 
-                      size={20} 
-                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                        theme === 'dark' 
-                          ? 'rotate-0 scale-100 text-blue-400' 
-                          : '-rotate-90 scale-0 text-gray-400'
-                      }`} 
-                    />
-                  </div>
-                </button>
-
+               
                 {/* Settings */}
-                <button 
-                  className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 group"
-                  title="Settings"
-                >
-                  <Settings size={18} className="text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" />
-                </button>
-              </div>
+                      <Link 
+                      to="/settings"
+                      className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 flex items-center justify-center"
+                      title="Settings"
+                    >
+                      <Settings size={18} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white" />
+                    </Link>
+                                  </div>
             </div>
           </div>
         </div>

@@ -1,6 +1,4 @@
-aizo@aizocraft:~/mh/frontend$ tree -I "node_modules"
-.
- tree -I "node_modules"
+$ tree -I "node_modules"
 .
 ├── eslint.config.js
 ├── index.html
@@ -29,6 +27,8 @@ aizo@aizocraft:~/mh/frontend$ tree -I "node_modules"
 │   ├── components
 │   │   ├── CreateUserModal.jsx
 │   │   ├── Footer.jsx
+│   │   ├── GoogleAuthButton.jsx
+│   │   ├── GoogleAuthSuccess.jsx
 │   │   ├── LoadingSpinner.jsx
 │   │   ├── Navbar.jsx
 │   │   ├── NotificationIcon.jsx
@@ -71,9 +71,11 @@ aizo@aizocraft:~/mh/frontend$ tree -I "node_modules"
 │       ├── LoginPage.jsx
 │       ├── ProfilePage.jsx
 │       ├── RegisterPage.jsx
+│       ├── RoleSelectionPage.jsx
 │       └── SettingsPage.jsx
 ├── tailwind.config.js
+├── tree.txt
 ├── vercel.json
 └── vite.config.js
 
-12 directories, 62 files
+12 directories, 66 files

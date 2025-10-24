@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import GoogleAuthSuccess from './components/GoogleAuthSuccess.jsx';
+import RoleSelectionPage from './pages/RoleSelectionPage';
+
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -98,6 +101,8 @@ export default function App() {
             {/* Routes without Navbar + Footer (login/register) */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/auth/success" element={<GoogleAuthSuccess />} />
+            <Route path="/role-selection" element={<RoleSelectionPage />} />
           </Routes>
         </BrowserRouter>
         <ToastContainer

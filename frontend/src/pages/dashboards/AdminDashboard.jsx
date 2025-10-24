@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../context/ThemeContext';
 import UserManagement from '../../components/UserManagement';
 import Overview from './admin/Overview';
 import Weather from './admin/Weather';
@@ -10,16 +9,12 @@ import {
   Cloud, 
   Shield, 
   CheckCircle, 
-  Sun, 
-  Moon,
-  ChevronDown,
-  Settings,
-  Bell
+  Settings 
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
 
   const navigationTabs = [
@@ -34,6 +29,7 @@ const AdminDashboard = () => {
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-4 space-y-4 lg:space-y-0">
+            
             {/* Left Section - Title and User Info */}
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
@@ -51,60 +47,31 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {/* Right Section - Badges and Actions */}
+            {/* Right Section - Status Badges + Settings */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+              
               {/* Status Badges */}
               <div className="flex items-center space-x-2">
-                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-xl text-sm font-medium border border-purple-200 dark:border-purple-800">
+                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-xl text-sm font-medium border border-purple-200 dark:border-purple-800 shadow-md hover:scale-105 transform transition-all duration-200">
                   <Shield size={16} />
                   <span className="hidden sm:inline">Administrator</span>
                   <span className="sm:hidden">Admin</span>
                 </span>
-                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-xl text-sm font-medium border border-emerald-200 dark:border-emerald-800">
+                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-xl text-sm font-medium border border-emerald-200 dark:border-emerald-800 shadow-md hover:scale-105 transform transition-all duration-200">
                   <CheckCircle size={16} />
                   <span className="hidden sm:inline">All Access</span>
                   <span className="sm:hidden">Access</span>
                 </span>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2">
-                {/* Notifications */}
-                <button className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 relative">
-                  <Bell size={18} className="text-gray-600 dark:text-gray-400" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
-                </button>
-
-                {/* Theme Toggle */}
-                <button 
-                  onClick={toggleTheme}
-                  className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 group"
-                  aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              {/* Settings Button */}
+              <div className="flex items-center">
+                <Link 
+                  to="/settings" 
+                  className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200 shadow hover:shadow-lg"
                 >
-                  <div className="relative w-5 h-5">
-                    <Sun 
-                      size={20} 
-                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                        theme === 'light' 
-                          ? 'rotate-0 scale-100 text-orange-500' 
-                          : 'rotate-90 scale-0 text-gray-400'
-                      }`} 
-                    />
-                    <Moon 
-                      size={20} 
-                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                        theme === 'dark' 
-                          ? 'rotate-0 scale-100 text-blue-400' 
-                          : '-rotate-90 scale-0 text-gray-400'
-                      }`} 
-                    />
-                  </div>
-                </button>
-
-                {/* Settings */}
-                <button className="p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-xl transition-colors duration-200">
                   <Settings size={18} className="text-gray-600 dark:text-gray-400" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
