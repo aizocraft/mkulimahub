@@ -3,13 +3,15 @@ import { useAuth } from '../../context/AuthContext';
 import UserManagement from '../../components/UserManagement';
 import Overview from './admin/Overview';
 import Weather from './admin/Weather';
+import Logs from './admin/Logs'; // Import the Logs component
 import { 
   BarChart3, 
   Users, 
   Cloud, 
   Shield, 
   CheckCircle, 
-  Settings 
+  Settings,
+  FileText // Add FileText icon import
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -20,7 +22,8 @@ const AdminDashboard = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'weather', label: 'Weather', icon: Cloud }
+    { id: 'weather', label: 'Weather', icon: Cloud },
+    { id: 'logs', label: 'System Logs', icon: FileText }, // Fixed: Added FileText icon
   ];
 
   return (
@@ -87,14 +90,22 @@ const AdminDashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg border-b-2 transition-all duration-200 flex-shrink-0 min-w-0 ${
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg border-b-2 transition-all duration-200 flex-shrink-0 min-w-0 group ${
                     isActive
-                      ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-500 text-purple-700 dark:text-purple-300'
+                      ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-500 text-purple-700 dark:text-purple-300 shadow-sm'
                       : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
                 >
-                  <Icon size={18} className="flex-shrink-0" />
+                  <Icon 
+                    size={18} 
+                    className={`flex-shrink-0 transition-transform duration-200 ${
+                      isActive ? 'scale-110' : 'group-hover:scale-105'
+                    }`} 
+                  />
                   <span className="font-medium text-sm whitespace-nowrap">{tab.label}</span>
+                  {isActive && (
+                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
+                  )}
                 </button>
               );
             })}
@@ -108,6 +119,7 @@ const AdminDashboard = () => {
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'users' && <UserManagement />}
           {activeTab === 'weather' && <Weather />}
+          {activeTab === 'logs' && <Logs />} {/* Added Logs component */}
         </div>
       </div>
     </div>

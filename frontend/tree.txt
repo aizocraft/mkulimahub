@@ -1,4 +1,5 @@
-$ tree -I "node_modules"
+
+aizo@aizocraft:~/Documents/mkulimahub/frontend$ tree -I "node_modules"
 .
 ├── eslint.config.js
 ├── index.html
@@ -43,39 +44,42 @@ $ tree -I "node_modules"
 │   │   └── ThemeContext.jsx
 │   ├── index.css
 │   ├── main.jsx
-│   └── pages
-│       ├── AboutPage.jsx
-│       ├── ContactPage.jsx
-│       ├── Dashboard.jsx
-│       ├── dashboards
-│       │   ├── admin
-│       │   │   ├── Overview.jsx
-│       │   │   ├── UserDistribution.jsx
-│       │   │   ├── UserPage.jsx
-│       │   │   └── Weather.jsx
-│       │   ├── AdminDashboard.jsx
-│       │   ├── expert
-│       │   │   ├── Consultations.jsx
-│       │   │   ├── Overview.jsx
-│       │   │   ├── Questions.jsx
-│       │   │   └── Schedule.jsx
-│       │   ├── ExpertDashboard.jsx
-│       │   ├── farmer
-│       │   │   ├── Consultations.jsx
-│       │   │   ├── ExpertsPage.jsx
-│       │   │   ├── Knowledge.jsx
-│       │   │   ├── MyCrops.jsx
-│       │   │   └── Overview.jsx
-│       │   └── FarmerDashboard.jsx
-│       ├── HomePage.jsx
-│       ├── LoginPage.jsx
-│       ├── ProfilePage.jsx
-│       ├── RegisterPage.jsx
-│       ├── RoleSelectionPage.jsx
-│       └── SettingsPage.jsx
+│   ├── pages
+│   │   ├── AboutPage.jsx
+│   │   ├── ContactPage.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── dashboards
+│   │   │   ├── admin
+│   │   │   │   ├── Logs.jsx
+│   │   │   │   ├── Overview.jsx
+│   │   │   │   ├── UserDistribution.jsx
+│   │   │   │   ├── UserPage.jsx
+│   │   │   │   └── Weather.jsx
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── expert
+│   │   │   │   ├── Consultations.jsx
+│   │   │   │   ├── Overview.jsx
+│   │   │   │   ├── Questions.jsx
+│   │   │   │   └── Schedule.jsx
+│   │   │   ├── ExpertDashboard.jsx
+│   │   │   ├── farmer
+│   │   │   │   ├── Consultations.jsx
+│   │   │   │   ├── ExpertsPage.jsx
+│   │   │   │   ├── Knowledge.jsx
+│   │   │   │   ├── MyCrops.jsx
+│   │   │   │   └── Overview.jsx
+│   │   │   └── FarmerDashboard.jsx
+│   │   ├── HomePage.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── ProfilePage.jsx
+│   │   ├── RegisterPage.jsx
+│   │   ├── RoleSelectionPage.jsx
+│   │   └── SettingsPage.jsx
+│   └── services
+│       └── logService.js
 ├── tailwind.config.js
 ├── tree.txt
 ├── vercel.json
 └── vite.config.js
 
-12 directories, 66 files
+13 directories, 68 files
