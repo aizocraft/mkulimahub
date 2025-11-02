@@ -4,8 +4,7 @@ import UserTable from './UserTable';
 import UserSearch from './UserSearch';
 import CreateUserModal from './CreateUserModal';
 import UserProfileModal from './UserProfileModal';
-import UserStats from './UserStats';
-import { Users, Plus, Download, Upload } from 'lucide-react';
+import { Users, Plus, Download } from 'lucide-react';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -98,18 +97,6 @@ const UserManagement = () => {
     }
   };
 
-  const handleUpdateRole = async (userId, newRole) => {
-    try {
-      await userAPI.updateUserRole(userId, newRole);
-      setUsers(users.map(user => 
-        user._id === userId ? { ...user, role: newRole } : user
-      ));
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update user role');
-    }
-  };
-
   const handleUpdateProfile = async (userId, userData) => {
     try {
       const response = await userAPI.updateUserProfile(userId, userData);
@@ -156,6 +143,14 @@ const UserManagement = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Calculate user statistics
+  const userStats = {
+    total: users.length,
+    farmers: users.filter(user => user.role === 'farmer').length,
+    experts: users.filter(user => user.role === 'expert').length,
+    admins: users.filter(user => user.role === 'admin').length,
+  };
+
   if (loading) return (
     <div className="user-management">
       <div className="loading-container">
@@ -184,17 +179,18 @@ const UserManagement = () => {
             <div className="flex items-center space-x-3">
               <button 
                 onClick={exportUsers}
-                className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                className="flex items-center space-x-2 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 text-sm"
               >
                 <Download className="w-4 h-4" />
-                <span>Export</span>
+                <span className="hidden sm:inline">Export</span>
               </button>
               <button 
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 shadow-sm"
+                className="flex items-center space-x-2 px-3 py-2 sm:px-4 sm:py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 shadow-sm text-sm"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add User</span>
+                <span className="hidden sm:inline">Add User</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
           </div>
@@ -202,14 +198,62 @@ const UserManagement = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6">
         {/* Stats Overview */}
-        <UserStats users={users} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{userStats.total}</p>
+              </div>
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Farmers</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{userStats.farmers}</p>
+              </div>
+              <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                <span className="text-lg">🌱</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Experts</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{userStats.experts}</p>
+              </div>
+              <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                <span className="text-lg">💡</span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Admins</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{userStats.admins}</p>
+              </div>
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <span className="text-lg">👑</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Search and Filters */}
-        <div className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            <div className="flex-1 max-w-md">
+        <div className="mb-6 p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col space-y-4">
+            <div className="w-full">
               <UserSearch onSearch={handleSearch} />
             </div>
             
@@ -217,7 +261,7 @@ const UserManagement = () => {
               <select 
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 w-full sm:w-auto"
               >
                 <option value="all">All Roles</option>
                 <option value="admin">Admin</option>
@@ -228,7 +272,7 @@ const UserManagement = () => {
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 w-full sm:w-auto"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -237,7 +281,7 @@ const UserManagement = () => {
 
               <button 
                 onClick={fetchUsers}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200 text-sm font-medium"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200 text-sm font-medium w-full sm:w-auto"
               >
                 Refresh
               </button>
@@ -267,7 +311,6 @@ const UserManagement = () => {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <UserTable
             users={filteredUsers}
-            onUpdateRole={handleUpdateRole}
             onDeleteUser={handleDeleteUser}
             onViewProfile={handleViewProfile}
           />

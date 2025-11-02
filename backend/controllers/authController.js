@@ -54,18 +54,41 @@ exports.registerUser = async (req, res, next) => {
       address
     } = req.body;
 
-    // Log registration attempt
-    logger.info('User registration attempt', {
-      email: email,
-      role: role || 'farmer',
-      ip: req.ip
+    // Log registration attempt with comprehensive details
+    logger.info('USER_REGISTRATION_ATTEMPT', {
+      userEmail: email,
+      requestedRole: role || 'farmer',
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      timestamp: new Date().toISOString(),
+      hasProfilePicture: !!profilePicture,
+      hasBio: !!bio,
+      hasPhone: !!phone,
+      hasAddress: !!address,
+      expertFieldsProvided: role === 'expert' ? {
+        expertiseCount: expertise?.length || 0,
+        yearsOfExperience: yearsOfExperience || 0,
+        hourlyRate: hourlyRate || 0,
+        languagesCount: languages?.length || 0
+      } : null,
+      farmerFieldsProvided: (role === 'farmer' || !role) ? {
+        farmSize: !!farmSize,
+        mainCropsCount: mainCrops?.length || 0,
+        experienceLevel: experienceLevel || 'beginner'
+      } : null
     });
 
     // Basic required field checks
     if (!name || !email || !password) {
-      logger.warn('Registration failed - missing required fields', {
-        email: email,
-        missingFields: [!name && 'name', !email && 'email', !password && 'password'].filter(Boolean)
+      logger.warn('REGISTRATION_VALIDATION_FAILED', {
+        userEmail: email,
+        missingFields: {
+          name: !name,
+          email: !email,
+          password: !password
+        },
+        ipAddress: req.ip,
+        validationType: 'missing_required_fields'
       });
       return res.status(400).json({ 
         success: false,
@@ -75,9 +98,12 @@ exports.registerUser = async (req, res, next) => {
 
     // Validate role
     if (role && !['admin', 'farmer', 'expert'].includes(role)) {
-      logger.warn('Registration failed - invalid role', {
-        email: email,
-        invalidRole: role
+      logger.warn('REGISTRATION_VALIDATION_FAILED', {
+        userEmail: email,
+        invalidRole: role,
+        ipAddress: req.ip,
+        validationType: 'invalid_role',
+        allowedRoles: ['admin', 'farmer', 'expert']
       });
       return res.status(400).json({
         success: false,
@@ -88,9 +114,13 @@ exports.registerUser = async (req, res, next) => {
     // Check for existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      logger.warn('Registration failed - email already exists', {
-        email: email,
-        existingUserId: existingUser._id
+      logger.warn('REGISTRATION_CONFLICT', {
+        userEmail: email,
+        existingUserId: existingUser._id,
+        existingUserRole: existingUser.role,
+        existingUserStatus: existingUser.isActive ? 'active' : 'inactive',
+        ipAddress: req.ip,
+        conflictType: 'email_already_exists'
       });
       return res.status(409).json({ 
         success: false,
@@ -143,12 +173,31 @@ exports.registerUser = async (req, res, next) => {
       { expiresIn: '7d' }
     );
 
-    // Log successful registration
-    logger.info('User registered successfully', {
+    // Log successful registration with comprehensive details
+    logger.info('USER_REGISTRATION_SUCCESS', {
       userId: user._id,
-      email: user.email,
-      role: user.role,
-      ip: req.ip
+      userEmail: user.email,
+      userRole: user.role,
+      ipAddress: req.ip,
+      registrationTimestamp: user.createdAt,
+      userStatus: 'active',
+      verificationStatus: user.isVerified ? 'verified' : 'unverified',
+      profileCompletion: {
+        hasProfilePicture: !!user.profilePicture,
+        hasBio: !!user.bio,
+        hasPhone: !!user.phone,
+        hasAddress: !!user.address
+      },
+      roleSpecificData: user.role === 'expert' ? {
+        expertiseCount: user.expertise.length,
+        yearsOfExperience: user.yearsOfExperience,
+        hourlyRate: user.hourlyRate,
+        languagesCount: user.languages.length
+      } : {
+        farmSize: user.farmSize,
+        mainCropsCount: user.mainCrops.length,
+        experienceLevel: user.experienceLevel
+      }
     });
 
     // Return response without password
@@ -160,10 +209,14 @@ exports.registerUser = async (req, res, next) => {
     });
 
   } catch (error) {
-    logger.error('Registration error', {
-      error: error.message,
-      email: req.body.email,
-      stack: error.stack
+    logger.error('REGISTRATION_SYSTEM_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
+      userEmail: req.body.email,
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'user_registration',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -173,17 +226,25 @@ exports.loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Log login attempt
-    logger.info('User login attempt', {
-      email: email,
-      ip: req.ip
+    // Log login attempt with comprehensive details
+    logger.info('USER_LOGIN_ATTEMPT', {
+      userEmail: email,
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      timestamp: new Date().toISOString(),
+      loginMethod: 'email_password'
     });
 
     // Basic required field checks
     if (!email || !password) {
-      logger.warn('Login failed - missing credentials', {
-        email: email,
-        ip: req.ip
+      logger.warn('LOGIN_VALIDATION_FAILED', {
+        userEmail: email,
+        missingFields: {
+          email: !email,
+          password: !password
+        },
+        ipAddress: req.ip,
+        validationType: 'missing_credentials'
       });
       return res.status(400).json({ 
         success: false,
@@ -194,9 +255,11 @@ exports.loginUser = async (req, res, next) => {
     // Find user including password field
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      logger.warn('Login failed - user not found', {
-        email: email,
-        ip: req.ip
+      logger.warn('LOGIN_FAILED', {
+        userEmail: email,
+        ipAddress: req.ip,
+        failureReason: 'user_not_found',
+        accountStatus: 'non_existent'
       });
       return res.status(401).json({ 
         success: false,
@@ -206,10 +269,14 @@ exports.loginUser = async (req, res, next) => {
 
     // Check if user is active
     if (user.isActive === false) {
-      logger.warn('Login failed - account deactivated', {
+      logger.warn('LOGIN_FAILED', {
         userId: user._id,
-        email: user.email,
-        ip: req.ip
+        userEmail: user.email,
+        userRole: user.role,
+        ipAddress: req.ip,
+        failureReason: 'account_deactivated',
+        accountStatus: 'inactive',
+        lastActive: user.updatedAt
       });
       return res.status(401).json({
         success: false,
@@ -220,10 +287,14 @@ exports.loginUser = async (req, res, next) => {
     // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      logger.warn('Login failed - invalid password', {
+      logger.warn('LOGIN_FAILED', {
         userId: user._id,
-        email: user.email,
-        ip: req.ip
+        userEmail: user.email,
+        userRole: user.role,
+        ipAddress: req.ip,
+        failureReason: 'invalid_password',
+        accountStatus: 'active',
+        verificationStatus: user.isVerified ? 'verified' : 'unverified'
       });
       return res.status(401).json({ 
         success: false,
@@ -242,13 +313,28 @@ exports.loginUser = async (req, res, next) => {
       { expiresIn: '7d' }
     );
 
-    // Log successful login
-    logger.info('User logged in successfully', {
+    // Log successful login with comprehensive details
+    logger.info('USER_LOGIN_SUCCESS', {
       userId: user._id,
-      email: user.email,
-      role: user.role,
-      ip: req.ip
+      userEmail: user.email,
+      userRole: user.role,
+      ipAddress: req.ip,
+      loginTimestamp: new Date().toISOString(),
+      accountStatus: 'active',
+      verificationStatus: user.isVerified ? 'verified' : 'unverified',
+      lastLogin: user.lastLogin,
+      sessionDuration: '7d',
+      profileData: {
+        hasProfilePicture: !!user.profilePicture,
+        hasBio: !!user.bio,
+        expertiseCount: user.expertise?.length || 0,
+        mainCropsCount: user.mainCrops?.length || 0
+      }
     });
+
+    // Update last login timestamp
+    user.lastLogin = new Date();
+    await user.save();
 
     // Return response without password
     res.status(200).json({
@@ -259,11 +345,14 @@ exports.loginUser = async (req, res, next) => {
     });
 
   } catch (error) {
-    logger.error('Login error', {
-      error: error.message,
-      email: req.body.email,
-      ip: req.ip,
-      stack: error.stack
+    logger.error('LOGIN_SYSTEM_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
+      userEmail: req.body.email,
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'user_login',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -274,8 +363,11 @@ exports.getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
-      logger.warn('Profile fetch failed - user not found', {
-        userId: req.user.id
+      logger.warn('PROFILE_FETCH_FAILED', {
+        userId: req.user.id,
+        ipAddress: req.ip,
+        failureReason: 'user_not_found',
+        operation: 'get_profile'
       });
       return res.status(404).json({ 
         success: false,
@@ -283,9 +375,29 @@ exports.getProfile = async (req, res, next) => {
       });
     }
 
-    logger.info('Profile fetched successfully', {
+    logger.info('PROFILE_FETCH_SUCCESS', {
       userId: user._id,
-      email: user.email
+      userEmail: user.email,
+      userRole: user.role,
+      ipAddress: req.ip,
+      profileData: {
+        hasProfilePicture: !!user.profilePicture,
+        hasBio: !!user.bio,
+        hasPhone: !!user.phone,
+        hasAddress: !!user.address,
+        verificationStatus: user.isVerified ? 'verified' : 'unverified',
+        accountStatus: user.isActive ? 'active' : 'inactive'
+      },
+      roleSpecificData: user.role === 'expert' ? {
+        expertiseCount: user.expertise.length,
+        yearsOfExperience: user.yearsOfExperience,
+        hourlyRate: user.hourlyRate,
+        availability: user.availability
+      } : {
+        farmSize: user.farmSize,
+        mainCropsCount: user.mainCrops.length,
+        experienceLevel: user.experienceLevel
+      }
     });
 
     res.status(200).json({ 
@@ -293,10 +405,14 @@ exports.getProfile = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
-    logger.error('Profile fetch error', {
-      error: error.message,
+    logger.error('PROFILE_FETCH_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
       userId: req.user.id,
-      stack: error.stack
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'get_profile',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -324,10 +440,34 @@ exports.updateProfile = async (req, res, next) => {
       experienceLevel
     } = req.body;
     
-    // Log profile update attempt
-    logger.info('Profile update attempt', {
+    // Log profile update attempt with comprehensive details
+    logger.info('PROFILE_UPDATE_ATTEMPT', {
       userId: req.user.id,
-      updatedFields: Object.keys(req.body).filter(key => req.body[key] !== undefined)
+      userRole: req.user.role,
+      ipAddress: req.ip,
+      updateFields: Object.keys(req.body).filter(key => req.body[key] !== undefined),
+      fieldDetails: {
+        personalInfo: {
+          name: !!name,
+          email: !!email,
+          bio: bio !== undefined,
+          phone: phone !== undefined,
+          profilePicture: !!profilePicture,
+          address: !!address
+        },
+        expertFields: req.user.role === 'expert' ? {
+          expertise: expertise !== undefined,
+          yearsOfExperience: yearsOfExperience !== undefined,
+          hourlyRate: hourlyRate !== undefined,
+          availability: availability !== undefined,
+          languages: languages !== undefined
+        } : null,
+        farmerFields: req.user.role === 'farmer' ? {
+          farmSize: farmSize !== undefined,
+          mainCrops: mainCrops !== undefined,
+          experienceLevel: experienceLevel !== undefined
+        } : null
+      }
     });
     
     const updateData = {};
@@ -362,8 +502,11 @@ exports.updateProfile = async (req, res, next) => {
     );
 
     if (!user) {
-      logger.warn('Profile update failed - user not found', {
-        userId: req.user.id
+      logger.warn('PROFILE_UPDATE_FAILED', {
+        userId: req.user.id,
+        ipAddress: req.ip,
+        failureReason: 'user_not_found',
+        operation: 'update_profile'
       });
       return res.status(404).json({
         success: false,
@@ -371,10 +514,27 @@ exports.updateProfile = async (req, res, next) => {
       });
     }
 
-    logger.info('Profile updated successfully', {
+    logger.info('PROFILE_UPDATE_SUCCESS', {
       userId: user._id,
-      email: user.email,
-      updatedFields: Object.keys(updateData)
+      userEmail: user.email,
+      userRole: user.role,
+      ipAddress: req.ip,
+      updatedFields: Object.keys(updateData),
+      updateSummary: {
+        personalInfoUpdated: !!updateData.name || !!updateData.email || updateData.bio !== undefined || updateData.phone !== undefined || !!updateData.profilePicture || !!updateData.address,
+        expertFieldsUpdated: req.user.role === 'expert' ? {
+          expertise: updateData.expertise !== undefined,
+          yearsOfExperience: updateData.yearsOfExperience !== undefined,
+          hourlyRate: updateData.hourlyRate !== undefined,
+          availability: updateData.availability !== undefined,
+          languages: updateData.languages !== undefined
+        } : null,
+        farmerFieldsUpdated: req.user.role === 'farmer' ? {
+          farmSize: updateData.farmSize !== undefined,
+          mainCrops: updateData.mainCrops !== undefined,
+          experienceLevel: updateData.experienceLevel !== undefined
+        } : null
+      }
     });
 
     res.status(200).json({
@@ -383,10 +543,14 @@ exports.updateProfile = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
-    logger.error('Profile update error', {
-      error: error.message,
+    logger.error('PROFILE_UPDATE_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
       userId: req.user.id,
-      stack: error.stack
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'update_profile',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -398,13 +562,23 @@ exports.changePassword = async (req, res, next) => {
     const { currentPassword, newPassword } = req.body;
 
     // Log password change attempt
-    logger.info('Password change attempt', {
-      userId: req.user.id
+    logger.info('PASSWORD_CHANGE_ATTEMPT', {
+      userId: req.user.id,
+      ipAddress: req.ip,
+      hasCurrentPassword: !!currentPassword,
+      hasNewPassword: !!newPassword,
+      newPasswordLength: newPassword?.length || 0
     });
 
     if (!currentPassword || !newPassword) {
-      logger.warn('Password change failed - missing required fields', {
-        userId: req.user.id
+      logger.warn('PASSWORD_CHANGE_VALIDATION_FAILED', {
+        userId: req.user.id,
+        missingFields: {
+          currentPassword: !currentPassword,
+          newPassword: !newPassword
+        },
+        ipAddress: req.ip,
+        validationType: 'missing_passwords'
       });
       return res.status(400).json({
         success: false,
@@ -413,8 +587,12 @@ exports.changePassword = async (req, res, next) => {
     }
 
     if (newPassword.length < 6) {
-      logger.warn('Password change failed - password too short', {
-        userId: req.user.id
+      logger.warn('PASSWORD_CHANGE_VALIDATION_FAILED', {
+        userId: req.user.id,
+        newPasswordLength: newPassword.length,
+        minimumRequired: 6,
+        ipAddress: req.ip,
+        validationType: 'password_too_short'
       });
       return res.status(400).json({
         success: false,
@@ -425,8 +603,11 @@ exports.changePassword = async (req, res, next) => {
     // Get user with password
     const user = await User.findById(req.user.id).select('+password');
     if (!user) {
-      logger.warn('Password change failed - user not found', {
-        userId: req.user.id
+      logger.warn('PASSWORD_CHANGE_FAILED', {
+        userId: req.user.id,
+        ipAddress: req.ip,
+        failureReason: 'user_not_found',
+        operation: 'change_password'
       });
       return res.status(404).json({
         success: false,
@@ -437,9 +618,13 @@ exports.changePassword = async (req, res, next) => {
     // Verify current password
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) {
-      logger.warn('Password change failed - current password incorrect', {
+      logger.warn('PASSWORD_CHANGE_FAILED', {
         userId: user._id,
-        email: user.email
+        userEmail: user.email,
+        userRole: user.role,
+        ipAddress: req.ip,
+        failureReason: 'incorrect_current_password',
+        operation: 'change_password'
       });
       return res.status(401).json({
         success: false,
@@ -454,9 +639,13 @@ exports.changePassword = async (req, res, next) => {
     user.password = hashedPassword;
     await user.save();
 
-    logger.info('Password changed successfully', {
+    logger.info('PASSWORD_CHANGE_SUCCESS', {
       userId: user._id,
-      email: user.email
+      userEmail: user.email,
+      userRole: user.role,
+      ipAddress: req.ip,
+      passwordChangedAt: new Date().toISOString(),
+      operation: 'change_password'
     });
 
     res.status(200).json({
@@ -464,10 +653,14 @@ exports.changePassword = async (req, res, next) => {
       message: 'Password changed successfully'
     });
   } catch (error) {
-    logger.error('Password change error', {
-      error: error.message,
+    logger.error('PASSWORD_CHANGE_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
       userId: req.user.id,
-      stack: error.stack
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'change_password',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -477,8 +670,11 @@ exports.changePassword = async (req, res, next) => {
 exports.deactivateAccount = async (req, res, next) => {
   try {
     // Log account deactivation attempt
-    logger.info('Account deactivation attempt', {
-      userId: req.user.id
+    logger.info('ACCOUNT_DEACTIVATION_ATTEMPT', {
+      userId: req.user.id,
+      ipAddress: req.ip,
+      timestamp: new Date().toISOString(),
+      operation: 'deactivate_account'
     });
 
     const user = await User.findByIdAndUpdate(
@@ -488,8 +684,11 @@ exports.deactivateAccount = async (req, res, next) => {
     );
 
     if (!user) {
-      logger.warn('Account deactivation failed - user not found', {
-        userId: req.user.id
+      logger.warn('ACCOUNT_DEACTIVATION_FAILED', {
+        userId: req.user.id,
+        ipAddress: req.ip,
+        failureReason: 'user_not_found',
+        operation: 'deactivate_account'
       });
       return res.status(404).json({
         success: false,
@@ -497,9 +696,15 @@ exports.deactivateAccount = async (req, res, next) => {
       });
     }
 
-    logger.info('Account deactivated successfully', {
+    logger.info('ACCOUNT_DEACTIVATION_SUCCESS', {
       userId: user._id,
-      email: user.email
+      userEmail: user.email,
+      userRole: user.role,
+      ipAddress: req.ip,
+      deactivationTimestamp: new Date().toISOString(),
+      accountStatus: 'inactive',
+      lastActive: user.updatedAt,
+      operation: 'deactivate_account'
     });
 
     res.status(200).json({
@@ -507,10 +712,14 @@ exports.deactivateAccount = async (req, res, next) => {
       message: 'Account deactivated successfully'
     });
   } catch (error) {
-    logger.error('Account deactivation error', {
-      error: error.message,
+    logger.error('ACCOUNT_DEACTIVATION_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
       userId: req.user.id,
-      stack: error.stack
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'deactivate_account',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -525,17 +734,22 @@ exports.googleCallback = (req, res, next) => {
   passport.authenticate('google', { session: false }, async (err, user, info) => {
     try {
       if (err) {
-        logger.error('Google OAuth error', {
-          error: err.message,
-          stack: err.stack,
-          ip: req.ip
+        logger.error('GOOGLE_OAUTH_ERROR', {
+          errorMessage: err.message,
+          errorType: err.name,
+          ipAddress: req.ip,
+          stackTrace: err.stack,
+          operation: 'google_oauth',
+          timestamp: new Date().toISOString()
         });
         return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
       }
       
       if (!user) {
-        logger.warn('Google OAuth failed - no user returned', {
-          ip: req.ip
+        logger.warn('GOOGLE_OAUTH_FAILED', {
+          ipAddress: req.ip,
+          failureReason: 'no_user_returned',
+          operation: 'google_oauth'
         });
         return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
       }
@@ -554,12 +768,23 @@ exports.googleCallback = (req, res, next) => {
         { expiresIn: '7d' }
       );
 
-      // Log successful Google OAuth
-      logger.info('Google OAuth successful', {
+      // Log successful Google OAuth with comprehensive details
+      logger.info('GOOGLE_OAUTH_SUCCESS', {
         userId: user._id,
-        email: user.email,
+        userEmail: user.email,
+        userRole: user.role,
+        ipAddress: req.ip,
         isNewUser: isNewUser,
-        ip: req.ip
+        oauthTimestamp: new Date().toISOString(),
+        accountStatus: user.isActive ? 'active' : 'inactive',
+        verificationStatus: user.isVerified ? 'verified' : 'unverified',
+        profileData: {
+          hasProfilePicture: !!user.profilePicture,
+          hasBio: !!user.bio,
+          expertiseCount: user.expertise?.length || 0,
+          mainCropsCount: user.mainCrops?.length || 0
+        },
+        operation: 'google_oauth'
       });
 
       // Clear the new user flag after first login
@@ -574,10 +799,13 @@ exports.googleCallback = (req, res, next) => {
       
       res.redirect(redirectUrl);
     } catch (error) {
-      logger.error('Error in Google callback', {
-        error: error.message,
-        stack: error.stack,
-        ip: req.ip
+      logger.error('GOOGLE_CALLBACK_ERROR', {
+        errorMessage: error.message,
+        errorType: error.name,
+        ipAddress: req.ip,
+        stackTrace: error.stack,
+        operation: 'google_oauth_callback',
+        timestamp: new Date().toISOString()
       });
       res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
     }
@@ -589,12 +817,28 @@ exports.checkEmail = async (req, res, next) => {
   try {
     const { email } = req.body;
     
-    logger.info('Email check request', {
+    logger.info('EMAIL_CHECK_REQUEST', {
       email: email,
-      ip: req.ip
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent'),
+      timestamp: new Date().toISOString(),
+      operation: 'check_email'
     });
     
     const user = await User.findOne({ email });
+    
+    logger.info('EMAIL_CHECK_RESULT', {
+      email: email,
+      exists: !!user,
+      isGoogleAuth: user?.googleId ? true : false,
+      userStatus: user ? {
+        userId: user._id,
+        role: user.role,
+        isActive: user.isActive,
+        isVerified: user.isVerified
+      } : null,
+      operation: 'check_email'
+    });
     
     res.status(200).json({
       success: true,
@@ -602,10 +846,14 @@ exports.checkEmail = async (req, res, next) => {
       isGoogleAuth: user?.googleId ? true : false
     });
   } catch (error) {
-    logger.error('Email check error', {
-      error: error.message,
+    logger.error('EMAIL_CHECK_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
       email: req.body.email,
-      stack: error.stack
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'check_email',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }
@@ -616,18 +864,24 @@ exports.updateMyRole = async (req, res, next) => {
   try {
     const { role } = req.body;
     
-    // Log role update attempt
-    logger.info('Role update attempt', {
+    // Log role update attempt with comprehensive details
+    logger.info('ROLE_UPDATE_ATTEMPT', {
       userId: req.user.id,
+      currentRole: req.user.role,
       requestedRole: role,
-      currentRole: req.user.role
+      ipAddress: req.ip,
+      timestamp: new Date().toISOString(),
+      operation: 'update_role'
     });
     
     // Validate role
     if (!role || !['farmer', 'expert'].includes(role)) {
-      logger.warn('Role update failed - invalid role', {
+      logger.warn('ROLE_UPDATE_VALIDATION_FAILED', {
         userId: req.user.id,
-        invalidRole: role
+        invalidRole: role,
+        allowedRoles: ['farmer', 'expert'],
+        ipAddress: req.ip,
+        validationType: 'invalid_role'
       });
       return res.status(400).json({
         success: false,
@@ -638,8 +892,11 @@ exports.updateMyRole = async (req, res, next) => {
     // Get current user
     const currentUser = await User.findById(req.user.id);
     if (!currentUser) {
-      logger.warn('Role update failed - user not found', {
-        userId: req.user.id
+      logger.warn('ROLE_UPDATE_FAILED', {
+        userId: req.user.id,
+        ipAddress: req.ip,
+        failureReason: 'user_not_found',
+        operation: 'update_role'
       });
       return res.status(404).json({
         success: false,
@@ -649,9 +906,12 @@ exports.updateMyRole = async (req, res, next) => {
 
     // Check if user is trying to switch to their current role
     if (currentUser.role === role) {
-      logger.warn('Role update failed - same role', {
+      logger.warn('ROLE_UPDATE_VALIDATION_FAILED', {
         userId: req.user.id,
-        role: role
+        currentRole: currentUser.role,
+        requestedRole: role,
+        ipAddress: req.ip,
+        validationType: 'same_role'
       });
       return res.status(400).json({
         success: false,
@@ -666,11 +926,15 @@ exports.updateMyRole = async (req, res, next) => {
       { new: true, runValidators: true }
     );
 
-    logger.info('Role updated successfully', {
+    logger.info('ROLE_UPDATE_SUCCESS', {
       userId: user._id,
-      email: user.email,
+      userEmail: user.email,
       oldRole: currentUser.role,
-      newRole: role
+      newRole: role,
+      ipAddress: req.ip,
+      updateTimestamp: new Date().toISOString(),
+      roleTransition: `${currentUser.role}_to_${role}`,
+      operation: 'update_role'
     });
 
     res.status(200).json({
@@ -679,10 +943,14 @@ exports.updateMyRole = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
-    logger.error('Role update error', {
-      error: error.message,
+    logger.error('ROLE_UPDATE_ERROR', {
+      errorMessage: error.message,
+      errorType: error.name,
       userId: req.user.id,
-      stack: error.stack
+      ipAddress: req.ip,
+      stackTrace: error.stack,
+      operation: 'update_role',
+      timestamp: new Date().toISOString()
     });
     next(error);
   }

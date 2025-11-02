@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const { logger } = require('../middleware/logger');
 
 // Helper function to generate user response without password
 const generateUserResponse = (user) => {
@@ -42,6 +43,12 @@ exports.getAllUsers = async (req, res, next) => {
       search 
     } = req.query;
     
+    // Log user list request
+    logger.info('Admin fetching user list', {
+      adminId: req.user.id,
+      filters: { role, county, expertise, isActive, search, page, limit }
+    });
+    
     const filter = {};
     
     // Apply filters
@@ -67,6 +74,12 @@ exports.getAllUsers = async (req, res, next) => {
 
     const total = await User.countDocuments(filter);
 
+    logger.info('User list fetched successfully', {
+      adminId: req.user.id,
+      count: users.length,
+      total: total
+    });
+
     res.status(200).json({
       success: true,
       count: users.length,
@@ -76,6 +89,11 @@ exports.getAllUsers = async (req, res, next) => {
       users: users.map(user => generateUserResponse(user))
     });
   } catch (error) {
+    logger.error('Error fetching user list', {
+      error: error.message,
+      adminId: req.user.id,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -83,20 +101,41 @@ exports.getAllUsers = async (req, res, next) => {
 // Get single user by ID
 exports.getUserById = async (req, res, next) => {
   try {
+    logger.info('Fetching user by ID', {
+      requestedById: req.user.id,
+      targetUserId: req.params.id
+    });
+    
     const user = await User.findById(req.params.id);
     
     if (!user) {
+      logger.warn('User not found', {
+        requestedById: req.user.id,
+        targetUserId: req.params.id
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    logger.info('User fetched successfully', {
+      requestedById: req.user.id,
+      targetUserId: user._id,
+      targetUserRole: user.role
+    });
+
     res.status(200).json({
       success: true,
       user: generateUserResponse(user)
     });
   } catch (error) {
+    logger.error('Error fetching user by ID', {
+      error: error.message,
+      requestedById: req.user.id,
+      targetUserId: req.params.id,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -106,7 +145,19 @@ exports.updateUserRole = async (req, res, next) => {
   try {
     const { role } = req.body;
     
+    // Log role update attempt
+    logger.info('Admin updating user role', {
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      newRole: role
+    });
+    
     if (!role || !['admin', 'farmer', 'expert'].includes(role)) {
+      logger.warn('Role update failed - invalid role', {
+        adminId: req.user.id,
+        targetUserId: req.params.id,
+        invalidRole: role
+      });
       return res.status(400).json({
         success: false,
         message: 'Valid role (admin, farmer, expert) is required'
@@ -115,6 +166,9 @@ exports.updateUserRole = async (req, res, next) => {
 
     // Prevent admin from changing their own role
     if (req.params.id === req.user.id) {
+      logger.warn('Role update failed - admin trying to change own role', {
+        adminId: req.user.id
+      });
       return res.status(400).json({
         success: false,
         message: 'Cannot change your own role'
@@ -128,11 +182,22 @@ exports.updateUserRole = async (req, res, next) => {
     );
 
     if (!user) {
+      logger.warn('Role update failed - user not found', {
+        adminId: req.user.id,
+        targetUserId: req.params.id
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
+
+    logger.info('User role updated successfully', {
+      adminId: req.user.id,
+      targetUserId: user._id,
+      oldRole: user.role, // Note: This shows the new role due to {new: true}
+      newRole: role
+    });
 
     res.status(200).json({
       success: true,
@@ -140,6 +205,12 @@ exports.updateUserRole = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
+    logger.error('Error updating user role', {
+      error: error.message,
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -167,6 +238,13 @@ exports.updateUserProfile = async (req, res, next) => {
       isVerified,
       isActive
     } = req.body;
+    
+    // Log profile update attempt
+    logger.info('Admin updating user profile', {
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      updatedFields: Object.keys(req.body).filter(key => req.body[key] !== undefined)
+    });
     
     const updateData = {};
     
@@ -201,11 +279,21 @@ exports.updateUserProfile = async (req, res, next) => {
     );
 
     if (!user) {
+      logger.warn('Profile update failed - user not found', {
+        adminId: req.user.id,
+        targetUserId: req.params.id
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
+
+    logger.info('User profile updated successfully by admin', {
+      adminId: req.user.id,
+      targetUserId: user._id,
+      updatedFields: Object.keys(updateData)
+    });
 
     res.status(200).json({
       success: true,
@@ -213,6 +301,12 @@ exports.updateUserProfile = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
+    logger.error('Error updating user profile', {
+      error: error.message,
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -220,8 +314,17 @@ exports.updateUserProfile = async (req, res, next) => {
 // Delete user (Admin only - hard delete)
 exports.deleteUser = async (req, res, next) => {
   try {
+    // Log delete attempt
+    logger.info('Admin attempting to delete user', {
+      adminId: req.user.id,
+      targetUserId: req.params.id
+    });
+
     // Prevent admin from deleting themselves
     if (req.params.id === req.user.id) {
+      logger.warn('User deletion failed - admin trying to delete own account', {
+        adminId: req.user.id
+      });
       return res.status(400).json({
         success: false,
         message: 'Cannot delete your own account'
@@ -231,17 +334,33 @@ exports.deleteUser = async (req, res, next) => {
     const user = await User.findByIdAndDelete(req.params.id);
 
     if (!user) {
+      logger.warn('User deletion failed - user not found', {
+        adminId: req.user.id,
+        targetUserId: req.params.id
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    logger.info('User deleted successfully by admin', {
+      adminId: req.user.id,
+      deletedUserId: user._id,
+      deletedUserEmail: user.email
+    });
+
     res.status(200).json({
       success: true,
       message: 'User deleted successfully'
     });
   } catch (error) {
+    logger.error('Error deleting user', {
+      error: error.message,
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -270,8 +389,19 @@ exports.createUser = async (req, res, next) => {
       isVerified
     } = req.body;
 
+    // Log user creation attempt
+    logger.info('Admin creating new user', {
+      adminId: req.user.id,
+      userEmail: email,
+      userRole: role
+    });
+
     // Basic validation
     if (!name || !email || !password) {
+      logger.warn('User creation failed - missing required fields', {
+        adminId: req.user.id,
+        missingFields: [!name && 'name', !email && 'email', !password && 'password'].filter(Boolean)
+      });
       return res.status(400).json({
         success: false,
         message: 'Please provide name, email, and password'
@@ -280,6 +410,10 @@ exports.createUser = async (req, res, next) => {
 
     // Validate role
     if (role && !['admin', 'farmer', 'expert'].includes(role)) {
+      logger.warn('User creation failed - invalid role', {
+        adminId: req.user.id,
+        invalidRole: role
+      });
       return res.status(400).json({
         success: false,
         message: 'Invalid role. Must be admin, farmer, or expert'
@@ -289,6 +423,11 @@ exports.createUser = async (req, res, next) => {
     // Check for existing user
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      logger.warn('User creation failed - email already exists', {
+        adminId: req.user.id,
+        email: email,
+        existingUserId: existingUser._id
+      });
       return res.status(409).json({
         success: false,
         message: 'User with this email already exists'
@@ -329,12 +468,25 @@ exports.createUser = async (req, res, next) => {
     const user = new User(userData);
     await user.save();
 
+    logger.info('User created successfully by admin', {
+      adminId: req.user.id,
+      newUserId: user._id,
+      newUserEmail: user.email,
+      newUserRole: user.role
+    });
+
     res.status(201).json({
       success: true,
       message: 'User created successfully',
       user: generateUserResponse(user)
     });
   } catch (error) {
+    logger.error('Error creating user', {
+      error: error.message,
+      adminId: req.user.id,
+      userEmail: req.body.email,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -350,6 +502,12 @@ exports.getExperts = async (req, res, next) => {
       page = 1, 
       limit = 10 
     } = req.query;
+    
+    // Log experts fetch request
+    logger.info('Fetching experts list', {
+      requestedById: req.user?.id || 'anonymous',
+      filters: { expertise, county, minRating, maxHourlyRate, page, limit }
+    });
     
     const filter = { 
       role: 'expert', 
@@ -369,6 +527,12 @@ exports.getExperts = async (req, res, next) => {
 
     const total = await User.countDocuments(filter);
 
+    logger.info('Experts list fetched successfully', {
+      requestedById: req.user?.id || 'anonymous',
+      count: experts.length,
+      total: total
+    });
+
     res.status(200).json({
       success: true,
       count: experts.length,
@@ -378,6 +542,11 @@ exports.getExperts = async (req, res, next) => {
       experts: experts.map(expert => generateUserResponse(expert))
     });
   } catch (error) {
+    logger.error('Error fetching experts list', {
+      error: error.message,
+      requestedById: req.user?.id || 'anonymous',
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -392,6 +561,12 @@ exports.getFarmers = async (req, res, next) => {
       page = 1, 
       limit = 10 
     } = req.query;
+    
+    // Log farmers fetch request
+    logger.info('Fetching farmers list', {
+      requestedById: req.user?.id || 'anonymous',
+      filters: { county, mainCrops, experienceLevel, page, limit }
+    });
     
     const filter = { 
       role: 'farmer', 
@@ -410,6 +585,12 @@ exports.getFarmers = async (req, res, next) => {
 
     const total = await User.countDocuments(filter);
 
+    logger.info('Farmers list fetched successfully', {
+      requestedById: req.user?.id || 'anonymous',
+      count: farmers.length,
+      total: total
+    });
+
     res.status(200).json({
       success: true,
       count: farmers.length,
@@ -419,6 +600,11 @@ exports.getFarmers = async (req, res, next) => {
       farmers: farmers.map(farmer => generateUserResponse(farmer))
     });
   } catch (error) {
+    logger.error('Error fetching farmers list', {
+      error: error.message,
+      requestedById: req.user?.id || 'anonymous',
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -426,17 +612,35 @@ exports.getFarmers = async (req, res, next) => {
 // Toggle user verification (Admin only)
 exports.toggleVerification = async (req, res, next) => {
   try {
+    // Log verification toggle attempt
+    logger.info('Admin toggling user verification', {
+      adminId: req.user.id,
+      targetUserId: req.params.id
+    });
+
     const user = await User.findById(req.params.id);
     
     if (!user) {
+      logger.warn('Verification toggle failed - user not found', {
+        adminId: req.user.id,
+        targetUserId: req.params.id
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    const oldStatus = user.isVerified;
     user.isVerified = !user.isVerified;
     await user.save();
+
+    logger.info('User verification status updated', {
+      adminId: req.user.id,
+      targetUserId: user._id,
+      oldStatus: oldStatus,
+      newStatus: user.isVerified
+    });
 
     res.status(200).json({
       success: true,
@@ -444,6 +648,12 @@ exports.toggleVerification = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
+    logger.error('Error toggling user verification', {
+      error: error.message,
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      stack: error.stack
+    });
     next(error);
   }
 };
@@ -451,8 +661,17 @@ exports.toggleVerification = async (req, res, next) => {
 // Toggle user active status (Admin only)
 exports.toggleActiveStatus = async (req, res, next) => {
   try {
+    // Log active status toggle attempt
+    logger.info('Admin toggling user active status', {
+      adminId: req.user.id,
+      targetUserId: req.params.id
+    });
+
     // Prevent admin from deactivating themselves
     if (req.params.id === req.user.id) {
+      logger.warn('Active status toggle failed - admin trying to deactivate own account', {
+        adminId: req.user.id
+      });
       return res.status(400).json({
         success: false,
         message: 'Cannot deactivate your own account'
@@ -462,14 +681,26 @@ exports.toggleActiveStatus = async (req, res, next) => {
     const user = await User.findById(req.params.id);
     
     if (!user) {
+      logger.warn('Active status toggle failed - user not found', {
+        adminId: req.user.id,
+        targetUserId: req.params.id
+      });
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
 
+    const oldStatus = user.isActive;
     user.isActive = !user.isActive;
     await user.save();
+
+    logger.info('User active status updated', {
+      adminId: req.user.id,
+      targetUserId: user._id,
+      oldStatus: oldStatus,
+      newStatus: user.isActive
+    });
 
     res.status(200).json({
       success: true,
@@ -477,6 +708,12 @@ exports.toggleActiveStatus = async (req, res, next) => {
       user: generateUserResponse(user)
     });
   } catch (error) {
+    logger.error('Error toggling user active status', {
+      error: error.message,
+      adminId: req.user.id,
+      targetUserId: req.params.id,
+      stack: error.stack
+    });
     next(error);
   }
 };

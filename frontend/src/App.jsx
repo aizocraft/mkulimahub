@@ -19,6 +19,7 @@ import AdminDashboard from './pages/dashboards/AdminDashboard';
 import FarmerDashboard from './pages/dashboards/FarmerDashboard';
 import ExpertDashboard from './pages/dashboards/ExpertDashboard';
 import UserPage from './pages/dashboards/admin/UserPage.jsx';
+import Analytics from './pages/dashboards/admin/Analytics.jsx';
 import ExpertsPage from './pages/dashboards/farmer/ExpertsPage.jsx';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
@@ -90,6 +91,11 @@ export default function App() {
             <Route path="/users" element={
               <PageLayout>
                 <UserPage />
+              </PageLayout>
+            } />
+            <Route path="/analytics" element={
+              <PageLayout>
+                <Analytics />
               </PageLayout>
             } />
             <Route path="/experts" element={

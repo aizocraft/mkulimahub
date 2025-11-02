@@ -32,7 +32,6 @@ const UserPage = () => {
     email: '',
     phone: '',
     bio: '',
-    role: '',
     address: {
       street: '',
       city: '',
@@ -153,23 +152,6 @@ const UserPage = () => {
     }
   };
 
-  const handleRoleUpdate = async (userId, newRole) => {
-    try {
-      const response = await userAPI.updateUserRole(userId, newRole);
-      
-      if (response?.data?.success) {
-        showSuccess('User role updated successfully');
-        fetchUsers();
-        return { success: true };
-      } else {
-        return { success: false, message: response?.data?.message || 'Action failed' };
-      }
-    } catch (error) {
-      const errorData = apiUtils.handleError(error);
-      return { success: false, message: errorData.message };
-    }
-  };
-
   // Delete user functionality
   const handleDeleteUser = async (userId) => {
     try {
@@ -203,7 +185,6 @@ const UserPage = () => {
       email: user.email || '',
       phone: user.phone || '',
       bio: user.bio || '',
-      role: user.role || 'farmer',
       address: user.address || {
         street: '',
         city: '',
@@ -952,20 +933,9 @@ const UserPage = () => {
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 whitespace-nowrap">
-                          <select
-                            value={user?.role || ''}
-                            onChange={(e) => handleAction(handleRoleUpdate, user?.id || user?._id, e.target.value)}
-                            disabled={actionLoading[user?.id || user?._id]}
-                            className={`text-xs font-semibold px-2 sm:px-3 lg:px-4 py-1 sm:py-2 rounded-full focus:ring-2 focus:ring-offset-1 focus:outline-none transition-all ${getRoleBadgeColor(user?.role)} ${
-                              actionLoading[user?.id || user?._id] 
-                                ? 'opacity-50 cursor-not-allowed' 
-                                : 'cursor-pointer hover:shadow-lg transform hover:scale-105'
-                            }`}
-                          >
-                            <option value="farmer">Farmer</option>
-                            <option value="expert">Expert</option>
-                            <option value="admin">Admin</option>
-                          </select>
+                          <span className={`inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs font-semibold shadow-lg ${getRoleBadgeColor(user?.role)}`}>
+                            {user?.role}
+                          </span>
                         </td>
                         <td className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 whitespace-nowrap">
                           <button
@@ -1382,23 +1352,7 @@ const UserPage = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Role
-                  </label>
-                  <select
-                    name="role"
-                    value={editForm.role}
-                    onChange={handleEditFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                  >
-                    <option value="farmer">Farmer</option>
-                    <option value="expert">Expert</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-
-                {editForm.role === 'expert' && (
+                {selectedUser?.role === 'expert' && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -1444,7 +1398,7 @@ const UserPage = () => {
                   </>
                 )}
 
-                {editForm.role === 'farmer' && (
+                {selectedUser?.role === 'farmer' && (
                   <>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

@@ -1,5 +1,5 @@
 
-aizo@aizocraft:~/Documents/mkulimahub/frontend$ tree -I "node_modules"
+mkulimahub/frontend$ tree -I "node_modules"
 .
 ├── eslint.config.js
 ├── index.html
