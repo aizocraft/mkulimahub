@@ -1,5 +1,4 @@
-
-mkulimahub/frontend$ tree -I "node_modules"
+ tree -I "node_modules"
 .
 ├── eslint.config.js
 ├── index.html
@@ -27,6 +26,7 @@ mkulimahub/frontend$ tree -I "node_modules"
 │   │   └── react.svg
 │   ├── components
 │   │   ├── CreateUserModal.jsx
+│   │   ├── DbStats.jsx
 │   │   ├── Footer.jsx
 │   │   ├── GoogleAuthButton.jsx
 │   │   ├── GoogleAuthSuccess.jsx
@@ -50,6 +50,17 @@ mkulimahub/frontend$ tree -I "node_modules"
 │   │   ├── Dashboard.jsx
 │   │   ├── dashboards
 │   │   │   ├── admin
+│   │   │   │   ├── Analytics.jsx
+│   │   │   │   ├── logs
+│   │   │   │   │   ├── AuthLogs.jsx
+│   │   │   │   │   ├── components
+│   │   │   │   │   │   ├── LogFilters.jsx
+│   │   │   │   │   │   ├── LogStats.jsx
+│   │   │   │   │   │   ├── LogTable.jsx
+│   │   │   │   │   │   └── Pagination.jsx
+│   │   │   │   │   ├── ConsultationLogs.jsx
+│   │   │   │   │   ├── SystemLogs.jsx
+│   │   │   │   │   └── UserLogs.jsx
 │   │   │   │   ├── Logs.jsx
 │   │   │   │   ├── Overview.jsx
 │   │   │   │   ├── UserDistribution.jsx
@@ -82,4 +93,4 @@ mkulimahub/frontend$ tree -I "node_modules"
 ├── vercel.json
 └── vite.config.js
 
-13 directories, 68 files
+15 directories, 78 files
