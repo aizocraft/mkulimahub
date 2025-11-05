@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import AuthLogs from './logs/AuthLogs.jsx';
-import UserLogs from './logs/UserLogs.jsx';
-import ConsultationLogs from './logs/ConsultationLogs.jsx';
-import SystemLogs from './logs/SystemLogs.jsx';
+import AuthLogs from './logger/AuthLogs.jsx';
+import UserLogs from './logger/UserLogs.jsx';
+import ConsultationLogs from './logger/ConsultationLogs.jsx';
+import SystemLogs from './logger/SystemLogs.jsx';
 import { 
   Shield, 
   Users, 
