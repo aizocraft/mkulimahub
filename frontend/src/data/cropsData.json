@@ -1,0 +1,274 @@
+{
+  "crops": [
+    {
+      "id": 1,
+      "name": "Maize (Corn)",
+      "category": "Cereal",
+      "icon": "🌽",
+      "iconColor": "from-yellow-500 to-amber-600",
+      "description": "The most important cereal crop in sub-Saharan Africa. Requires good water drainage and proper spacing.",
+      "season": "Long Rain (Mar-May)",
+      "duration": "3-4 months",
+      "difficulty": "Medium",
+      "successRate": "85%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Land Selection",
+            "duration": "7-14 days",
+            "description": "Choose well-drained loamy soil with pH 5.5-7.0",
+            "tips": [
+              "Avoid waterlogged areas",
+              "Test soil nutrients",
+              "Clear all weeds and debris"
+            ],
+            "keyActivities": ["Soil testing", "Land clearing", "Plowing"],
+            "materials": ["Plough", "Soil test kit", "Herbicide"],
+            "successIndicator": "Fine tilth soil ready for planting"
+          },
+          {
+            "id": 2,
+            "title": "Soil Preparation",
+            "duration": "5-7 days",
+            "description": "Prepare fine tilth soil for optimal seed germination",
+            "tips": [
+              "Plow to 15-20cm depth",
+              "Break large soil clods",
+              "Level the field properly"
+            ],
+            "keyActivities": ["Plowing", "Harrowing", "Leveling"],
+            "materials": ["Tractor", "Harrow", "Leveling board"],
+            "successIndicator": "Soil crumbles easily"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Seed Selection",
+            "duration": "2-3 days",
+            "description": "Choose certified, disease-free seeds",
+            "tips": [
+              "Select hybrid varieties",
+              "Check germination rate >85%",
+              "Treat seeds with fungicide"
+            ],
+            "keyActivities": ["Seed purchase", "Seed treatment", "Sorting"],
+            "materials": ["Certified seeds", "Fungicide", "Storage bags"],
+            "successIndicator": "Healthy, viable seeds"
+          },
+          {
+            "id": 2,
+            "title": "Planting",
+            "duration": "1-2 days",
+            "description": "Plant at optimal spacing and depth",
+            "tips": [
+              "Plant at 75cm x 30cm spacing",
+              "2-3 seeds per hole at 5cm depth",
+              "Apply basal fertilizer"
+            ],
+            "keyActivities": ["Marking", "Digging", "Planting"],
+            "materials": ["Planting line", "Dibble", "Fertilizer"],
+            "successIndicator": "Uniform planting"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Germination",
+            "duration": "5-10 days",
+            "description": "Seed sprouts and establishes",
+            "tips": [
+              "Ensure adequate moisture",
+              "Control pests immediately",
+              "Thin to 2 plants per hill"
+            ],
+            "keyActivities": ["Monitoring", "Thinning", "Gap filling"],
+            "materials": ["Watering can", "Pesticide"],
+            "successIndicator": "80% germination rate"
+          },
+          {
+            "id": 2,
+            "title": "Vegetative Stage",
+            "duration": "30-45 days",
+            "description": "Rapid leaf and stem growth",
+            "tips": [
+              "Apply top dressing fertilizer",
+              "Weed control is critical",
+              "Monitor for diseases"
+            ],
+            "keyActivities": ["Weeding", "Fertilizing", "Pest control"],
+            "materials": ["Weeder", "Fertilizer", "Herbicide"],
+            "successIndicator": "Healthy dark green leaves"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Tasseling & Silking",
+            "duration": "10-15 days",
+            "description": "Pollination and kernel development",
+            "tips": [
+              "Ensure adequate water",
+              "Avoid foliar sprays",
+              "Monitor pollination"
+            ],
+            "keyActivities": ["Irrigation", "Monitoring", "Support"],
+            "materials": ["Water source", "Stakes"],
+            "successIndicator": "Proper pollination"
+          },
+          {
+            "id": 2,
+            "title": "Grain Filling",
+            "duration": "25-35 days",
+            "description": "Kernels develop and harden",
+            "tips": [
+              "Water stress reduces yield",
+              "Monitor for storage pests",
+              "Check moisture content"
+            ],
+            "keyActivities": ["Moisture check", "Pest control", "Harvest planning"],
+            "materials": ["Moisture meter", "Storage bags"],
+            "successIndicator": "Hard, dented kernels"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvest Timing",
+            "duration": "1 day",
+            "description": "Harvest at physiological maturity",
+            "tips": [
+              "Harvest when kernels dent",
+              "Moisture content 20-25%",
+              "Use sharp harvesting tools"
+            ],
+            "keyActivities": ["Field inspection", "Harvesting", "Transport"],
+            "materials": ["Harvesting knife", "Baskets", "Transport"],
+            "successIndicator": "Dry, hard kernels"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Drying",
+            "duration": "7-14 days",
+            "description": "Reduce moisture to safe storage levels",
+            "tips": [
+              "Dry to 12-13% moisture",
+              "Use clean drying surfaces",
+              "Turn regularly"
+            ],
+            "keyActivities": ["Spreading", "Turning", "Moisture testing"],
+            "materials": ["Drying mats", "Moisture meter"],
+            "successIndicator": "12% moisture content"
+          },
+          {
+            "id": 2,
+            "title": "Storage",
+            "duration": "3-6 months",
+            "description": "Store in clean, dry conditions",
+            "tips": [
+              "Use airtight containers",
+              "Add pest control measures",
+              "Monitor regularly"
+            ],
+            "keyActivities": ["Cleaning", "Bagging", "Storage"],
+            "materials": ["Storage bags", "Pesticides", "Containers"],
+            "successIndicator": "No pest damage"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "20°C - 30°C",
+        "rainfall": "600 mm - 1200 mm",
+        "soilType": "Deep, fertile loam soils",
+        "soilPH": "5.5 - 7.5",
+        "sunlight": "Full sun (6-8 hours daily)",
+        "altitude": "0-2000m above sea level"
+      },
+      "yield": {
+        "average": "2.5 - 4 tons/acre",
+        "optimal": "6 tons/acre",
+        "quality": "Large, well-filled kernels"
+      },
+      "pests": ["Stem borers", "Fall armyworm", "Storage weevils"],
+      "diseases": ["Maize streak virus", "Leaf blight", "Rust"],
+      "fertilizer": {
+        "basal": "DAP: 100kg/acre",
+        "topDressing": "CAN: 100kg/acre",
+        "micronutrients": ["Zinc", "Boron"]
+      },
+      "tags": ["Staple", "Drought-tolerant", "Cash-crop", "High-yield"],
+      "image": "https://placehold.co/600x400/FACC15/FFFFFF?text=Maize+Field"
+    },
+    {
+      "id": 2,
+      "name": "Coffee Arabica",
+      "category": "Cash Crop",
+      "icon": "☕",
+      "iconColor": "from-amber-900 to-brown-800",
+      "description": "High-value cash crop requiring specific microclimates, often grown on highlands.",
+      "season": "Year-round",
+      "duration": "9-12 months",
+      "difficulty": "High",
+      "successRate": "75%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Site Selection",
+            "duration": "14-21 days",
+            "description": "Choose high altitude with well-drained volcanic soils",
+            "tips": [
+              "Altitude 1200-2000m",
+              "Gentle slopes (10-30%)",
+              "Good shade cover"
+            ],
+            "keyActivities": ["Site survey", "Shade assessment", "Soil analysis"],
+            "materials": ["Compass", "Soil test kit", "GPS"],
+            "successIndicator": "Suitable microclimate"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Nursery Establishment",
+            "duration": "8-12 months",
+            "description": "Raise healthy seedlings in nursery",
+            "tips": [
+              "Use polythene tubes",
+              "Regular watering",
+              "Shade management"
+            ],
+            "keyActivities": ["Seed sowing", "Watering", "Shading"],
+            "materials": ["Nursery bed", "Polythene tubes", "Shade net"],
+            "successIndicator": "20-30cm tall seedlings"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "15°C - 25°C",
+        "rainfall": "1500 mm - 2000 mm",
+        "soilType": "Volcanic red earth",
+        "soilPH": "5.0 - 6.5",
+        "sunlight": "Partial shade",
+        "altitude": "1200-2000m above sea level"
+      },
+      "yield": {
+        "average": "1-2 kg/tree",
+        "optimal": "5 kg/tree",
+        "quality": "Grade AA beans"
+      },
+      "pests": ["Coffee berry borer", "Leaf miner", "Mealybugs"],
+      "diseases": ["Coffee leaf rust", "Berry disease", "Wilt"],
+      "fertilizer": {
+        "basal": "NPK 17:17:17",
+        "topDressing": "CAN",
+        "micronutrients": ["Boron", "Zinc"]
+      },
+      "tags": ["Export", "Shade-grown", "Premium", "High-value"],
+      "image": "https://placehold.co/600x400/7C2D12/FFFFFF?text=Coffee+Beans"
+    }
+  ]
+}

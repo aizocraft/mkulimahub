@@ -1,4 +1,5 @@
 Render
+sudo kill -9 $(sudo lsof -t -i:5000)
 
 https://mkulimahub.onrender.com - Link
 srv-d3tsnhre5dus7398aff0 - Service ID

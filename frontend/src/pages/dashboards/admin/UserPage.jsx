@@ -697,13 +697,13 @@ const UserPage = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           {[
-            { label: 'Total Users', value: stats.total, color: 'from-blue-500 to-blue-600', icon: '👥' },
-            { label: 'Active', value: stats.active, color: 'from-green-500 to-green-600', icon: '🟢' },
-            { label: 'Admins', value: stats.admins, color: 'from-purple-500 to-purple-600', icon: '👑' },
-            { label: 'Experts', value: stats.experts, color: 'from-blue-500 to-blue-600', icon: '💼' },
-            { label: 'Farmers', value: stats.farmers, color: 'from-green-500 to-green-600', icon: '👨‍🌾' },
-            { label: 'Verified', value: stats.verified, color: 'from-yellow-500 to-yellow-600', icon: '✅' },
-            { label: 'Online', value: stats.online, color: 'from-green-500 to-emerald-600', icon: '🌐' }
+            { label: 'Total Users', value: stats.total, color: 'from-blue-500 to-blue-600' },
+            { label: 'Active', value: stats.active, color: 'from-green-500 to-green-600' },
+            { label: 'Admins', value: stats.admins, color: 'from-purple-500 to-purple-600'},
+            { label: 'Experts', value: stats.experts, color: 'from-blue-500 to-blue-600'},
+            { label: 'Farmers', value: stats.farmers, color: 'from-green-500 to-green-600'},
+            { label: 'Verified', value: stats.verified, color: 'from-yellow-500 to-yellow-600' },
+            { label: 'Online', value: stats.online, color: 'from-green-500 to-emerald-600'}
           ].map((stat, index) => (
             <div 
               key={index} 

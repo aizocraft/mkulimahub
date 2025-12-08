@@ -21,6 +21,7 @@ import ExpertDashboard from './pages/dashboards/ExpertDashboard';
 import UserPage from './pages/dashboards/admin/UserPage.jsx';
 import Analytics from './pages/dashboards/admin/Analytics.jsx';
 import ExpertsPage from './pages/dashboards/farmer/ExpertsPage.jsx';
+import CropsPage from './pages/CropsPage'; 
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 
@@ -56,6 +57,12 @@ export default function App() {
             <Route path="/contact" element={
               <PageLayout>
                 <ContactPage />
+              </PageLayout>
+            } />
+             
+            <Route path="/crops" element={
+              <PageLayout>
+                <CropsPage />
               </PageLayout>
             } />
             <Route path="/dashboard" element={
