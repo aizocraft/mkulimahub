@@ -1,3 +1,4 @@
+// api.js - UPDATED
 import axios from 'axios';
 
 // Base URL from environment or fallback
@@ -49,8 +50,11 @@ export const authAPI = {
   deactivateAccount: () => api.put('/auth/deactivate'),
   updateMyRole: (roleData) => api.put('/auth/profile/role', roleData),
 
-  // Google OAuth
+  // Google OAuth - ADD THIS METHOD
   getGoogleAuthUrl: () => `${API_BASE_URL}/auth/google`,
+  
+  // ADD THIS NEW METHOD FOR TOKEN EXCHANGE
+  exchangeToken: (shortToken) => api.post('/auth/exchange-token', { token: shortToken }),
 };
 
 // User Management API

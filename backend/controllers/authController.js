@@ -730,86 +730,81 @@ exports.googleAuth = passport.authenticate('google', {
   scope: ['profile', 'email']
 });
 
+// Google OAuth callback - ULTRA MINIMAL
 exports.googleCallback = (req, res, next) => {
-  passport.authenticate('google', { session: false }, async (err, user, info) => {
+  passport.authenticate('google', { session: false }, async (err, user) => {
     try {
-      if (err) {
-        logger.error('GOOGLE_OAUTH_ERROR', {
-          errorMessage: err.message,
-          errorType: err.name,
-          ipAddress: req.ip,
-          stackTrace: err.stack,
-          operation: 'google_oauth',
-          timestamp: new Date().toISOString()
-        });
-        return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
-      }
-      
-      if (!user) {
-        logger.warn('GOOGLE_OAUTH_FAILED', {
-          ipAddress: req.ip,
-          failureReason: 'no_user_returned',
-          operation: 'google_oauth'
-        });
+      if (err || !user) {
+        console.error('Google OAuth error:', err);
         return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
       }
 
-      // Check if this is a new user
-      const isNewUser = user.isNewUser === true;
-
-      // Generate JWT token
-      const token = jwt.sign(
-        { 
-          id: user._id, 
-          role: user.role,
-          email: user.email
-        },
+      // Generate SHORT token (use user ID only)
+      const shortToken = jwt.sign(
+        { id: user._id }, // Only ID, nothing else
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: '1h' } // Short expiration
       );
 
-      // Log successful Google OAuth with comprehensive details
-      logger.info('GOOGLE_OAUTH_SUCCESS', {
-        userId: user._id,
-        userEmail: user.email,
-        userRole: user.role,
-        ipAddress: req.ip,
-        isNewUser: isNewUser,
-        oauthTimestamp: new Date().toISOString(),
-        accountStatus: user.isActive ? 'active' : 'inactive',
-        verificationStatus: user.isVerified ? 'verified' : 'unverified',
-        profileData: {
-          hasProfilePicture: !!user.profilePicture,
-          hasBio: !!user.bio,
-          expertiseCount: user.expertise?.length || 0,
-          mainCropsCount: user.mainCrops?.length || 0
-        },
-        operation: 'google_oauth'
-      });
-
-      // Clear the new user flag after first login
-      if (isNewUser) {
-        user.isNewUser = false;
-        await user.save();
-      }
-
-      // Redirect to frontend with token and user info
-      const userResponse = generateUserResponse(user);
-      const redirectUrl = `${process.env.CLIENT_URL}/auth/success?token=${token}&user=${encodeURIComponent(JSON.stringify(userResponse))}&isNewUser=${isNewUser}`;
+      console.log('Token length:', shortToken.length);
       
-      res.redirect(redirectUrl);
+      // Redirect with ONLY the short token
+      res.redirect(`${process.env.CLIENT_URL}/auth/success?t=${shortToken}`);
+      
     } catch (error) {
-      logger.error('GOOGLE_CALLBACK_ERROR', {
-        errorMessage: error.message,
-        errorType: error.name,
-        ipAddress: req.ip,
-        stackTrace: error.stack,
-        operation: 'google_oauth_callback',
-        timestamp: new Date().toISOString()
-      });
+      console.error('Google callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
     }
   })(req, res, next);
+};
+
+// Exchange short token for full token and user data
+exports.exchangeToken = async (req, res, next) => {
+  try {
+    const { token: shortToken } = req.body;
+
+    if (!shortToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token is required'
+      });
+    }
+
+    // Verify short token
+    const decoded = jwt.verify(shortToken, process.env.JWT_SECRET);
+    
+    // Get user
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Generate full token
+    const fullToken = jwt.sign(
+      { 
+        id: user._id, 
+        role: user.role,
+        email: user.email
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.status(200).json({
+      success: true,
+      token: fullToken,
+      user: generateUserResponse(user)
+    });
+  } catch (error) {
+    console.error('Token exchange error:', error);
+    res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token'
+    });
+  }
 };
 
 // Check if email exists for Google Auth

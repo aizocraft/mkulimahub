@@ -1,45 +1,112 @@
+// GoogleAuthSuccess.jsx - UPDATED with axios
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { CheckCircle, Loader } from 'lucide-react';
+import { authAPI } from '../api'; // Import the API
 
 const GoogleAuthSuccess = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const handleAuthSuccess = () => {
+    const handleAuthSuccess = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-      const userParam = urlParams.get('user');
+      const shortToken = urlParams.get('t'); // Changed from 'token' to 't'
 
-      if (token && userParam) {
+      console.log('🔍 Google Auth Success - Short token received:', shortToken ? 'Yes' : 'No');
+
+      if (shortToken) {
         try {
-          const userData = JSON.parse(decodeURIComponent(userParam));
+          console.log('🔄 Exchanging short token for full token...');
           
-          login(userData, token);
-          toast.success(`Welcome ${userData.name}!`);
+          // Use the authAPI method instead of fetch
+          const response = await authAPI.exchangeToken(shortToken);
           
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'AUTH_SUCCESS',
-              token,
-              user: userData
-            }, window.location.origin);
+          if (response.data.success) {
+            const { token, user } = response.data;
             
-            setTimeout(() => window.close(), 500);
+            console.log('✅ Token exchange successful for user:', user.email);
+            
+            // Login user
+            login(user, token);
+            toast.success(`Welcome ${user.name}!`);
+            
+            // Notify opener window if this is a popup
+            if (window.opener) {
+              console.log('📤 Sending success message to opener...');
+              window.opener.postMessage({
+                type: 'AUTH_SUCCESS',
+                token,
+                user
+              }, window.location.origin);
+              
+              setTimeout(() => window.close(), 500);
+            } else {
+              // Navigate based on role
+              navigateToDashboard(user);
+            }
           } else {
-            navigateToDashboard(userData);
+            throw new Error(response.data.message || 'Failed to exchange token');
           }
         } catch (error) {
-          console.error('Error processing auth success:', error);
-          toast.error('Authentication failed');
-          setTimeout(() => window.close(), 2000);
+          console.error('❌ Error processing auth success:', error);
+          
+          // Try alternative: direct fetch
+          console.log('🔄 Trying direct fetch as fallback...');
+          try {
+            const response = await fetch('http://localhost:5000/api/auth/exchange-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ token: shortToken })
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              const { token, user } = data;
+              
+              login(user, token);
+              toast.success(`Welcome ${user.name}!`);
+              
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'AUTH_SUCCESS',
+                  token,
+                  user
+                }, window.location.origin);
+                setTimeout(() => window.close(), 500);
+              } else {
+                navigateToDashboard(user);
+              }
+            } else {
+              throw new Error('Direct fetch also failed');
+            }
+          } catch (fallbackError) {
+            console.error('❌ Fallback also failed:', fallbackError);
+            toast.error('Authentication failed. Please try logging in again.');
+            setTimeout(() => {
+              if (window.opener) {
+                window.close();
+              } else {
+                navigate('/login');
+              }
+            }, 3000);
+          }
         }
       } else {
-        toast.error('Authentication failed');
-        setTimeout(() => window.close(), 2000);
+        console.error('❌ No short token found in URL');
+        toast.error('Authentication failed: No authentication token received');
+        
+        setTimeout(() => {
+          if (window.opener) {
+            window.close();
+          } else {
+            navigate('/login');
+          }
+        }, 2000);
       }
     };
 
@@ -47,6 +114,8 @@ const GoogleAuthSuccess = () => {
   }, [login, navigate]);
 
   const navigateToDashboard = (user) => {
+    console.log('📍 Navigating to dashboard for role:', user.role);
+    
     setTimeout(() => {
       if (user.role === 'admin') {
         navigate('/dashboard/admin');
@@ -72,12 +141,16 @@ const GoogleAuthSuccess = () => {
         </h2>
         
         <p className="text-gray-600 mb-2">
-          You have been successfully authenticated.
+          Finalizing authentication...
         </p>
         
         <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-6">
           <Loader className="w-4 h-4 animate-spin" />
-          <span>Redirecting...</span>
+          <span>Please wait...</span>
+        </div>
+        
+        <div className="text-xs text-gray-400">
+          <p>Check browser console (F12) for details</p>
         </div>
       </div>
     </div>
