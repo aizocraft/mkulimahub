@@ -1,0 +1,694 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { forumAPI } from '../../api';
+import {
+  ArrowLeft,
+  Plus,
+  X,
+  AlertCircle,
+  CheckCircle,
+  Loader2
+} from 'lucide-react';
+
+const CreatePostPage = () => {
+  const { user, isAuthenticated } = useAuth();
+  const { theme } = useTheme();
+  const navigate = useNavigate();
+  
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [debugInfo, setDebugInfo] = useState('');
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    category: '',
+    tags: []
+  });
+  
+  const [tagInput, setTagInput] = useState('');
+
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+    
+    fetchCategories();
+  }, [isAuthenticated, navigate]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await forumAPI.getCategories();
+      setCategories(response.data.categories || []);
+      console.log('Categories loaded:', response.data.categories);
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+      setError('Failed to load categories');
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAddTag = () => {
+    const tag = tagInput.trim();
+    if (tag && !formData.tags.includes(tag) && formData.tags.length < 10) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tag]
+      }));
+      setTagInput('');
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validation
+    if (!formData.title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    
+    if (formData.title.trim().length < 5) {
+      setError('Title must be at least 5 characters');
+      return;
+    }
+    
+    if (!formData.content.trim()) {
+      setError('Content is required');
+      return;
+    }
+    
+    if (formData.content.trim().length < 10) {
+      setError('Content must be at least 10 characters');
+      return;
+    }
+    
+    if (!formData.category) {
+      setError('Please select a category');
+      return;
+    }
+    
+    // Validate category exists
+    const selectedCategory = categories.find(c => c._id === formData.category);
+    if (!selectedCategory) {
+      setError('Selected category not found. Please refresh the page and try again.');
+      return;
+    }
+    
+    // Check category permissions
+    if (selectedCategory.expertOnly && user?.role !== 'expert' && user?.role !== 'admin') {
+      setError('This category is for experts only. Please select a different category.');
+      return;
+    }
+    
+    if (!selectedCategory.isActive) {
+      setError('This category is not active. Please select a different category.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+    setDebugInfo('');
+    
+    try {
+      // Create a clean object to send - Use 'category' (not 'categoryId')
+      const postData = {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        category: formData.category.trim(), // CORRECT FIELD NAME
+        tags: formData.tags.map(tag => tag.trim().toLowerCase())
+      };
+      
+      // Debug information
+      console.log('=== DEBUG: Form Submission ===');
+      console.log('Post Data:', postData);
+      console.log('Field names:', Object.keys(postData));
+      console.log('Selected Category:', selectedCategory);
+      console.log('User Role:', user?.role);
+      console.log('=============================');
+      
+      setDebugInfo(`
+        Sending data to server:
+        - Title: ${postData.title}
+        - Content length: ${postData.content.length} characters
+        - Category: ${postData.category} (field name: "category")
+        - Category Name: ${selectedCategory?.name || 'Unknown'}
+        - User Role: ${user?.role}
+        - Tags: ${postData.tags.join(', ') || 'None'}
+        - Full Payload: ${JSON.stringify(postData, null, 2)}
+      `);
+      
+      const response = await forumAPI.createPost(postData);
+      
+      console.log('=== DEBUG: API Response ===');
+      console.log('Response:', response);
+      console.log('Response Data:', response.data);
+      console.log('==========================');
+      
+      if (response.data.requiresReview) {
+        setSuccess('Post created successfully! It will be reviewed by an expert before appearing publicly.');
+      } else {
+        setSuccess('Post created successfully!');
+      }
+      
+      // Reset form
+      setFormData({
+        title: '',
+        content: '',
+        category: '',
+        tags: []
+      });
+      
+      setTimeout(() => {
+        navigate(`/forum/posts/${response.data.post?.id || response.data.post?._id}`);
+      }, 2000);
+      
+    } catch (err) {
+      console.error('=== DEBUG: Full Error Details ===');
+      console.error('Error:', err);
+      console.error('Error Message:', err.message);
+      console.error('Response Data:', err.response?.data);
+      console.error('Response Status:', err.response?.status);
+      console.error('Request Headers:', err.config?.headers);
+      console.error('Request Data:', err.config?.data);
+      console.error('==============================');
+      
+      let errorMessage = 'Failed to create post';
+      let detailedError = '';
+      
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        console.log('Error Data Structure:', errorData);
+        
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.join(', ');
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+          // Provide more specific error messages
+          if (errorData.message.includes('category') || errorData.message.includes('Category')) {
+            if (errorData.message.includes('required')) {
+              errorMessage = 'Category is required. Please select a valid category.';
+            } else if (errorData.message.includes('not found')) {
+              errorMessage = 'Selected category not found. Please refresh the page.';
+            } else if (errorData.message.includes('invalid')) {
+              errorMessage = 'Invalid category selected. Please choose a different category.';
+            }
+          }
+        } else if (errorData.validationErrors) {
+          errorMessage = Object.entries(errorData.validationErrors)
+            .map(([field, message]) => `${field}: ${message}`)
+            .join(', ');
+        }
+        
+        detailedError = JSON.stringify(errorData, null, 2);
+      } else if (!err.response) {
+        errorMessage = 'Network error. Please check your connection.';
+        detailedError = 'No response received from server';
+      } else if (err.response?.status === 400) {
+        errorMessage = 'Bad request. Please check your input.';
+      } else if (err.response?.status === 403) {
+        errorMessage = 'You do not have permission to create this post.';
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Category not found. Please refresh the page and try again.';
+      }
+      
+      setError(errorMessage);
+      setDebugInfo(prev => `
+        ${prev}
+        
+        Error Details:
+        - Status: ${err.response?.status || 'No response'}
+        - Message: ${errorMessage}
+        - Detailed: ${detailedError}
+        
+        Category Debug:
+        1. Selected Category ID: ${formData.category}
+        2. Category Exists in List: ${categories.find(c => c._id === formData.category) ? 'Yes' : 'No'}
+        3. Category Active: ${categories.find(c => c._id === formData.category)?.isActive}
+        4. Category Expert Only: ${categories.find(c => c._id === formData.category)?.expertOnly}
+        5. User Role: ${user?.role}
+        6. Can Post: ${!(categories.find(c => c._id === formData.category)?.expertOnly) || user?.role === 'expert' || user?.role === 'admin'}
+        
+        What we sent:
+        - Field names: ${Object.keys(err.config?.data ? JSON.parse(err.config.data) : {})}
+        - Full payload: ${err.config?.data}
+      `);
+      
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Check if user is logged in
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate('/login', { state: { from: '/forum/create' } });
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Test API function - FIXED
+  const testAPICall = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      const testData = {
+        title: 'Test Post - ' + new Date().toISOString(),
+        content: 'This is a test post for debugging purposes.',
+        category: formData.category || categories[0]?._id, // FIXED: 'category' not 'categoryId'
+        tags: ['test', 'debug']
+      };
+      
+      console.log('Testing API call with:', testData);
+      console.log('Field names:', Object.keys(testData));
+      const response = await forumAPI.createPost(testData);
+      console.log('Test response:', response.data);
+      setSuccess('API test successful! Post created: ' + response.data.post?.title);
+    } catch (error) {
+      console.error('Test API error:', error.response?.data);
+      setError(`Test failed: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isAuthenticated()) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+      }`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen transition-colors duration-300 ${
+      theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
+    }`}>
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/forum')}
+          className={`inline-flex items-center mb-6 transition-colors duration-200 ${
+            theme === 'dark' 
+              ? 'text-gray-400 hover:text-gray-300' 
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back to Forum
+        </button>
+
+        {/* Form */}
+        <div className={`rounded-lg shadow-sm border p-6 transition-colors duration-300 ${
+          theme === 'dark' 
+            ? 'bg-gray-800 border-gray-700' 
+            : 'bg-white border-gray-200'
+        }`}>
+          <h1 className={`text-2xl font-bold mb-2 ${
+            theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+          }`}>Create New Post</h1>
+          <p className={`mb-6 ${
+            theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+          }`}>
+            Share your knowledge or ask questions to the community.
+            {user?.role === 'farmer' && ' Your post will be reviewed by experts before appearing publicly.'}
+          </p>
+          
+          {/* Debug Panel */}
+          <div className={`mb-6 p-4 rounded-lg ${
+            theme === 'dark' 
+              ? 'bg-gray-900 border-gray-700' 
+              : 'bg-gray-50 border-gray-200'
+          } border`}>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className={`text-sm font-medium ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>Debug Information</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={testAPICall}
+                  disabled={isLoading}
+                  className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
+                >
+                  Test API
+                </button>
+                <button
+                  onClick={() => setDebugInfo('')}
+                  className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            {debugInfo ? (
+              <pre className={`text-xs font-mono whitespace-pre-wrap max-h-48 overflow-auto p-2 rounded ${
+                theme === 'dark' 
+                  ? 'bg-gray-800 text-gray-300' 
+                  : 'bg-white text-gray-700'
+              }`}>
+                {debugInfo}
+              </pre>
+            ) : (
+              <p className={`text-xs ${
+                theme === 'dark' ? 'text-gray-500' : 'text-gray-600'
+              }`}>
+                Debug information will appear here when you try to submit
+              </p>
+            )}
+          </div>
+          
+          {/* Error Alert */}
+          {error && (
+            <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
+              theme === 'dark' 
+                ? 'bg-red-900/20 border-red-800' 
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className={`font-medium ${theme === 'dark' ? 'text-red-300' : 'text-red-700'}`}>
+                    Error creating post
+                  </p>
+                  <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
+                    {error}
+                  </p>
+                  <div className="mt-2 space-x-2">
+                    <button
+                      onClick={() => fetchCategories()}
+                      className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                    >
+                      Refresh Categories
+                    </button>
+                    <button
+                      onClick={() => console.log('Manual test:', {
+                        formData,
+                        categories,
+                        selectedCategory: categories.find(c => c._id === formData.category),
+                        payload: {
+                          title: formData.title.trim(),
+                          content: formData.content.trim(),
+                          category: formData.category.trim(),
+                          tags: formData.tags.map(tag => tag.trim().toLowerCase())
+                        }
+                      })}
+                      className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                    >
+                      Log to Console
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Success Alert */}
+          {success && (
+            <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
+              theme === 'dark' 
+                ? 'bg-green-900/20 border-green-800' 
+                : 'bg-green-50 border-green-200'
+            }`}>
+              <div className="flex items-center">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                <p className={theme === 'dark' ? 'text-green-300' : 'text-green-700'}>{success}</p>
+              </div>
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Title */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Title *
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300'
+                } border`}
+                placeholder="Enter a descriptive title for your post"
+                required
+                minLength="5"
+                maxLength="200"
+              />
+              <div className="flex justify-between mt-1">
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {formData.title.length < 5 
+                    ? `Need ${5 - formData.title.length} more characters`
+                    : '✓ Good'
+                  }
+                </span>
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {formData.title.length}/200
+                </span>
+              </div>
+            </div>
+            
+            {/* Category */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Category *
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                className={`w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-300'
+                } border`}
+                required
+              >
+                <option value="">-- Select a category --</option>
+                {categories.map((category) => {
+                  const isDisabled = category.expertOnly && user?.role !== 'expert' && user?.role !== 'admin';
+                  return (
+                    <option 
+                      key={category._id} 
+                      value={category._id}
+                      disabled={isDisabled}
+                      className={isDisabled ? 'text-gray-400' : ''}
+                    >
+                      {category.name}
+                      {category.expertOnly && ' (Experts Only)'}
+                      {!category.isActive && ' (Inactive)'}
+                    </option>
+                  );
+                })}
+              </select>
+              {formData.category && (
+                <div className="mt-2">
+                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Selected: {categories.find(c => c._id === formData.category)?.name || 'Unknown category'}
+                    {categories.find(c => c._id === formData.category)?.expertOnly && 
+                      (user?.role !== 'expert' && user?.role !== 'admin') && (
+                        <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                          ⚠️ Requires expert permissions
+                        </span>
+                      )}
+                    {!categories.find(c => c._id === formData.category)?.isActive && (
+                      <span className="ml-2 text-red-600 dark:text-red-400">
+                        ⚠️ Category is inactive
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Tags */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Tags (optional)
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddTag();
+                    }
+                  }}
+                  className={`flex-1 px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300'
+                  } border`}
+                  placeholder="Add a tag and press Enter"
+                  maxLength="50"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  disabled={!tagInput.trim() || formData.tags.length >= 10}
+                  className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                    theme === 'dark' 
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50' 
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
+                  }`}
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {formData.tags.map((tag, index) => (
+                    <div
+                      key={`${tag}-${index}`}
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+                        theme === 'dark' 
+                          ? 'bg-green-900 text-green-300' 
+                          : 'bg-green-100 text-green-800'
+                      }`}
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className={`ml-2 transition-colors duration-200 ${
+                          theme === 'dark' 
+                            ? 'text-green-400 hover:text-green-300' 
+                            : 'text-green-800 hover:text-green-900'
+                        }`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  Add relevant tags (optional)
+                </span>
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {formData.tags.length}/10 tags
+                </span>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div>
+              <label className={`block text-sm font-medium mb-2 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                Content *
+              </label>
+              <textarea
+                name="content"
+                value={formData.content}
+                onChange={handleInputChange}
+                rows="10"
+                className={`w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
+                  theme === 'dark' 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300'
+                } border`}
+                placeholder="Share your knowledge, ask questions, or discuss farming topics..."
+                required
+                minLength="10"
+                maxLength="10000"
+              />
+              <div className="flex justify-between mt-1">
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {formData.content.length < 10 
+                    ? `Need ${10 - formData.content.length} more characters`
+                    : '✓ Good'
+                  }
+                </span>
+                <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
+                  {formData.content.length}/10000
+                </span>
+              </div>
+            </div>
+            
+            {/* User Info */}
+            <div className={`p-3 rounded-lg ${
+              theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
+            }`}>
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+                <span className="font-medium">Posting as:</span> {user?.name} ({user?.role})
+                {user?.role === 'farmer' && (
+                  <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                    ⓘ Your posts will be reviewed by experts before appearing publicly
+                  </span>
+                )}
+              </p>
+            </div>
+            
+            {/* Submit Buttons */}
+            <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                type="button"
+                onClick={() => navigate('/forum')}
+                disabled={isLoading}
+                className={`px-6 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 ${
+                  theme === 'dark' 
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                } border`}
+              >
+                Cancel
+              </button>
+              
+              <button
+                type="submit"
+                disabled={isLoading || !formData.category || formData.title.trim().length < 5 || formData.content.trim().length < 10}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Post'
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CreatePostPage;

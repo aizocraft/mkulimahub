@@ -15,6 +15,11 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage'; 
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import ForumPages from './pages/ForumPages';
+import CreatePostPage from './pages/forum/CreatePostPage';
+import PostDetailPage from './pages/forum/PostDetailPage';
+import EditPostPage from './pages/forum/EditPostPage';
+
 import AdminDashboard from './pages/dashboards/AdminDashboard';
 import FarmerDashboard from './pages/dashboards/FarmerDashboard';
 import ExpertDashboard from './pages/dashboards/ExpertDashboard';
@@ -95,6 +100,33 @@ export default function App() {
                 <SettingsPage />
               </PageLayout>
             } />
+
+
+ {/* Forum Routes */}
+            <Route path="/forum" element={
+              <PageLayout>
+                <ForumPages />
+              </PageLayout>
+            } />
+            <Route path="/forum/create" element={
+              <PageLayout>
+                <CreatePostPage />
+              </PageLayout>
+            } />
+            <Route path="/forum/post/:id" element={
+              <PageLayout>
+                <PostDetailPage />
+              </PageLayout>
+            } />
+            <Route path="/forum/edit/:id" element={
+              <PageLayout>
+                <EditPostPage />
+              </PageLayout>
+            } />
+
+
+
+
             <Route path="/users" element={
               <PageLayout>
                 <UserPage />

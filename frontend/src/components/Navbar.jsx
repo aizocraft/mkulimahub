@@ -10,7 +10,7 @@ import {
   Settings, 
   LogOut, 
   LayoutDashboard,
-  MessageCircle,
+  MessageCircle, // Changed: Added MessageCircle icon
   HelpCircle,
   Sparkles,
   Crop,
@@ -89,11 +89,12 @@ const Navbar = () => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&bold=true&size=128`;
   };
 
-  // Base navigation items for all users
+  // Base navigation items for all users 
   const baseNavigationItems = [
     { path: '/', label: 'Home', icon: Home },
     { path: '/about', label: 'About', icon: Info },
     { path: '/contact', label: 'Contact', icon: Contact },
+    { path: '/forum', label: 'Forum', icon: MessageCircle }, 
   ];
 
   // Role-specific navigation items
@@ -457,6 +458,14 @@ const Navbar = () => {
 
                         {/* Menu Items */}
                         <div className="p-2">
+                          <Link
+                            to="/forum" // Added Forum link to dropdown
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors duration-200"
+                          >
+                            <MessageCircle size={18} />
+                            <span className="font-medium">Forum</span>
+                          </Link>
                           <Link
                             to="/settings"
                             onClick={() => setIsDropdownOpen(false)}
