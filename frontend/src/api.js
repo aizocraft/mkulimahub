@@ -1,4 +1,4 @@
-// api.js - UPDATED WITH FORUM ENDPOINTS
+// api.js - UPDATED WITH BOOKING ENDPOINTS
 import axios from 'axios';
 
 // Base URL from environment or fallback
@@ -28,15 +28,11 @@ api.interceptors.request.use(
 
 // Response interceptor to handle unauthorized access
 api.interceptors.response.use(
-  (response) => {
-    // Add custom response handling if needed
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Only redirect if not already on login page
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
@@ -76,6 +72,24 @@ export const userAPI = {
   // Public access
   getExperts: (params = {}) => api.get('/users/experts', { params }),
   getFarmers: (params = {}) => api.get('/users/farmers', { params }),
+};
+
+// Booking & Consultation API
+export const bookingAPI = {
+  // Direct booking 
+  bookConsultation: (consultationData) => api.post('/booking/book', consultationData),
+
+  // Consultation management
+  getExpertConsultations: (params = {}) => api.get('/booking/expert/my', { params }),
+  getFarmerConsultations: (params = {}) => api.get('/booking/farmer/my', { params }),
+  acceptConsultation: (consultationId) => api.patch(`/booking/${consultationId}/accept`),
+  rejectConsultation: (consultationId, reason) => api.patch(`/booking/${consultationId}/reject`, { reason }),
+  cancelConsultation: (consultationId, reason) => api.patch(`/booking/${consultationId}/cancel`, { reason }),
+  completeConsultation: (consultationId) => api.patch(`/booking/${consultationId}/complete`),
+  addReview: (consultationId, reviewData) => api.post(`/booking/${consultationId}/review`, reviewData),
+
+  // Quick booking functions
+  getExpertDetailsForBooking: (expertId) => api.get(`/users/${expertId}`),
 };
 
 // Forum API
@@ -177,7 +191,101 @@ export const apiUtils = {
     status: response.status,
   }),
   
-  // Forum-specific utilities
+  // Booking utilities
+  booking: {
+    // Format time slots for display
+    formatTimeSlot: (slot) => {
+      if (!slot.startTime) return '';
+      const start = new Date(`2000-01-01T${slot.startTime}`);
+      const end = new Date(start.getTime() + (slot.duration || 60) * 60000);
+      
+      return `${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    },
+    
+    // Format date for display
+    formatBookingDate: (dateString) => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      if (date.toDateString() === now.toDateString()) {
+        return 'Today';
+      } else if (date.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow';
+      } else {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+    },
+    
+    // Calculate consultation end time
+    calculateEndTime: (startTime, duration) => {
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const start = new Date();
+      start.setHours(hours, minutes, 0, 0);
+      const end = new Date(start.getTime() + duration * 60000);
+      
+      return end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    },
+    
+    // Validate booking data
+    validateBooking: (bookingData) => {
+      const errors = [];
+      
+      if (!bookingData.expertId) errors.push('Expert is required');
+      if (!bookingData.date) errors.push('Date is required');
+      if (!bookingData.startTime) errors.push('Time is required');
+      if (!bookingData.duration || bookingData.duration < 15) 
+        errors.push('Duration must be at least 15 minutes');
+      if (!bookingData.topic || bookingData.topic.trim().length < 5)
+        errors.push('Topic must be at least 5 characters');
+      
+      return errors;
+    },
+    
+    // Get status color
+    getStatusColor: (status) => {
+      const colors = {
+        pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+        confirmed: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+        accepted: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+        rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+        completed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
+        cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+      };
+      return colors[status] || colors.pending;
+    },
+    
+    // Get status icon
+    getStatusIcon: (status) => {
+      const icons = {
+        pending: '⏳',
+        confirmed: '✅',
+        accepted: '👍',
+        rejected: '❌',
+        completed: '🏁',
+        cancelled: '🚫',
+      };
+      return icons[status] || '⏳';
+    },
+    
+    // Format consultation for display
+    formatConsultation: (consultation) => {
+      return {
+        ...consultation,
+        formattedDate: apiUtils.booking.formatBookingDate(consultation.bookingDate),
+        formattedTime: `${consultation.startTime} - ${apiUtils.booking.calculateEndTime(consultation.startTime, consultation.duration)}`,
+        statusColor: apiUtils.booking.getStatusColor(consultation.status),
+        statusIcon: apiUtils.booking.getStatusIcon(consultation.status),
+      };
+    },
+  },
+  
+  // Forum utilities (existing)
   forum: {
     formatPostParams: (filters) => {
       const params = {};
@@ -303,5 +411,6 @@ export default api;
 export const {
   handleError,
   handleSuccess,
+  booking,
   forum,
 } = apiUtils;

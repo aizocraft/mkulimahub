@@ -6,7 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import Overview from './expert/Overview';
 import Consultations from './expert/Consultations';
 import Questions from './expert/Questions';
-import Schedule from './expert/Schedule';
+
 import { 
   BarChart3, 
   MessageCircle, 
@@ -57,8 +57,7 @@ const ExpertDashboard = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'consultations', label: 'Consultations', icon: MessageCircle },
-    { id: 'questions', label: 'Questions', icon: Users },
-    { id: 'schedule', label: 'Schedule', icon: Calendar }
+    { id: 'questions', label: 'Questions', icon: Users }
   ];
 
   // Function to get verification display text
@@ -250,7 +249,7 @@ const ExpertDashboard = () => {
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'consultations' && <Consultations />}
           {activeTab === 'questions' && <Questions />}
-          {activeTab === 'schedule' && <Schedule />}
+       
         </div>
 
         {/* Expert Stats Summary */}

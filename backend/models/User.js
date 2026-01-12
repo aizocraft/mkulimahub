@@ -1,3 +1,4 @@
+// models/User.js - UPDATED
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
@@ -16,7 +17,7 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
-     password: {
+    password: {
       type: String,
       required: function() {
         return !this.googleId; // Password is required only for non-Google users
@@ -67,9 +68,9 @@ const userSchema = new mongoose.Schema(
       zipCode: String
     },
     isNewUser: {
-  type: Boolean,
-  default: false
-},
+      type: Boolean,
+      default: false
+    },
     // Expert-specific fields
     expertise: {
       type: [String],
@@ -81,7 +82,8 @@ const userSchema = new mongoose.Schema(
     },
     hourlyRate: {
       type: Number,
-      default: 0
+      default: 0,
+      min: 0
     },
     availability: {
       type: String,
@@ -133,7 +135,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-
 // Add index for Google ID
 userSchema.index({ googleId: 1 });
 
@@ -141,7 +142,6 @@ userSchema.index({ googleId: 1 });
 userSchema.virtual('isGoogleAuth').get(function() {
   return !!this.googleId;
 });
-
 
 // Virtual for full address
 userSchema.virtual('fullAddress').get(function() {
@@ -170,6 +170,11 @@ userSchema.methods.isFarmer = function() {
 // Method to check if user is admin
 userSchema.methods.isAdmin = function() {
   return this.role === 'admin';
+};
+
+// Method to check if consultation is free
+userSchema.methods.isFreeConsultation = function() {
+  return this.hourlyRate === 0;
 };
 
 module.exports = mongoose.model('User', userSchema);

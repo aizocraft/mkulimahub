@@ -116,8 +116,7 @@ const AboutPage = () => {
             animate={heroInView ? "visible" : "hidden"}
             className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
           >
-            Bridging the gap between traditional farming wisdom and cutting-edge technology
-            to empower farmers with expert knowledge and sustainable solutions.
+           
           </motion.p>
         </div>
       </section>
@@ -159,8 +158,8 @@ const AboutPage = () => {
                   <h3 className="text-xl font-bold">Vision 2030</h3>
                 </div>
                 <p className="text-emerald-50 text-lg">
-                  Empowering <strong>1 million African farmers</strong> with digital agricultural expertise
-                  to transform food systems and create sustainable livelihoods.
+                  Empowering <strong>African farmers</strong> with digital agricultural expertise
+                  to create sustainable livelihoods.
                 </p>
               </motion.div>
 
@@ -174,7 +173,7 @@ const AboutPage = () => {
                     <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/40 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto mb-3">
                       {stat.icon}
                     </div>
-                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{stat.number}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white"></div>
                     <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">{stat.label}</div>
                   </motion.div>
                 ))}

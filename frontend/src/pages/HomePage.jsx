@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import './HomePage.css';
 import { 
   Sprout, 
   Users, 
@@ -490,49 +491,7 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* Add Custom Animations */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        @keyframes expand {
-          0% { width: 0; }
-          100% { width: 100%; }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        .animate-gradient {
-          animation: gradient 3s ease infinite;
-          background-size: 300% 300%;
-        }
-        .animate-expand {
-          animation: expand 1s ease-out forwards;
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.8s ease-out forwards;
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 2s ease-in-out infinite;
-        }
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(20px);
-        }
-      `}</style>
+    
     </div>
   );
 };
