@@ -1,3 +1,4 @@
+// src/pages/dashboards/FarmerDashboard.jsx
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -83,10 +84,33 @@ const FarmerDashboard = () => {
     return county && county !== 'Not specified' ? county : 'County not set';
   };
 
+  // Debug function to log tab clicks
+  const handleTabClick = (tabId) => {
+    console.log('Tab clicked:', tabId);
+    setActiveTab(tabId);
+  };
+
+  // Function to render active tab content
+  const renderActiveTab = () => {
+    console.log('Rendering tab:', activeTab);
+    switch (activeTab) {
+      case 'overview':
+        return <Overview />;
+      case 'crops':
+        return <MyCrops />;
+      case 'consultations':
+        return <Consultations />;
+      case 'knowledge':
+        return <Knowledge />;
+      default:
+        return <Overview />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-4 space-y-4 lg:space-y-0">
             {/* Left Section - Title and User Info */}
@@ -160,19 +184,20 @@ const FarmerDashboard = () => {
 
         {/* Navigation Tabs */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-1 overflow-x-auto scrollbar-hide">
+          <nav className="flex space-x-1 overflow-x-auto scrollbar-hide">
             {navigationTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg border-b-2 transition-all duration-200 flex-shrink-0 min-w-0 group ${
+                  onClick={() => handleTabClick(tab.id)}
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg border-b-2 transition-all duration-200 flex-shrink-0 min-w-0 group relative z-20 ${
                     isActive
                       ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-500 text-emerald-700 dark:text-emerald-300 shadow-sm'
                       : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700/50'
                   }`}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon 
                     size={18} 
@@ -187,17 +212,14 @@ const FarmerDashboard = () => {
                 </button>
               );
             })}
-          </div>
+          </nav>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {activeTab === 'overview' && <Overview />}
-          {activeTab === 'crops' && <MyCrops />}
-          {activeTab === 'consultations' && <Consultations />}
-          {activeTab === 'knowledge' && <Knowledge />}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden min-h-[500px]">
+          {renderActiveTab()}
         </div>
 
         {/* Farmer Stats Summary */}
@@ -260,6 +282,11 @@ const FarmerDashboard = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Debug Info (remove in production) */}
+      <div className="fixed bottom-4 right-4 bg-black/80 text-white p-2 rounded text-xs opacity-70">
+        Active Tab: {activeTab}
       </div>
     </div>
   );
