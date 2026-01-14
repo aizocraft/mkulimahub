@@ -289,10 +289,15 @@ const HomePage = () => {
               )}
             </div>
 
-            {/* Scroll Indicator */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-              <ChevronDown className="w-6 h-6 text-emerald-500 dark:text-emerald-400 opacity-60" />
-            </div>
+           {/* Scroll Indicator */}
+<div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 z-30">
+  <div className="flex flex-col items-center">
+    <div className="animate-bounce mb-1">
+      <ChevronDown className="w-8 h-8 text-emerald-500 dark:text-emerald-400 opacity-90" />
+    </div>
+    <div className="h-8 w-0.5 bg-gradient-to-b from-emerald-400/50 to-transparent rounded-full animate-pulse"></div>
+  </div>
+</div>
           </div>
         </div>
       </section>

@@ -7,6 +7,7 @@ const bookingRoutes = require('./bookingRoutes');
 const logRoutes = require('./logs');  
 const dbRoutes = require('./dbRoutes');
 const forumRoutes = require('./forumRoutes');
+const weatherRoutes = require('./weatherRoutes');
 
 const { requestLogger, errorLogger } = require('../middleware/logger');
 
@@ -20,7 +21,7 @@ router.use('/booking', bookingRoutes);
 router.use('/logs', logRoutes); 
 router.use('/db', dbRoutes); 
 router.use('/forum', forumRoutes);
-
+router.use('/weather', weatherRoutes);
 // Apply error logger (should be after all routes)
 router.use(errorLogger);
 

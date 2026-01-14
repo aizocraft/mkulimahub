@@ -7,6 +7,7 @@ import ExpertProfileModal from './components/ExpertProfileModal';
 import BookingModal from './components/BookingModal';
 import BookingSuccessModal from './components/BookingSuccessModal';
 import SearchAndFilters from './components/SearchAndFilters';
+import AiChatBot from './components/AiChatBot';
 import {
   Users,
   Shield,
@@ -375,7 +376,10 @@ const ExpertsPage = () => {
             </p>
           </div>
         )}
+
+          <AiChatBot /> 
       </div>
+
 
       {/* Modals */}
       {selectedExpert && (

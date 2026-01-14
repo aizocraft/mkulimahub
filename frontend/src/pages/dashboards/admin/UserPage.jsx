@@ -1,5 +1,16 @@
 import { useState, useEffect } from 'react';
 import { userAPI, apiUtils } from '../../../api';
+import { toast } from 'react-toastify';
+
+// Icons for better UI
+import {
+  User, Mail, Phone, MapPin, Edit3, Save, X,
+  Upload, Calendar, Shield, Leaf, Target, Award,
+  Settings, Briefcase, Globe, Clock, DollarSign,
+  Crop, TrendingUp, Map, Eye, Trash2, RefreshCw,
+  Download, Search, CheckCircle, XCircle, Users,
+  ChevronDown, ChevronUp, Filter, MoreVertical
+} from 'lucide-react';
 
 const UserPage = () => {
   const [users, setUsers] = useState([]);
@@ -10,7 +21,7 @@ const UserPage = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isBulkActionsOpen, setIsBulkActionsOpen] = useState(false);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -21,6 +32,10 @@ const UserPage = () => {
   const [selectedUsers, setSelectedUsers] = useState(new Set());
   const [bulkAction, setBulkAction] = useState('');
   const [exportFormat, setExportFormat] = useState('csv');
+  const [newRole, setNewRole] = useState('farmer');
+  const [newExpertise, setNewExpertise] = useState('');
+  const [newCrop, setNewCrop] = useState('');
+  const [newLanguage, setNewLanguage] = useState('');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -32,6 +47,7 @@ const UserPage = () => {
     email: '',
     phone: '',
     bio: '',
+    profilePicture: '',
     address: {
       street: '',
       city: '',
@@ -45,7 +61,9 @@ const UserPage = () => {
     languages: ['English'],
     farmSize: '',
     mainCrops: [],
-    experienceLevel: 'beginner'
+    experienceLevel: 'beginner',
+    isVerified: false,
+    isActive: true
   });
 
   // Animation states
@@ -93,6 +111,7 @@ const UserPage = () => {
   const showSuccess = (message) => {
     setSuccessMessage(message);
     setPulseAnimation(true);
+    toast.success(message);
     setTimeout(() => setPulseAnimation(false), 500);
     setTimeout(() => setSuccessMessage(''), 4000);
   };
@@ -116,9 +135,11 @@ const UserPage = () => {
       const result = await action(userId, ...args);
       if (result && !result.success) {
         setError(result.message);
+        toast.error(result.message);
       }
     } catch (err) {
       setError('Action failed');
+      toast.error('Action failed');
     } finally {
       setActionLoading(prev => ({ ...prev, [userId]: false }));
     }
@@ -158,6 +179,32 @@ const UserPage = () => {
     }
   };
 
+  // Change user role
+  const handleRoleChange = async (userId) => {
+    if (!newRole || !userId) return;
+
+    try {
+      setActionLoading(prev => ({ ...prev, role: true }));
+      const response = await userAPI.updateUserRole(userId, { role: newRole });
+      
+      if (response?.data?.success) {
+        showSuccess(`User role changed to ${newRole} successfully`);
+        setIsRoleModalOpen(false);
+        fetchUsers();
+        return { success: true };
+      } else {
+        setError(response?.data?.message || 'Role change failed');
+        return { success: false };
+      }
+    } catch (error) {
+      const errorData = apiUtils.handleError(error);
+      setError(errorData.message);
+      return { success: false };
+    } finally {
+      setActionLoading(prev => ({ ...prev, role: false }));
+    }
+  };
+
   // Delete user functionality
   const handleDeleteUser = async (userId) => {
     try {
@@ -191,6 +238,7 @@ const UserPage = () => {
       email: user.email || '',
       phone: user.phone || '',
       bio: user.bio || '',
+      profilePicture: user.profilePicture || '',
       address: user.address || {
         street: '',
         city: '',
@@ -204,7 +252,9 @@ const UserPage = () => {
       languages: user.languages || ['English'],
       farmSize: user.farmSize || '',
       mainCrops: user.mainCrops || [],
-      experienceLevel: user.experienceLevel || 'beginner'
+      experienceLevel: user.experienceLevel || 'beginner',
+      isVerified: user.isVerified || false,
+      isActive: user.isActive !== undefined ? user.isActive : true
     });
     setIsEditModalOpen(true);
   };
@@ -245,6 +295,21 @@ const UserPage = () => {
     }
   };
 
+  // Handle array fields in edit form
+  const handleArrayField = (field, value, action = 'add') => {
+    if (action === 'add' && value.trim()) {
+      setEditForm(prev => ({
+        ...prev,
+        [field]: [...prev[field], value.trim()]
+      }));
+    } else if (action === 'remove') {
+      setEditForm(prev => ({
+        ...prev,
+        [field]: prev[field].filter(item => item !== value)
+      }));
+    }
+  };
+
   const handleSaveEdit = async (e) => {
     e.preventDefault();
     if (!selectedUser) return;
@@ -259,10 +324,12 @@ const UserPage = () => {
         fetchUsers();
       } else {
         setError(response?.data?.message || 'Update failed');
+        toast.error(response?.data?.message || 'Update failed');
       }
     } catch (error) {
       const errorData = apiUtils.handleError(error);
       setError(errorData.message);
+      toast.error(errorData.message);
     } finally {
       setActionLoading(prev => ({ ...prev, edit: false }));
     }
@@ -272,6 +339,13 @@ const UserPage = () => {
     if (!user) return;
     setSelectedUser(user);
     setIsProfileModalOpen(true);
+  };
+
+  const handleRoleModalOpen = (user) => {
+    if (!user) return;
+    setSelectedUser(user);
+    setNewRole(user.role || 'farmer');
+    setIsRoleModalOpen(true);
   };
 
   // Bulk actions
@@ -301,59 +375,36 @@ const UserPage = () => {
     try {
       setActionLoading(prev => ({ ...prev, bulk: true }));
       
-      switch (bulkAction) {
-        case 'activate':
-          await Promise.all(
-            Array.from(selectedUsers).map(userId => 
-              userAPI.toggleActiveStatus(userId)
-            )
-          );
-          showSuccess(`${selectedUsers.size} users activated successfully`);
-          break;
-        
-        case 'deactivate':
-          await Promise.all(
-            Array.from(selectedUsers).map(userId => 
-              userAPI.toggleActiveStatus(userId)
-            )
-          );
-          showSuccess(`${selectedUsers.size} users deactivated successfully`);
-          break;
-        
-        case 'verify':
-          await Promise.all(
-            Array.from(selectedUsers).map(userId => 
-              userAPI.toggleVerification(userId)
-            )
-          );
-          showSuccess(`${selectedUsers.size} users verified successfully`);
-          break;
-        
-        case 'delete':
-          await Promise.all(
-            Array.from(selectedUsers).map(userId => 
-              userAPI.deleteUser(userId)
-            )
-          );
-          showSuccess(`${selectedUsers.size} users deleted successfully`);
-          break;
-        
-        default:
-          break;
-      }
+      const actions = Array.from(selectedUsers).map(userId => {
+        switch (bulkAction) {
+          case 'activate':
+            return userAPI.toggleActiveStatus(userId);
+          case 'deactivate':
+            return userAPI.toggleActiveStatus(userId);
+          case 'verify':
+            return userAPI.toggleVerification(userId);
+          case 'delete':
+            return userAPI.deleteUser(userId);
+          default:
+            return Promise.resolve();
+        }
+      });
+
+      await Promise.all(actions);
+      showSuccess(`${selectedUsers.size} users ${bulkAction}ed successfully`);
       
       setSelectedUsers(new Set());
       setBulkAction('');
-      setIsBulkActionsOpen(false);
       fetchUsers();
     } catch (error) {
       setError('Bulk action failed');
+      toast.error('Bulk action failed');
     } finally {
       setActionLoading(prev => ({ ...prev, bulk: false }));
     }
   };
 
-  // Enhanced export functionality
+  // Export functionality
   const handleExportUsers = () => {
     try {
       const filteredUsers = getFilteredUsers();
@@ -382,6 +433,7 @@ const UserPage = () => {
       showSuccess(`Users exported as ${exportFormat.toUpperCase()} successfully`);
     } catch (err) {
       setError('Export failed');
+      toast.error('Export failed');
     }
   };
 
@@ -395,6 +447,52 @@ const UserPage = () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  // Helper functions for profile view
+  const formatAddress = (address) => {
+    if (!address) return 'Not provided';
+    if (typeof address === 'string') return address;
+    if (typeof address === 'object') {
+      const parts = [];
+      if (address.street) parts.push(address.street);
+      if (address.county) parts.push(address.county);
+      if (address.country) parts.push(address.country);
+      return parts.length > 0 ? parts.join(', ') : 'Not provided';
+    }
+    return 'Not provided';
+  };
+
+  const safeRender = (value, fallback = 'Not provided') => {
+    if (value === null || value === undefined) return fallback;
+    if (typeof value === 'object') {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return fallback;
+      }
+    }
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (value === '') return fallback;
+    return value;
+  };
+
+  const getRoleColor = (role) => {
+    const colors = {
+      admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+      expert: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+      farmer: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+    };
+    return colors[role] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+  };
+
+  const getRoleIcon = (role) => {
+    const icons = {
+      farmer: <Leaf className="w-4 h-4" />,
+      expert: <Target className="w-4 h-4" />,
+      admin: <Shield className="w-4 h-4" />
+    };
+    return icons[role] || <User className="w-4 h-4" />;
   };
 
   // Filter and sort users
@@ -518,7 +616,8 @@ const UserPage = () => {
       blue: 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
       green: 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700',
       red: 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700',
-      purple: 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
+      purple: 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700',
+      orange: 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700'
     };
 
     return (
@@ -559,65 +658,89 @@ const UserPage = () => {
     online: users.filter(user => user?.lastLogin && (Date.now() - new Date(user.lastLogin).getTime()) < 15 * 60 * 1000).length,
   };
 
-  // Enhanced icons
-  const Icons = {
-    View: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-      </svg>
-    ),
-    Edit: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    ),
-    Delete: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-    ),
-    Refresh: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    ),
-    Export: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ),
-    Search: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-    )
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-20 h-20 border-4 border-blue-200 rounded-full animate-spin"></div>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+if (loading) {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-80 h-80 bg-gradient-to-r from-blue-300 to-purple-300 dark:from-blue-600/20 dark:to-purple-600/20 rounded-full blur-3xl opacity-70 animate-pulse"></div>
+        <div className="absolute -bottom-40 -right-40 w-80 h-80 bg-gradient-to-r from-indigo-300 to-blue-300 dark:from-indigo-600/20 dark:to-blue-600/20 rounded-full blur-3xl opacity-70 animate-pulse" style={{animationDelay: '1s'}}></div>
+      </div>
+      
+      {/* Main loading container */}
+      <div className="relative z-10 text-center">
+        {/* Dual ring loader */}
+        <div className="relative mx-auto mb-8">
+          {/* Outer ring - subtle pulse */}
+          <div className="w-24 h-24 border-4 border-blue-100 dark:border-gray-700 rounded-full"></div>
+          
+          {/* Inner ring - spinning gradient */}
+          <div className="absolute top-0 left-0 w-24 h-24">
+            <div className="w-full h-full rounded-full border-4 border-transparent border-t-blue-500 border-r-purple-500 animate-spin"></div>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 text-lg font-medium mt-4 animate-pulse">
-            Loading users...
+          
+          {/* Center dot with pulse */}
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full animate-ping"></div>
+          </div>
+        </div>
+        
+        {/* Animated text with gradient */}
+        <div className="space-y-3">
+          <h3 className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
+            Loading Users
+          </h3>
+          
+          {/* Dots animation */}
+          <div className="flex justify-center space-x-2">
+            <div className="w-2 h-2 bg-blue-400 dark:bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+            <div className="w-2 h-2 bg-purple-400 dark:bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+          </div>
+          
+          {/* Stats preview skeleton */}
+          <div className="mt-8 opacity-50">
+            <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 animate-pulse">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
+        {/* Subtle progress indicator */}
+        <div className="mt-8 max-w-md mx-auto">
+          <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-full animate-loading-bar"></div>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-mono animate-pulse">
+            Fetching user data...
           </p>
         </div>
       </div>
-    );
-  }
-
+      
+      {/* Add custom animation styles */}
+      <style jsx>{`
+        @keyframes loading-bar {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-loading-bar {
+          animation: loading-bar 2s ease-in-out infinite;
+        }
+      `}</style>
+    </div>
+  );
+}
   if (error && users.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="text-center bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4 animate-fade-in">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+            <XCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
           </div>
           <div className="text-red-500 dark:text-red-400 text-lg mb-4">Error: {error}</div>
           <button 
@@ -658,13 +781,13 @@ const UserPage = () => {
             </div>
             <ActionButton
               onClick={handleExportUsers}
-              icon={Icons.Export}
+              icon={<Download className="w-5 h-5" />}
               tooltip="Export Users"
               color="green"
             />
             <ActionButton
               onClick={fetchUsers}
-              icon={Icons.Refresh}
+              icon={<RefreshCw className="w-5 h-5" />}
               tooltip="Refresh Data"
               color="blue"
             />
@@ -675,9 +798,7 @@ const UserPage = () => {
         {successMessage && (
           <div className={`mb-4 sm:mb-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg animate-fade-in ${pulseAnimation ? 'animate-pulse' : ''}`}>
             <div className="flex items-center space-x-2 text-sm sm:text-base">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <CheckCircle className="w-5 h-5" />
               <span>{successMessage}</span>
             </div>
           </div>
@@ -686,9 +807,7 @@ const UserPage = () => {
         {error && (
           <div className="mb-4 sm:mb-6 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 sm:px-6 py-3 sm:py-4 rounded-xl shadow-lg animate-shake">
             <div className="flex items-center space-x-2 text-sm sm:text-base">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <XCircle className="w-5 h-5" />
               <span>{error}</span>
             </div>
           </div>
@@ -697,13 +816,13 @@ const UserPage = () => {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
           {[
-            { label: 'Total Users', value: stats.total, color: 'from-blue-500 to-blue-600' },
-            { label: 'Active', value: stats.active, color: 'from-green-500 to-green-600' },
-            { label: 'Admins', value: stats.admins, color: 'from-purple-500 to-purple-600'},
-            { label: 'Experts', value: stats.experts, color: 'from-blue-500 to-blue-600'},
-            { label: 'Farmers', value: stats.farmers, color: 'from-green-500 to-green-600'},
-            { label: 'Verified', value: stats.verified, color: 'from-yellow-500 to-yellow-600' },
-            { label: 'Online', value: stats.online, color: 'from-green-500 to-emerald-600'}
+            { label: 'Total Users', value: stats.total, color: 'from-blue-500 to-blue-600', icon: <Users className="w-5 h-5" /> },
+            { label: 'Active', value: stats.active, color: 'from-green-500 to-green-600', icon: <CheckCircle className="w-5 h-5" /> },
+            { label: 'Admins', value: stats.admins, color: 'from-purple-500 to-purple-600', icon: <Shield className="w-5 h-5" /> },
+            { label: 'Experts', value: stats.experts, color: 'from-blue-500 to-blue-600', icon: <Target className="w-5 h-5" /> },
+            { label: 'Farmers', value: stats.farmers, color: 'from-green-500 to-green-600', icon: <Leaf className="w-5 h-5" /> },
+            { label: 'Verified', value: stats.verified, color: 'from-yellow-500 to-yellow-600', icon: <Award className="w-5 h-5" /> },
+            { label: 'Online', value: stats.online, color: 'from-green-500 to-emerald-600', icon: <Globe className="w-5 h-5" /> }
           ].map((stat, index) => (
             <div 
               key={index} 
@@ -729,9 +848,7 @@ const UserPage = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-3">
                 <div className="bg-yellow-100 dark:bg-yellow-800 p-2 rounded-lg">
-                  <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                  <Settings className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
@@ -777,7 +894,10 @@ const UserPage = () => {
 
         {/* Filters and Search */}
         <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 mb-6 sm:mb-8 animate-slide-up">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">Filter Users</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6 flex items-center space-x-2">
+            <Filter className="w-5 h-5 text-blue-500" />
+            <span>Filter Users</span>
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Search */}
             <div className="md:col-span-2 lg:col-span-2">
@@ -796,7 +916,7 @@ const UserPage = () => {
                   className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-all duration-200 text-sm sm:text-base"
                 />
                 <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                  {Icons.Search}
+                  <Search className="w-5 h-5 text-gray-400" />
                 </div>
               </div>
             </div>
@@ -1067,16 +1187,23 @@ const UserPage = () => {
                             <ActionButton
                               onClick={() => handleViewProfile(user)}
                               loading={actionLoading[user?.id || user?._id]}
-                              icon={Icons.View}
+                              icon={<Eye className="w-5 h-5" />}
                               tooltip="View Profile"
                               color="blue"
                             />
                             <ActionButton
                               onClick={() => handleEditUser(user)}
                               loading={actionLoading[user?.id || user?._id]}
-                              icon={Icons.Edit}
+                              icon={<Edit3 className="w-5 h-5" />}
                               tooltip="Edit User"
                               color="green"
+                            />
+                            <ActionButton
+                              onClick={() => handleRoleModalOpen(user)}
+                              loading={actionLoading[user?.id || user?._id]}
+                              icon={<Shield className="w-5 h-5" />}
+                              tooltip="Change Role"
+                              color="purple"
                             />
                             <ActionButton
                               onClick={() => {
@@ -1084,7 +1211,7 @@ const UserPage = () => {
                                 setIsDeleteModalOpen(true);
                               }}
                               loading={actionLoading[user?.id || user?._id]}
-                              icon={Icons.Delete}
+                              icon={<Trash2 className="w-5 h-5" />}
                               tooltip="Delete User"
                               color="red"
                             />
@@ -1163,9 +1290,7 @@ const UserPage = () => {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-2 transform animate-scale-in">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+                <Trash2 className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
               
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -1198,10 +1323,64 @@ const UserPage = () => {
         </div>
       )}
 
-      {/* Profile Modal */}
+      {/* Role Change Modal */}
+      {isRoleModalOpen && selectedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md mx-2 transform animate-scale-in">
+            <div className="p-6">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
+                Change User Role
+              </h3>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-4 text-center">
+                Change role for <span className="font-semibold">{selectedUser.name}</span>
+              </p>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Select New Role
+                </label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white"
+                >
+                  <option value="farmer">Farmer</option>
+                  <option value="expert">Expert</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsRoleModalOpen(false)}
+                  className="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-all transform hover:scale-105"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleRoleChange(selectedUser.id || selectedUser._id);
+                  }}
+                  disabled={actionLoading.role}
+                  className="flex-1 px-4 py-2 bg-purple-500 hover:bg-purple-600 disabled:opacity-50 text-white rounded-lg font-medium transition-all transform hover:scale-105"
+                >
+                  {actionLoading.role ? 'Changing...' : 'Change Role'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile View Modal */}
       {isProfileModalOpen && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4 transform animate-scale-in">
+          <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4 transform animate-scale-in">
             <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-t-xl sm:rounded-t-2xl">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -1216,9 +1395,258 @@ const UserPage = () => {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-              {/* Profile content remains the same as before */}
-              {/* ... */}
+            <div className="p-4 sm:p-6 lg:p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Sidebar */}
+                <div className="lg:col-span-1 space-y-6">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-6">
+                    <div className="text-center">
+                      <div className="relative inline-block mb-4">
+                        <img 
+                          src={getUserAvatar(selectedUser)}
+                          alt={selectedUser.name}
+                          className="w-32 h-32 rounded-2xl border-4 border-white dark:border-gray-800 shadow-lg mx-auto"
+                        />
+                      </div>
+                      
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        {safeRender(selectedUser.name)}
+                      </h3>
+                      
+                      <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full border ${getRoleColor(selectedUser.role)} mb-3`}>
+                        {getRoleIcon(selectedUser.role)}
+                        <span className="font-medium capitalize">{safeRender(selectedUser.role)}</span>
+                      </div>
+                      
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                        {safeRender(selectedUser.email)}
+                      </p>
+
+                      {selectedUser.role === 'expert' && selectedUser.yearsOfExperience > 0 && (
+                        <div className="flex items-center justify-center space-x-1 text-sm text-blue-600 dark:text-blue-400 mb-2">
+                          <Clock className="w-4 h-4" />
+                          <span>{safeRender(selectedUser.yearsOfExperience)} years experience</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-center space-x-1 text-gray-500 dark:text-gray-400 text-sm">
+                        <Calendar className="w-4 h-4" />
+                        <span>Joined {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString() : 'Unknown'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-6">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Account Status</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Active</span>
+                        <span className={`font-medium ${selectedUser.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                          {selectedUser.isActive ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Verified</span>
+                        <span className={`font-medium ${selectedUser.isVerified ? 'text-blue-600' : 'text-yellow-600'}`}>
+                          {selectedUser.isVerified ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Google Auth</span>
+                        <span className="font-medium">
+                          {selectedUser.googleId ? 'Yes' : 'No'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main Content */}
+                <div className="lg:col-span-3">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-6">
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                            <User className="w-4 h-4" />
+                            <span>Full Name</span>
+                          </label>
+                          <p className="text-gray-900 dark:text-white text-lg font-medium">
+                            {safeRender(selectedUser.name)}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                            <Mail className="w-4 h-4" />
+                            <span>Email Address</span>
+                          </label>
+                          <p className="text-gray-900 dark:text-white text-lg">
+                            {safeRender(selectedUser.email)}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                            <Phone className="w-4 h-4" />
+                            <span>Phone Number</span>
+                          </label>
+                          <p className="text-gray-900 dark:text-white text-lg">
+                            {safeRender(selectedUser.phone, 'Not provided')}
+                          </p>
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>Address</span>
+                          </label>
+                          <p className="text-gray-900 dark:text-white text-lg">
+                            {formatAddress(selectedUser.address)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      {selectedUser.bio && (
+                        <div className="space-y-3">
+                          <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Bio
+                          </label>
+                          <div className="p-4 bg-white dark:bg-gray-800 rounded-xl">
+                            <p className="text-gray-900 dark:text-white leading-relaxed">
+                              {safeRender(selectedUser.bio)}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Expert Specific Fields */}
+                      {selectedUser.role === 'expert' && (
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                            <Target className="w-5 h-5 text-blue-500" />
+                            <span>Expert Information</span>
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <Briefcase className="w-4 h-4" />
+                                <span>Expertise</span>
+                              </label>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {selectedUser.expertise?.map((skill, index) => (
+                                  <span key={index} className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm">
+                                    {safeRender(skill)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <Clock className="w-4 h-4" />
+                                <span>Experience</span>
+                              </label>
+                              <p className="text-gray-900 dark:text-white text-lg">
+                                {safeRender(selectedUser.yearsOfExperience, 0)} years
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <DollarSign className="w-4 h-4" />
+                                <span>Hourly Rate</span>
+                              </label>
+                              <p className="text-gray-900 dark:text-white text-lg">
+                                KSh {safeRender(selectedUser.hourlyRate, 0)}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <Globe className="w-4 h-4" />
+                                <span>Languages</span>
+                              </label>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {selectedUser.languages?.map((lang, index) => (
+                                  <span key={index} className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm">
+                                    {safeRender(lang)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <Settings className="w-4 h-4" />
+                                <span>Availability</span>
+                              </label>
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
+                                selectedUser.availability === 'available' ? 'bg-green-100 text-green-800' :
+                                selectedUser.availability === 'busy' ? 'bg-orange-100 text-orange-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {safeRender(selectedUser.availability)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Farmer Specific Fields */}
+                      {selectedUser.role === 'farmer' && (
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center space-x-2">
+                            <Leaf className="w-5 h-5 text-emerald-500" />
+                            <span>Farmer Information</span>
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <Map className="w-4 h-4" />
+                                <span>Farm Size</span>
+                              </label>
+                              <p className="text-gray-900 dark:text-white text-lg">
+                                {safeRender(selectedUser.farmSize, 'Not specified')}
+                              </p>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <Crop className="w-4 h-4" />
+                                <span>Main Crops</span>
+                              </label>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {selectedUser.mainCrops?.map((crop, index) => (
+                                  <span key={index} className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-full text-sm">
+                                    {safeRender(crop)}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center space-x-2">
+                                <TrendingUp className="w-4 h-4" />
+                                <span>Experience Level</span>
+                              </label>
+                              <span className={`px-3 py-1 rounded-full text-sm font-medium capitalize ${
+                                selectedUser.experienceLevel === 'beginner' ? 'bg-blue-100 text-blue-800' :
+                                selectedUser.experienceLevel === 'intermediate' ? 'bg-purple-100 text-purple-800' :
+                                'bg-orange-100 text-orange-800'
+                              }`}>
+                                {safeRender(selectedUser.experienceLevel)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 rounded-b-xl sm:rounded-b-2xl flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
@@ -1226,12 +1654,21 @@ const UserPage = () => {
                 onClick={() => handleEditUser(selectedUser)}
                 className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg sm:rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base w-full sm:w-auto"
               >
+                <Edit3 className="w-4 h-4 inline mr-2" />
                 Edit User
+              </button>
+              <button
+                onClick={() => handleRoleModalOpen(selectedUser)}
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg sm:rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base w-full sm:w-auto"
+              >
+                <Shield className="w-4 h-4 inline mr-2" />
+                Change Role
               </button>
               <button
                 onClick={() => setIsProfileModalOpen(false)}
                 className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg sm:rounded-xl font-medium transition-all transform hover:scale-105 shadow-lg text-sm sm:text-base w-full sm:w-auto"
               >
+                <X className="w-4 h-4 inline mr-2" />
                 Close
               </button>
             </div>
@@ -1242,11 +1679,11 @@ const UserPage = () => {
       {/* Edit Modal */}
       {isEditModalOpen && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50 animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl sm:max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4 transform animate-scale-in">
+          <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-4 transform animate-scale-in">
             <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-t-xl sm:rounded-t-2xl">
               <div className="flex justify-between items-center">
                 <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Edit User
+                  Edit User: {selectedUser.name}
                 </h2>
                 <button
                   onClick={() => setIsEditModalOpen(false)}
@@ -1258,47 +1695,341 @@ const UserPage = () => {
             </div>
 
             <form onSubmit={handleSaveEdit} className="p-4 sm:p-6 lg:p-8">
-              {/* Edit form content remains the same as before */}
-              {/* ... */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={editForm.email}
+                    onChange={handleEditFormChange}
+                    required
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={editForm.phone}
+                    onChange={handleEditFormChange}
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="address.street" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    id="address.street"
+                    name="address.street"
+                    value={editForm.address.street}
+                    onChange={handleEditFormChange}
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="address.county" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    County
+                  </label>
+                  <input
+                    type="text"
+                    id="address.county"
+                    name="address.county"
+                    value={editForm.address.county}
+                    onChange={handleEditFormChange}
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="address.country" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    id="address.country"
+                    name="address.country"
+                    value={editForm.address.country}
+                    onChange={handleEditFormChange}
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* Role-specific fields */}
+              {selectedUser.role === 'expert' && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Expert Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Expertise
+                      </label>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newExpertise}
+                            onChange={(e) => setNewExpertise(e.target.value)}
+                            placeholder="Add expertise"
+                            className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleArrayField('expertise', newExpertise, 'add');
+                              setNewExpertise('');
+                            }}
+                            className="px-4 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors duration-200"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {editForm.expertise.map((skill, index) => (
+                            <span key={index} className="flex items-center space-x-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full text-sm">
+                              <span>{skill}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleArrayField('expertise', skill, 'remove')}
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="yearsOfExperience" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Years of Experience
+                      </label>
+                      <input
+                        type="number"
+                        id="yearsOfExperience"
+                        name="yearsOfExperience"
+                        value={editForm.yearsOfExperience}
+                        onChange={handleEditFormChange}
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="hourlyRate" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Hourly Rate (KSh)
+                      </label>
+                      <input
+                        type="number"
+                        id="hourlyRate"
+                        name="hourlyRate"
+                        value={editForm.hourlyRate}
+                        onChange={handleEditFormChange}
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="availability" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Availability
+                      </label>
+                      <select
+                        id="availability"
+                        name="availability"
+                        value={editForm.availability}
+                        onChange={handleEditFormChange}
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                      >
+                        <option value="available">Available</option>
+                        <option value="busy">Busy</option>
+                        <option value="away">Away</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedUser.role === 'farmer' && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Farmer Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label htmlFor="farmSize" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Farm Size
+                      </label>
+                      <input
+                        type="text"
+                        id="farmSize"
+                        name="farmSize"
+                        value={editForm.farmSize}
+                        onChange={handleEditFormChange}
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Main Crops
+                      </label>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newCrop}
+                            onChange={(e) => setNewCrop(e.target.value)}
+                            placeholder="Add crop"
+                            className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleArrayField('mainCrops', newCrop, 'add');
+                              setNewCrop('');
+                            }}
+                            className="px-4 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-colors duration-200"
+                          >
+                            Add
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {editForm.mainCrops.map((crop, index) => (
+                            <span key={index} className="flex items-center space-x-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-full text-sm">
+                              <span>{crop}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleArrayField('mainCrops', crop, 'remove')}
+                                className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200"
+                              >
+                                ×
+                              </button>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label htmlFor="experienceLevel" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Experience Level
+                      </label>
+                      <select
+                        id="experienceLevel"
+                        name="experienceLevel"
+                        value={editForm.experienceLevel}
+                        onChange={handleEditFormChange}
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white"
+                      >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6 mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Account Settings</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="isVerified"
+                      name="isVerified"
+                      checked={editForm.isVerified}
+                      onChange={handleEditFormChange}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="isVerified" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Verified Account
+                    </label>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      name="isActive"
+                      checked={editForm.isActive}
+                      onChange={handleEditFormChange}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                    />
+                    <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Active Account
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <label htmlFor="bio" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Bio
+                </label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  value={editForm.bio}
+                  onChange={handleEditFormChange}
+                  rows="4"
+                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-gray-900 dark:text-white resize-none"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium transition-colors duration-200 w-full sm:w-auto"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={actionLoading.edit}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 text-white rounded-xl font-medium transition-all duration-200 w-full sm:w-auto"
+                >
+                  {actionLoading.edit ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Saving...
+                    </div>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Add these styles for animations */}
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slide-down {
-          from { transform: translateY(-20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes slide-up {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes scale-in {
-          from { transform: scale(0.9); opacity: 0; }
-          to { transform: scale(1); opacity: 1; }
-        }
-        @keyframes rise {
-          from { transform: translateY(30px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-        .animate-fade-in { animation: fade-in 0.3s ease-out; }
-        .animate-slide-down { animation: slide-down 0.4s ease-out; }
-        .animate-slide-up { animation: slide-up 0.4s ease-out; }
-        .animate-scale-in { animation: scale-in 0.3s ease-out; }
-        .animate-rise { animation: rise 0.5s ease-out; }
-        .animate-shake { animation: shake 0.5s ease-in-out; }
-      `}</style>
     </div>
   );
 };

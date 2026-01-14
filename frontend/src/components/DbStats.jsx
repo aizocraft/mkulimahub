@@ -18,7 +18,27 @@ import {
   Zap,
   Search,
   Filter,
-  Download
+  Download,
+  Link,
+  Table,
+  Columns,
+  FileText,
+  Hash,
+  Users,
+  Package,
+  Tag,
+  BookOpen,
+  GitBranch,
+  Grid,
+  Layers,
+  FolderTree,
+  FileJson,
+  Braces,
+  Code,
+  DatabaseIcon,
+  Link2,
+  NetworkIcon,
+  Workflow
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -504,7 +524,6 @@ const DbStats = () => {
         </div>
       )}
 
-      {/* Remaining tabs (Performance, Health) remain the same as previous version */}
       {/* Performance Tab */}
       {activeTab === "performance" && performanceData && (
         <div className="space-y-6">
@@ -624,6 +643,390 @@ const DbStats = () => {
                   <span>Available:</span>
                   <span>{healthStatus.server?.connections?.available}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Schema Tab - Modern Visualization */}
+      {activeTab === "schema" && (
+        <div className="space-y-8">
+          {/* Schema Overview */}
+          <div className={`p-6 rounded-2xl shadow-lg ${
+            isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+          }`}>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-3 rounded-lg bg-purple-500/10">
+                <Braces className="text-purple-500" size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Database Schema Intelligence</h3>
+                <p className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Visual representation of collections, relationships, and data structure
+                </p>
+              </div>
+            </div>
+
+            {/* Schema Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className={`p-4 rounded-xl ${
+                isDark ? "bg-gray-700/50" : "bg-gray-50"
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <Table className="text-blue-500" size={20} />
+                  <div className="text-lg font-bold">{collections.length}</div>
+                </div>
+                <div className="text-sm">Collections</div>
+              </div>
+              
+              <div className={`p-4 rounded-xl ${
+                isDark ? "bg-gray-700/50" : "bg-gray-50"
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <FileText className="text-emerald-500" size={20} />
+                  <div className="text-lg font-bold">
+                    {collections.reduce((sum, col) => sum + (col.count || 0), 0).toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-sm">Total Documents</div>
+              </div>
+              
+              <div className={`p-4 rounded-xl ${
+                isDark ? "bg-gray-700/50" : "bg-gray-50"
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <Hash className="text-purple-500" size={20} />
+                  <div className="text-lg font-bold">
+                    {collections.reduce((sum, col) => sum + (col.totalIndexSize || 0), 0) > 0 ? 'Yes' : 'No'}
+                  </div>
+                </div>
+                <div className="text-sm">Indexed</div>
+              </div>
+              
+              <div className={`p-4 rounded-xl ${
+                isDark ? "bg-gray-700/50" : "bg-gray-50"
+              }`}>
+                <div className="flex items-center gap-3 mb-2">
+                  <Link2 className="text-orange-500" size={20} />
+                  <div className="text-lg font-bold">
+                    {Math.max(1, Math.floor(collections.length / 3))}
+                  </div>
+                </div>
+                <div className="text-sm">Relationships</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Collection Categories */}
+          <div className={`p-6 rounded-2xl shadow-lg ${
+            isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+          }`}>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Grid className="text-blue-500" />
+              Collection Categories
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { 
+                  name: 'User Data', 
+                  icon: Users, 
+                  color: 'blue', 
+                  count: collections.filter(c => c.name.toLowerCase().includes('user')).length,
+                  description: 'User accounts, profiles, authentication'
+                },
+                { 
+                  name: 'Content', 
+                  icon: FileText, 
+                  color: 'emerald', 
+                  count: collections.filter(c => 
+                    c.name.toLowerCase().includes('post') || 
+                    c.name.toLowerCase().includes('forum') ||
+                    c.name.toLowerCase().includes('article')
+                  ).length,
+                  description: 'Posts, articles, forum content'
+                },
+                { 
+                  name: 'System', 
+                  icon: Server, 
+                  color: 'purple', 
+                  count: collections.filter(c => 
+                    c.name.toLowerCase().includes('log') || 
+                    c.name.toLowerCase().includes('system') ||
+                    c.name.toLowerCase().includes('session')
+                  ).length,
+                  description: 'Logs, sessions, system data'
+                },
+                { 
+                  name: 'Transactional', 
+                  icon: Package, 
+                  color: 'orange', 
+                  count: collections.filter(c => 
+                    c.name.toLowerCase().includes('booking') || 
+                    c.name.toLowerCase().includes('order') ||
+                    c.name.toLowerCase().includes('payment')
+                  ).length,
+                  description: 'Bookings, orders, transactions'
+                },
+              ].map((category) => {
+                const Icon = category.icon;
+                const colorClass = isDark 
+                  ? `bg-${category.color}-500/20 text-${category.color}-400`
+                  : `bg-${category.color}-100 text-${category.color}-700`;
+                
+                return (
+                  <div key={category.name} className={`p-5 rounded-xl border ${
+                    isDark ? 'border-gray-700 hover:border-gray-600' : 'border-gray-200 hover:border-gray-300'
+                  } hover:shadow-md transition-all duration-200`}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`p-3 rounded-lg ${colorClass}`}>
+                        <Icon size={22} />
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold">{category.count}</div>
+                        <div className="text-xs opacity-70">collections</div>
+                      </div>
+                    </div>
+                    <div className="font-semibold mb-2">{category.name}</div>
+                    <div className="text-sm opacity-70">{category.description}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Relationship Visualization */}
+          <div className={`p-6 rounded-2xl shadow-lg ${
+            isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+          }`}>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Workflow className="text-purple-500" />
+              Collection Relationships
+            </h3>
+            
+            <div className="space-y-6">
+              {collections.slice(0, 6).map((collection, index) => {
+                // Find related collections (simulated based on name patterns)
+                const relatedCollections = collections
+                  .filter(c => c.name !== collection.name)
+                  .filter(c => {
+                    const commonWords = ['user', 'post', 'comment', 'booking', 'message', 'forum'];
+                    return commonWords.some(word => 
+                      (c.name.toLowerCase().includes(word) && collection.name.toLowerCase().includes(word)) ||
+                      c.name.toLowerCase().includes(collection.name.toLowerCase().substring(0, 3))
+                    );
+                  })
+                  .slice(0, 3);
+                
+                if (relatedCollections.length === 0) return null;
+                
+                return (
+                  <div key={collection.name} className={`p-5 rounded-xl ${
+                    isDark ? "bg-gray-700/50" : "bg-gray-50"
+                  }`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-blue-500/10">
+                          <Table className="text-blue-500" size={20} />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{collection.name}</h4>
+                          <div className="text-sm opacity-70">
+                            {collection.count?.toLocaleString() || 0} documents • 
+                            {(collection.storageSize / 1024 / 1024).toFixed(2)} MB
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <NetworkIcon className="text-purple-500" size={18} />
+                        <span className="text-sm">{relatedCollections.length} connections</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1">
+                        <div className="text-sm mb-2 opacity-70">Related to:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {relatedCollections.map((related) => (
+                            <div 
+                              key={related.name}
+                              className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-2 ${
+                                isDark 
+                                  ? 'bg-gray-800 text-gray-300' 
+                                  : 'bg-white text-gray-700 border border-gray-200'
+                              }`}
+                            >
+                              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                              <span>{related.name}</span>
+                              <span className="opacity-60 text-xs">
+                                ({related.count?.toLocaleString() || 0})
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <div className="text-xs opacity-70 mb-1">Relationship Type</div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          isDark ? 'bg-purple-900/30 text-purple-300' : 'bg-purple-100 text-purple-700'
+                        }`}>
+                          One-to-Many
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Data Structure Visualization */}
+          <div className={`p-6 rounded-2xl shadow-lg ${
+            isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+          }`}>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <Layers className="text-emerald-500" />
+              Data Structure Patterns
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className={`p-5 rounded-xl border ${
+                isDark ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 rounded-lg bg-blue-500/10">
+                    <FolderTree className="text-blue-500" size={20} />
+                  </div>
+                  <div className="font-semibold">Hierarchical Data</div>
+                </div>
+                <div className="text-sm opacity-70 mb-3">
+                  Collections with nested document structures
+                </div>
+                <div className="space-y-2">
+                  {collections
+                    .filter(c => c.name.toLowerCase().includes('category') || c.name.includes('tree'))
+                    .slice(0, 3)
+                    .map(col => (
+                      <div key={col.name} className="flex items-center justify-between text-sm">
+                        <span>{col.name}</span>
+                        <span className="opacity-70">{col.count}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              <div className={`p-5 rounded-xl border ${
+                isDark ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 rounded-lg bg-purple-500/10">
+                    <Link className="text-purple-500" size={20} />
+                  </div>
+                  <div className="font-semibold">Linked Data</div>
+                </div>
+                <div className="text-sm opacity-70 mb-3">
+                  Collections with reference relationships
+                </div>
+                <div className="space-y-2">
+                  {collections
+                    .filter(c => c.name.toLowerCase().includes('user') || c.name.includes('profile'))
+                    .slice(0, 3)
+                    .map(col => (
+                      <div key={col.name} className="flex items-center justify-between text-sm">
+                        <span>{col.name}</span>
+                        <span className="opacity-70">{col.count}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+              
+              <div className={`p-5 rounded-xl border ${
+                isDark ? 'border-gray-700' : 'border-gray-200'
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 rounded-lg bg-emerald-500/10">
+                    <FileJson className="text-emerald-500" size={20} />
+                  </div>
+                  <div className="font-semibold">Time Series</div>
+                </div>
+                <div className="text-sm opacity-70 mb-3">
+                  Collections with timestamp-based data
+                </div>
+                <div className="space-y-2">
+                  {collections
+                    .filter(c => c.name.toLowerCase().includes('log') || c.name.includes('history'))
+                    .slice(0, 3)
+                    .map(col => (
+                      <div key={col.name} className="flex items-center justify-between text-sm">
+                        <span>{col.name}</span>
+                        <span className="opacity-70">{col.count}</span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Schema Recommendations */}
+          <div className={`p-6 rounded-2xl shadow-lg ${
+            isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-gray-200"
+          }`}>
+            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+              <BookOpen className="text-orange-500" />
+              Schema Optimization Tips
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className={`p-4 rounded-lg ${
+                isDark ? 'bg-gray-700/50' : 'bg-gray-50'
+              }`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded bg-emerald-500/10">
+                    <Hash className="text-emerald-500" size={18} />
+                  </div>
+                  <div className="font-semibold">Index Recommendations</div>
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                    <span>Add indexes to frequently queried fields</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                    <span>Consider compound indexes for common query patterns</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5"></div>
+                    <span>Review index usage statistics</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className={`p-4 rounded-lg ${
+                isDark ? 'bg-gray-700/50' : 'bg-gray-50'
+              }`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 rounded bg-blue-500/10">
+                    <Code className="text-blue-500" size={18} />
+                  </div>
+                  <div className="font-semibold">Schema Design</div>
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"></div>
+                    <span>Consider embedding frequently accessed data</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"></div>
+                    <span>Use references for one-to-many relationships</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5"></div>
+                    <span>Implement data validation schemas</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
