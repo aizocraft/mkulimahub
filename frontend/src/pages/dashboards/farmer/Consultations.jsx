@@ -1,11 +1,15 @@
-// pages/dashboards/farmer/Consultations.jsx - UPDATED WITH REAL API
+// pages/dashboards/farmer/Consultations.jsx 
 import { useState, useEffect } from 'react';
 import { 
   Users, Calendar, Play, Plus, MessageCircle, Clock, Star, 
-  Video, CheckCircle, XCircle, Search, Filter, ExternalLink
+  Video, CheckCircle, XCircle, Search, Filter, ExternalLink,
+  Phone, Video as VideoIcon
 } from 'lucide-react';
-import { bookingAPI, apiUtils } from '../../../api';
+import { bookingAPI, apiUtils, videoCallAPI } from '../../../api';
 import toast from 'react-hot-toast';
+import VideoCallModal from '../../../components/VideoCall/VideoCallModal'; 
+import socketService from '../../../services/socketService'; 
+
 
 const Consultations = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
@@ -14,6 +18,22 @@ const Consultations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false); 
+  const [user, setUser] = useState(null); 
+
+  // Get user from localStorage
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+      
+      // Initialize socket with token
+      const token = localStorage.getItem('token');
+      if (token) {
+        socketService.initialize(token, JSON.parse(userData)._id);
+      }
+    }
+  }, []);
 
   // Fetch consultations based on active tab
   useEffect(() => {
@@ -59,11 +79,39 @@ const Consultations = () => {
     }
   };
 
-  const handleJoinCall = (consultation) => {
-    if (consultation.meetingLink) {
-      window.open(consultation.meetingLink, '_blank');
-    } else {
-      toast.info('Meeting link will be provided by the expert');
+  // handleJoinCall function to use WebRTC
+  const handleJoinCall = async (consultation) => {
+    try {
+      // Validate consultation for video call
+      const validation = apiUtils.videoCall.validateConsultationForVideoCall(consultation);
+      
+      if (!validation.isValid) {
+        toast.error(validation.errors[0] || 'Cannot start video call');
+        return;
+      }
+      
+      // Check browser support
+      const browserSupport = apiUtils.videoCall.checkBrowserSupport();
+      if (!browserSupport.allSupported) {
+        toast.error(browserSupport.message);
+        return;
+      }
+      
+      // Check camera/microphone permissions
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch (error) {
+        toast.error('Please allow camera and microphone access');
+        return;
+      }
+      
+      // Set selected consultation and open video call modal
+      setSelectedConsultation(consultation);
+      setShowVideoCallModal(true);
+      
+    } catch (error) {
+      console.error('Error starting video call:', error);
+      toast.error('Failed to start video call');
     }
   };
 
@@ -136,6 +184,10 @@ const Consultations = () => {
     const statusDisplay = getStatusDisplay(selectedConsultation.status);
     const totalAmount = selectedConsultation.payment?.amount || 0;
     const isFree = selectedConsultation.payment?.isFree;
+
+    // Check if video call is available
+    const canStartVideoCall = selectedConsultation.status === 'accepted' && 
+      (!selectedConsultation.payment.isFree || selectedConsultation.payment.status === 'paid');
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -252,24 +304,28 @@ const Consultations = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons - UPDATED */}
               <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {canStartVideoCall && (
+                  <button 
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleJoinCall(selectedConsultation);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 flex items-center"
+                  >
+                    <VideoIcon size={16} className="mr-2" />
+                    Start Video Call
+                  </button>
+                )}
+                
                 {selectedConsultation.status === 'accepted' && (
-                  <>
-                    <button 
-                      onClick={() => handleJoinCall(selectedConsultation)}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 flex items-center"
-                    >
-                      <Video size={16} className="mr-2" />
-                      Join Video Call
-                    </button>
-                    <button 
-                      onClick={() => handleCancelConsultation(selectedConsultation._id)}
-                      className="px-4 py-2 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                    >
-                      Cancel Consultation
-                    </button>
-                  </>
+                  <button 
+                    onClick={() => handleCancelConsultation(selectedConsultation._id)}
+                    className="px-4 py-2 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                  >
+                    Cancel Consultation
+                  </button>
                 )}
                 
                 {selectedConsultation.status === 'completed' && !selectedConsultation.rating && (
@@ -456,7 +512,7 @@ const Consultations = () => {
                             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
                           >
                             <Video size={16} />
-                            <span>Join Call</span>
+                            <span>Video Call</span>
                           </button>
                         )}
                       </div>
@@ -620,6 +676,20 @@ const Consultations = () => {
 
       {/* Details Modal */}
       {showDetailsModal && <ConsultationDetailsModal />}
+      
+      {/* Video Call Modal */}
+      {showVideoCallModal && selectedConsultation && user && (
+        <VideoCallModal
+          consultation={selectedConsultation}
+          user={user}
+          isOpen={showVideoCallModal}
+          onClose={() => setShowVideoCallModal(false)}
+          onEndCall={() => {
+            toast.success('Video call ended');
+            fetchConsultations(); // Refresh consultations after call ends
+          }}
+        />
+      )}
     </div>
   );
 };

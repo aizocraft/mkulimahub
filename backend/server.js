@@ -5,6 +5,7 @@ require('./config/passport');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const routes = require('./routes');
+const { initializeSocket } = require('./socket');
 
 const app = express();
 
@@ -29,12 +30,10 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' })); 
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-
 // Debug Middleware (for development only)
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-    console.log('Request Headers:', req.headers);
     next();
   });
 }
@@ -54,11 +53,15 @@ app.use((err, req, res, next) => {
 // Database connection and server start
 connectDB()
   .then(() => {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
       console.log(`🌍 CORS allowed for: ${FRONTEND_URL}`);
       console.log(`🧭 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
+    
+    // Initialize Socket.IO
+    const io = initializeSocket(server);
+    console.log(`🔌 Socket.IO server initialized`);
   })
   .catch(err => {
     console.error('❌ Database connection failed:', err);

@@ -6,6 +6,7 @@ import { useTheme } from '../../context/ThemeContext';
 import Overview from './expert/Overview';
 import Consultations from './expert/Consultations';
 import Questions from './expert/Questions';
+import Weather from './admin/Weather';
 
 import { 
   BarChart3, 
@@ -24,7 +25,8 @@ import {
   Target,
   Award,
   DollarSign,
-  Globe
+  Globe,
+  Cloud
 } from 'lucide-react';
 
 const ExpertDashboard = () => {
@@ -57,7 +59,8 @@ const ExpertDashboard = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'consultations', label: 'Consultations', icon: MessageCircle },
-    { id: 'questions', label: 'Questions', icon: Users }
+    { id: 'questions', label: 'Questions', icon: Users },
+    { id: 'weather', label: 'Weather', icon: Cloud } 
   ];
 
   // Function to get verification display text
@@ -249,6 +252,7 @@ const ExpertDashboard = () => {
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'consultations' && <Consultations />}
           {activeTab === 'questions' && <Questions />}
+          {activeTab === 'weather' && <Weather />}
        
         </div>
 

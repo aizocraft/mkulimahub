@@ -1,11 +1,13 @@
-// pages/dashboards/expert/Consultations.jsx - UPDATED
+// pages/dashboards/expert/Consultations.jsx 
 import { useState, useEffect } from 'react';
 import { 
   Users, Calendar, Clock, CheckCircle, XCircle, Search, Filter, 
   Video, MessageCircle, ChevronDown, DollarSign, CreditCard 
 } from 'lucide-react';
-import { bookingAPI, apiUtils } from '../../../api';
+import { bookingAPI, apiUtils, videoCallAPI } from '../../../api';
 import toast from 'react-hot-toast';
+import VideoCallModal from '../../../components/VideoCall/VideoCallModal';
+import socketService from '../../../services/socketService';
 
 const Consultations = () => {
   const [activeFilter, setActiveFilter] = useState('pending');
@@ -14,6 +16,22 @@ const Consultations = () => {
   const [loading, setLoading] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false);
+  const [user, setUser] = useState(null);
+
+  // Get user from localStorage
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+      
+      // Initialize socket with token
+      const token = localStorage.getItem('token');
+      if (token) {
+        socketService.initialize(token, JSON.parse(userData)._id);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     fetchConsultations();
@@ -35,6 +53,41 @@ const Consultations = () => {
       console.error('Error fetching consultations:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleStartVideoCall = async (consultation) => {
+    try {
+      // Validate consultation for video call
+      const validation = apiUtils.videoCall.validateConsultationForVideoCall(consultation);
+      
+      if (!validation.isValid) {
+        toast.error(validation.errors[0] || 'Cannot start video call');
+        return;
+      }
+      
+      // Check browser support
+      const browserSupport = apiUtils.videoCall.checkBrowserSupport();
+      if (!browserSupport.allSupported) {
+        toast.error(browserSupport.message);
+        return;
+      }
+      
+      // Check camera/microphone permissions
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      } catch (error) {
+        toast.error('Please allow camera and microphone access');
+        return;
+      }
+      
+      // Set selected consultation and open video call modal
+      setSelectedConsultation(consultation);
+      setShowVideoCallModal(true);
+      
+    } catch (error) {
+      console.error('Error starting video call:', error);
+      toast.error('Failed to start video call');
     }
   };
 
@@ -145,6 +198,7 @@ const Consultations = () => {
     const isFree = selectedConsultation.payment?.isFree;
     const hourlyRate = selectedConsultation.payment?.hourlyRate || 0;
     const totalHours = selectedConsultation.duration / 60;
+    const canStartVideoCall = selectedConsultation.status === 'accepted';
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -249,8 +303,21 @@ const Consultations = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons - UPDATED */}
               <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {canStartVideoCall && (
+                  <button 
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      handleStartVideoCall(selectedConsultation);
+                    }}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    <Video size={16} className="inline mr-2" />
+                    Start Video Call
+                  </button>
+                )}
+                
                 {selectedConsultation.status === 'pending' && (
                   <>
                     <button 
@@ -374,6 +441,7 @@ const Consultations = () => {
             const paymentStatus = getPaymentStatus(consultation);
             const totalAmount = consultation.payment?.amount || 0;
             const isFree = consultation.payment?.isFree;
+            const canStartVideoCall = consultation.status === 'accepted';
 
             return (
               <div key={consultation._id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
@@ -436,6 +504,16 @@ const Consultations = () => {
                     </div>
 
                     <div className="flex space-x-2">
+                      {canStartVideoCall && (
+                        <button 
+                          onClick={() => handleStartVideoCall(consultation)}
+                          className="flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200"
+                        >
+                          <Video size={16} />
+                          <span>Video Call</span>
+                        </button>
+                      )}
+                      
                       {consultation.status === 'pending' && (
                         <>
                           <button 
@@ -494,6 +572,20 @@ const Consultations = () => {
 
       {/* Details Modal */}
       {showDetailsModal && <ConsultationDetailsModal />}
+      
+      {/* Video Call Modal */}
+      {showVideoCallModal && selectedConsultation && user && (
+        <VideoCallModal
+          consultation={selectedConsultation}
+          user={user}
+          isOpen={showVideoCallModal}
+          onClose={() => setShowVideoCallModal(false)}
+          onEndCall={() => {
+            toast.success('Video call ended');
+            fetchConsultations(); // Refresh consultations after call ends
+          }}
+        />
+      )}
     </div>
   );
 };

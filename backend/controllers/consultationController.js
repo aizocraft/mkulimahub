@@ -211,10 +211,21 @@ exports.acceptConsultation = async (req, res, next) => {
 
     consultation.status = 'accepted';
     
-    // If free consultation, mark payment as paid
-    if (consultation.payment.isFree) {
-      consultation.payment.status = 'paid';
-    }
+   // In the acceptConsultation method, add this after consultation.status = 'accepted';
+if (consultation.payment.isFree || consultation.payment.status === 'paid') {
+  // Notify farmer that they can now initiate video call
+  const io = require('../socket').getIO();
+  io.to(`user_${consultation.farmer._id}`).emit('notification:consultation-ready', {
+    type: 'consultation_accepted_ready',
+    consultationId: consultation._id,
+    expert: {
+      id: consultation.expert._id,
+      name: consultation.expert.name
+    },
+    message: 'Consultation accepted! You can now start video call.',
+    timestamp: new Date()
+  });
+}
     
     await consultation.save();
 

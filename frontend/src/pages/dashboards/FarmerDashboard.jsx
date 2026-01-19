@@ -6,12 +6,12 @@ import { useTheme } from '../../context/ThemeContext';
 import Overview from './farmer/Overview';
 import MyCrops from './farmer/MyCrops';
 import Consultations from './farmer/Consultations';
-import Knowledge from './farmer/Knowledge';
+import Weather from './admin/Weather';
 import { 
   Activity, 
   Sprout, 
   Users, 
-  BookOpen, 
+  Cloud, 
   MapPin, 
   Star, 
   CheckCircle,
@@ -44,7 +44,7 @@ const FarmerDashboard = () => {
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'crops', label: 'My Crops', icon: Sprout },
     { id: 'consultations', label: 'Consultations', icon: Users },
-    { id: 'knowledge', label: 'Knowledge', icon: BookOpen }
+     { id: 'weather', label: 'Weather', icon: Cloud }
   ];
 
   // Function to get experience level display text
@@ -100,8 +100,8 @@ const FarmerDashboard = () => {
         return <MyCrops />;
       case 'consultations':
         return <Consultations />;
-      case 'knowledge':
-        return <Knowledge />;
+       case 'weather':
+      return <Weather />;
       default:
         return <Overview />;
     }

@@ -8,7 +8,7 @@ const logRoutes = require('./logs');
 const dbRoutes = require('./dbRoutes');
 const forumRoutes = require('./forumRoutes');
 const weatherRoutes = require('./weatherRoutes');
-
+const videoCallRoutes = require('./videoCallRoutes');
 const { requestLogger, errorLogger } = require('../middleware/logger');
 
 // Apply request logger to all routes
@@ -22,7 +22,9 @@ router.use('/logs', logRoutes);
 router.use('/db', dbRoutes); 
 router.use('/forum', forumRoutes);
 router.use('/weather', weatherRoutes);
-// Apply error logger (should be after all routes)
+router.use('/video', videoCallRoutes);
+
+// Apply error logger 
 router.use(errorLogger);
 
 module.exports = router;

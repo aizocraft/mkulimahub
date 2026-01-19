@@ -17,8 +17,13 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.0.3",
     "morgan": "^1.10.0",
+    "node-fetch": "^3.3.2",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "simple-peer": "^9.11.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

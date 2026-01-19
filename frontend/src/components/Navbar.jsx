@@ -10,13 +10,10 @@ import {
   Settings, 
   LogOut, 
   LayoutDashboard,
-  MessageCircle, // Changed: Added MessageCircle icon
+  MessageCircle, 
   HelpCircle,
-  Sparkles,
   Crop,
   Users,
-  BookOpen,
-  Calendar,
   ChevronDown,
   Home,
   Info,
@@ -105,7 +102,7 @@ const Navbar = () => {
 
   const expertItems = [
     { path: '/questions', label: 'Q&A', icon: HelpCircle },
-    { path: '/schedule', label: 'Schedule', icon: Calendar },
+  
   ];
 
   const adminItems = [

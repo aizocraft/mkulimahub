@@ -1,4 +1,4 @@
-// api.js - UPDATED WITH BOOKING ENDPOINTS
+// src/api.js - COMPLETE WITH ALL ENDPOINTS INCLUDING VIDEO CALL
 import axios from 'axios';
 
 // Base URL from environment or fallback
@@ -41,7 +41,7 @@ api.interceptors.response.use(
   }
 );
 
-// Auth API
+// ========== AUTH API ==========
 export const authAPI = {
   register: (userData) => api.post('/auth/register', userData),
   login: (credentials) => api.post('/auth/login', credentials),
@@ -57,7 +57,7 @@ export const authAPI = {
   exchangeToken: (shortToken) => api.post('/auth/exchange-token', { token: shortToken }),
 };
 
-// User Management API
+// ========== USER MANAGEMENT API ==========
 export const userAPI = {
   // Admin routes
   getAllUsers: (params = {}) => api.get('/users', { params }),
@@ -74,7 +74,7 @@ export const userAPI = {
   getFarmers: (params = {}) => api.get('/users/farmers', { params }),
 };
 
-// Booking & Consultation API
+// ========== BOOKING & CONSULTATION API ==========
 export const bookingAPI = {
   // Direct booking 
   bookConsultation: (consultationData) => api.post('/booking/book', consultationData),
@@ -92,7 +92,28 @@ export const bookingAPI = {
   getExpertDetailsForBooking: (expertId) => api.get(`/users/${expertId}`),
 };
 
-// Forum API
+// ========== VIDEO CALL API ==========
+export const videoCallAPI = {
+  // Get WebRTC configuration
+  getCallConfig: () => api.get('/video/config/webrtc'),
+  
+  // Initiate video call
+  initiateVideoCall: (consultationId) => 
+    api.post(`/video/consultations/${consultationId}/video-call`),
+  
+  // Get consultation chat
+  getConsultationChat: (consultationId) => 
+    api.get(`/video/consultations/${consultationId}/chat`),
+  
+  // Send message
+  sendMessage: (consultationId, messageData) => 
+    api.post(`/video/consultations/${consultationId}/chat/messages`, messageData),
+  
+  // Note: There's also a markMessagesAsRead endpoint in the backend
+  // but not in the provided routes. Add if needed.
+};
+
+// ========== FORUM API ==========
 export const forumAPI = {
   // Categories
   getCategories: () => api.get('/forum/categories'),
@@ -134,7 +155,7 @@ export const forumAPI = {
     api.get(`/forum/moderation/users/${userId}/history`, { params }),
 };
 
-// Upload API (for attachments)
+// ========== UPLOAD API ==========
 export const uploadAPI = {
   uploadFile: (file, onUploadProgress) => {
     const formData = new FormData();
@@ -151,7 +172,7 @@ export const uploadAPI = {
   deleteFile: (fileId) => api.delete(`/uploads/${fileId}`),
 };
 
-// Notification API
+// ========== NOTIFICATION API ==========
 export const notificationAPI = {
   getAll: (params = {}) => api.get('/notifications', { params }),
   markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
@@ -160,8 +181,9 @@ export const notificationAPI = {
   getUnreadCount: () => api.get('/notifications/unread-count'),
 };
 
-// Utility functions for handling API responses
+// ========== UTILITY FUNCTIONS ==========
 export const apiUtils = {
+  // Error handling
   handleError: (error) => {
     if (error.response) {
       return {
@@ -185,6 +207,7 @@ export const apiUtils = {
     }
   },
 
+  // Success handling
   handleSuccess: (response) => ({
     success: true,
     data: response.data,
@@ -193,7 +216,6 @@ export const apiUtils = {
   
   // Booking utilities
   booking: {
-    // Format time slots for display
     formatTimeSlot: (slot) => {
       if (!slot.startTime) return '';
       const start = new Date(`2000-01-01T${slot.startTime}`);
@@ -202,7 +224,6 @@ export const apiUtils = {
       return `${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     },
     
-    // Format date for display
     formatBookingDate: (dateString) => {
       const date = new Date(dateString);
       const now = new Date();
@@ -222,7 +243,6 @@ export const apiUtils = {
       }
     },
     
-    // Calculate consultation end time
     calculateEndTime: (startTime, duration) => {
       const [hours, minutes] = startTime.split(':').map(Number);
       const start = new Date();
@@ -232,7 +252,6 @@ export const apiUtils = {
       return end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     },
     
-    // Validate booking data
     validateBooking: (bookingData) => {
       const errors = [];
       
@@ -247,7 +266,6 @@ export const apiUtils = {
       return errors;
     },
     
-    // Get status color
     getStatusColor: (status) => {
       const colors = {
         pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
@@ -260,7 +278,6 @@ export const apiUtils = {
       return colors[status] || colors.pending;
     },
     
-    // Get status icon
     getStatusIcon: (status) => {
       const icons = {
         pending: '⏳',
@@ -273,7 +290,6 @@ export const apiUtils = {
       return icons[status] || '⏳';
     },
     
-    // Format consultation for display
     formatConsultation: (consultation) => {
       return {
         ...consultation,
@@ -285,7 +301,116 @@ export const apiUtils = {
     },
   },
   
-  // Forum utilities (existing)
+  // Video call utilities
+  videoCall: {
+    // Get WebRTC configuration
+    getRTCPeerConnectionConfig: async () => {
+      try {
+        const response = await videoCallAPI.getCallConfig();
+        return response.data.rtcConfig || {
+          iceServers: [
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ],
+          iceCandidatePoolSize: 10
+        };
+      } catch (error) {
+        console.warn('Failed to get WebRTC config, using defaults', error);
+        return {
+          iceServers: [
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ],
+          iceCandidatePoolSize: 10
+        };
+      }
+    },
+
+    // Get media constraints
+    getMediaConstraints: () => ({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      },
+      video: {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        frameRate: { ideal: 30 }
+      }
+    }),
+
+    // Get screen share constraints
+    getScreenShareConstraints: () => ({
+      video: {
+        cursor: 'always',
+        displaySurface: 'monitor'
+      },
+      audio: false
+    }),
+
+    // Format duration
+    formatDuration: (seconds) => {
+      const hours = Math.floor(seconds / 3600);
+      const minutes = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      
+      if (hours > 0) {
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+      return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    },
+
+    // Check browser support
+    checkBrowserSupport: () => {
+      const supported = {
+        getUserMedia: !!navigator.mediaDevices?.getUserMedia,
+        RTCPeerConnection: !!window.RTCPeerConnection,
+        screenShare: !!navigator.mediaDevices?.getDisplayMedia
+      };
+      
+      return {
+        ...supported,
+        allSupported: supported.getUserMedia && supported.RTCPeerConnection,
+        message: !supported.allSupported ? 
+          'Your browser does not fully support video calls. Please use Chrome, Firefox, or Edge.' : 
+          'Your browser supports video calls.'
+      };
+    },
+
+    // Validate consultation for video call
+    validateConsultationForVideoCall: (consultation) => {
+      const errors = [];
+      
+      if (!consultation) {
+        errors.push('Consultation not found');
+        return { isValid: false, errors };
+      }
+      
+      if (consultation.status !== 'accepted') {
+        errors.push('Consultation must be accepted before starting video call');
+      }
+      
+      if (!consultation.payment.isFree && consultation.payment.status !== 'paid') {
+        errors.push('Payment must be completed before starting video call');
+      }
+      
+      const consultationTime = new Date(consultation.bookingDate);
+      const [hours, minutes] = consultation.startTime.split(':').map(Number);
+      consultationTime.setHours(hours, minutes, 0, 0);
+      const now = new Date();
+      
+    
+      
+      return {
+        isValid: errors.length === 0,
+        errors,
+        canJoin: errors.length === 0
+      };
+    }
+  },
+  
+  // Forum utilities
   forum: {
     formatPostParams: (filters) => {
       const params = {};
@@ -404,6 +529,60 @@ export const apiUtils = {
   },
 };
 
+// Create a socket utility for easy socket connection
+export const socketUtils = {
+  connect: (token) => {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+    const socket = io(socketUrl, {
+      auth: { token },
+      transports: ['websocket', 'polling']
+    });
+    
+    return socket;
+  },
+  
+  // Socket event constants
+  events: {
+    // Video call events
+    VIDEO_CALL_JOIN: 'video-call:join',
+    VIDEO_CALL_JOINED: 'video-call:joined',
+    VIDEO_CALL_READY: 'video-call:ready',
+    VIDEO_CALL_USER_JOINED: 'video-call:user-joined',
+    VIDEO_CALL_OFFER: 'video-call:offer',
+    VIDEO_CALL_ANSWER: 'video-call:answer',
+    VIDEO_CALL_ICE_CANDIDATE: 'video-call:ice-candidate',
+    VIDEO_CALL_USER_LEFT: 'video-call:user-left',
+    VIDEO_CALL_ENDED: 'video-call:ended',
+    VIDEO_CALL_TOGGLE_MEDIA: 'video-call:toggle-media',
+    VIDEO_CALL_SCREEN_SHARE: 'video-call:screen-share',
+    VIDEO_CALL_RAISE_HAND: 'video-call:raise-hand',
+    VIDEO_CALL_REACTION: 'video-call:reaction',
+    
+    // Chat events
+    CHAT_JOIN: 'chat:join',
+    CHAT_PREVIOUS_MESSAGES: 'chat:previous-messages',
+    CHAT_USER_JOINED: 'chat:user-joined',
+    CHAT_SEND_MESSAGE: 'chat:send-message',
+    CHAT_NEW_MESSAGE: 'chat:new-message',
+    CHAT_TYPING: 'chat:typing',
+    CHAT_TYPING_INDICATOR: 'chat:typing-indicator',
+    CHAT_MARK_READ: 'chat:mark-read',
+    CHAT_MESSAGES_READ: 'chat:messages-read',
+    CHAT_LEAVE: 'chat:leave',
+    CHAT_USER_LEFT: 'chat:user-left',
+    
+    // Notification events
+    NOTIFICATION_CONSULTATION_READY: 'notification:consultation-ready',
+    NOTIFICATION_NEW_MESSAGE: 'notification:new-message',
+    
+    // General events
+    ERROR: 'error',
+    USER_DISCONNECTED: 'user-disconnected'
+  }
+};
+
+export const videoCallUtils = apiUtils.videoCall;
+
 // Export everything
 export default api;
 
@@ -412,5 +591,6 @@ export const {
   handleError,
   handleSuccess,
   booking,
-  forum,
+  videoCall,
+  forum
 } = apiUtils;

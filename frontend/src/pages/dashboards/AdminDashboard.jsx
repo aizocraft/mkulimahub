@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import UserManagement from '../../components/UserManagement';
 import Overview from './admin/Overview';
 import Weather from './admin/Weather';
-import Logs from './admin/Logs'; // Import the Logs component
+import Logs from './admin/Logs';
 import { 
   BarChart3, 
   Users, 
@@ -11,7 +11,7 @@ import {
   Shield, 
   CheckCircle, 
   Settings,
-  FileText // Add FileText icon import
+  FileText 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ const AdminDashboard = () => {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'weather', label: 'Weather', icon: Cloud },
-    { id: 'logs', label: 'System Logs', icon: FileText }, // Fixed: Added FileText icon
+    { id: 'logs', label: 'System Logs', icon: FileText }, 
   ];
 
   return (
@@ -119,7 +119,7 @@ const AdminDashboard = () => {
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'users' && <UserManagement />}
           {activeTab === 'weather' && <Weather />}
-          {activeTab === 'logs' && <Logs />} {/* Added Logs component */}
+          {activeTab === 'logs' && <Logs />} 
         </div>
       </div>
     </div>
