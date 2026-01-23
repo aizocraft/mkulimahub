@@ -1,9 +1,75 @@
-// socket/videoCallHandler.js - COMPLETE WORKING VERSION
+// socket/videoCallHandler.js - COMPLETE FIX
 const Consultation = require('../models/Consultation');
 
-// Store active rooms
-const activeRooms = new Map(); // roomId -> { users: [], consultationId }
+// Store active rooms and peer connections
+const activeRooms = new Map(); // roomId -> { users: [], offers: {}, answers: {} }
 const userSocketMap = new Map(); // userId -> socket
+
+// Helper method: Handle user leaving
+const handleUserLeave = (socket, roomId) => {
+  if (activeRooms.has(roomId)) {
+    const room = activeRooms.get(roomId);
+    const userId = socket.user?._id?.toString();
+    
+    if (userId) {
+      // Remove user from room
+      room.users = room.users.filter(u => u.userId !== userId);
+      
+      if (room.users.length === 0) {
+        // Room is empty, delete it
+        activeRooms.delete(roomId);
+        console.log(`Room ${roomId} deleted (empty)`);
+      } else {
+        // Notify remaining users
+        room.users.forEach(user => {
+          const userSocket = userSocketMap.get(user.userId);
+          if (userSocket) {
+            userSocket.emit('video-call:user-left', {
+              userId,
+              userName: socket.user?.name || 'User',
+              timestamp: new Date(),
+              remainingUsers: room.users.length
+            });
+          }
+        });
+      }
+    }
+  }
+  
+  // Leave the socket room
+  socket.leave(roomId);
+  
+  // Confirm to user
+  socket.emit('video-call:left', { roomId });
+};
+
+// Helper method: Handle call end
+const handleCallEnd = (io, socket, roomId, consultationId) => {
+  if (activeRooms.has(roomId)) {
+    const room = activeRooms.get(roomId);
+    
+    // Notify all users in room
+    room.users.forEach(user => {
+      const userSocket = userSocketMap.get(user.userId);
+      if (userSocket) {
+        userSocket.emit('video-call:ended', {
+          endedBy: socket.user._id.toString(),
+          endedByName: socket.user.name,
+          roomId,
+          consultationId,
+          timestamp: new Date()
+        });
+        
+        // Make them leave the room
+        userSocket.leave(roomId);
+      }
+    });
+    
+    // Clean up room
+    activeRooms.delete(roomId);
+    console.log(`Room ${roomId} cleaned up`);
+  }
+};
 
 module.exports = (io, socket) => {
   console.log(`🎥 Video call handler connected: ${socket.id}, User: ${socket.user?._id}`);
@@ -18,7 +84,7 @@ module.exports = (io, socket) => {
   // Create or join video room
   socket.on('video-call:join', async ({ consultationId }, callback) => {
     try {
-      console.log(`User ${socket.user?._id} joining consultation: ${consultationId}`);
+      console.log(`📞 User ${socket.user?._id} joining consultation: ${consultationId}`);
 
       // Validate user
       if (!socket.user?._id) {
@@ -27,11 +93,11 @@ module.exports = (io, socket) => {
       }
 
       const userId = socket.user._id.toString();
+      const userName = socket.user.name || 'User';
 
-      // Verify consultation exists
+      // Verify consultation
       const consultation = await Consultation.findById(consultationId)
-        .populate('farmer', '_id name')
-        .populate('expert', '_id name');
+        .populate('farmer expert', '_id name');
 
       if (!consultation) {
         if (callback) callback({ error: 'Consultation not found' });
@@ -47,14 +113,7 @@ module.exports = (io, socket) => {
         return;
       }
 
-      // Check consultation status
-      if (consultation.status !== 'accepted') {
-        if (callback) callback({ error: 'Consultation must be accepted first' });
-        return;
-      }
-
       const roomId = `consultation_${consultationId}`;
-      const userName = socket.user.name || 'User';
       
       // Join the socket room
       await socket.join(roomId);
@@ -64,6 +123,9 @@ module.exports = (io, socket) => {
         activeRooms.set(roomId, {
           consultationId,
           users: [],
+          offers: new Map(),
+          answers: new Map(),
+          iceCandidates: new Map(),
           createdAt: new Date()
         });
       }
@@ -74,16 +136,16 @@ module.exports = (io, socket) => {
         socketId: socket.id,
         userName,
         role: isFarmer ? 'farmer' : 'expert',
-        joinedAt: new Date()
+        joinedAt: new Date(),
+        isConnected: true
       };
 
-      // Add user to room if not already present
+      // Add/update user in room
       const existingUserIndex = room.users.findIndex(u => u.userId === userId);
       if (existingUserIndex === -1) {
         room.users.push(userInfo);
       } else {
-        // Update socket ID if reconnecting
-        room.users[existingUserIndex].socketId = socket.id;
+        room.users[existingUserIndex] = userInfo;
       }
 
       // Get other users (excluding current user)
@@ -91,17 +153,17 @@ module.exports = (io, socket) => {
       
       console.log(`✅ User ${userId} joined room ${roomId}. Total users: ${room.users.length}`);
 
-      // Determine if user is initiator (first person)
+      // Determine if user is initiator (first person in room)
       const isInitiator = otherUsers.length === 0;
 
-      // Prepare response data
+      // Prepare response
       const responseData = {
         roomId,
         consultationId,
         user: userInfo,
         connectedUsers: otherUsers,
         isInitiator,
-        isCallActive: otherUsers.length > 0,
+        isCallActive: room.users.length >= 2,
         otherUser: otherUsers.length > 0 ? otherUsers[0] : null
       };
 
@@ -111,7 +173,7 @@ module.exports = (io, socket) => {
       // Also emit event for consistency
       socket.emit('video-call:joined', responseData);
 
-      // Notify other users in the room
+      // Send user-joined event to all other users immediately
       if (otherUsers.length > 0) {
         otherUsers.forEach(otherUser => {
           const otherSocket = userSocketMap.get(otherUser.userId);
@@ -120,22 +182,21 @@ module.exports = (io, socket) => {
               userId,
               userName,
               socketId: socket.id,
-              timestamp: new Date()
+              timestamp: new Date(),
+              shouldCreateOffer: true // Tell the other user to create offer
             });
             
-            // If this is the second user joining, notify initiator to create offer
+            // If this is the second user joining, send ready event
             if (room.users.length === 2) {
-              const initiator = room.users.find(u => u.userId !== userId);
-              if (initiator) {
-                const initiatorSocket = userSocketMap.get(initiator.userId);
-                if (initiatorSocket) {
-                  initiatorSocket.emit('video-call:ready', {
-                    roomId,
-                    newUser: userInfo,
-                    consultationId
-                  });
-                }
-              }
+              // Notify both users that call is ready
+              io.to(roomId).emit('video-call:ready', {
+                roomId,
+                users: room.users,
+                consultationId,
+                timestamp: new Date()
+              });
+              
+              console.log(`🚀 Call is ready in room ${roomId} with 2 users`);
             }
           }
         });
@@ -149,10 +210,16 @@ module.exports = (io, socket) => {
 
   // WebRTC Signaling - Offer
   socket.on('video-call:offer', ({ roomId, offer, targetUserId }) => {
-    console.log(`📤 Offer from ${socket.user._id} to ${targetUserId || 'all'}`);
+    console.log(`📤 Offer from ${socket.user._id} to ${targetUserId}`);
     
     const fromUserId = socket.user._id.toString();
     const fromUserName = socket.user.name;
+    
+    // Store offer for later use
+    const room = activeRooms.get(roomId);
+    if (room) {
+      room.offers.set(`${fromUserId}_${targetUserId}`, offer);
+    }
     
     if (targetUserId) {
       // Send to specific user
@@ -162,8 +229,11 @@ module.exports = (io, socket) => {
           offer,
           fromUserId,
           fromUserName,
-          roomId
+          roomId,
+          timestamp: new Date()
         });
+      } else {
+        console.warn(`Target user ${targetUserId} not found`);
       }
     } else {
       // Broadcast to all in room except sender
@@ -171,7 +241,8 @@ module.exports = (io, socket) => {
         offer,
         fromUserId,
         fromUserName,
-        roomId
+        roomId,
+        timestamp: new Date()
       });
     }
   });
@@ -183,6 +254,12 @@ module.exports = (io, socket) => {
     const fromUserId = socket.user._id.toString();
     const fromUserName = socket.user.name;
     
+    // Store answer
+    const room = activeRooms.get(roomId);
+    if (room) {
+      room.answers.set(`${fromUserId}_${targetUserId}`, answer);
+    }
+    
     if (targetUserId) {
       const targetSocket = userSocketMap.get(targetUserId);
       if (targetSocket) {
@@ -190,7 +267,8 @@ module.exports = (io, socket) => {
           answer,
           fromUserId,
           fromUserName,
-          roomId
+          roomId,
+          timestamp: new Date()
         });
       }
     }
@@ -200,89 +278,61 @@ module.exports = (io, socket) => {
   socket.on('video-call:ice-candidate', ({ roomId, candidate, targetUserId }) => {
     const fromUserId = socket.user._id.toString();
     
+    // Store ICE candidate
+    const room = activeRooms.get(roomId);
+    if (room) {
+      const key = `${fromUserId}_${targetUserId}`;
+      if (!room.iceCandidates.has(key)) {
+        room.iceCandidates.set(key, []);
+      }
+      room.iceCandidates.get(key).push(candidate);
+    }
+    
     if (targetUserId) {
       const targetSocket = userSocketMap.get(targetUserId);
       if (targetSocket) {
         targetSocket.emit('video-call:ice-candidate', {
           candidate,
           fromUserId,
-          roomId
+          roomId,
+          timestamp: new Date()
         });
       }
     } else {
       socket.to(roomId).emit('video-call:ice-candidate', {
         candidate,
         fromUserId,
-        roomId
+        roomId,
+        timestamp: new Date()
       });
     }
+  });
+
+  // Send connection established event
+  socket.on('video-call:connected', ({ roomId }) => {
+    console.log(`✅ User ${socket.user._id} connected in room ${roomId}`);
+    
+    // Notify other users in room
+    socket.to(roomId).emit('video-call:peer-connected', {
+      userId: socket.user._id.toString(),
+      userName: socket.user.name,
+      roomId,
+      timestamp: new Date()
+    });
   });
 
   // User leaving room
   socket.on('video-call:leave', ({ roomId }) => {
     console.log(`🚪 User ${socket.user._id} leaving room: ${roomId}`);
     
-    if (activeRooms.has(roomId)) {
-      const room = activeRooms.get(roomId);
-      const userId = socket.user._id.toString();
-      
-      // Remove user from room
-      room.users = room.users.filter(u => u.userId !== userId);
-      
-      if (room.users.length === 0) {
-        // Room is empty, delete it
-        activeRooms.delete(roomId);
-        console.log(`Room ${roomId} deleted (empty)`);
-      } else {
-        // Notify remaining users
-        room.users.forEach(user => {
-          const userSocket = userSocketMap.get(user.userId);
-          if (userSocket) {
-            userSocket.emit('video-call:user-left', {
-              userId,
-              userName: socket.user.name,
-              timestamp: new Date()
-            });
-          }
-        });
-      }
-    }
-    
-    // Leave the socket room
-    socket.leave(roomId);
-    
-    // Confirm to user
-    socket.emit('video-call:left', { roomId });
+    handleUserLeave(socket, roomId); // Fixed: Use the function directly
   });
 
   // End call for everyone
   socket.on('video-call:end', ({ roomId, consultationId }) => {
     console.log(`⛔ Call ended in room ${roomId} by ${socket.user._id}`);
     
-    if (activeRooms.has(roomId)) {
-      const room = activeRooms.get(roomId);
-      
-      // Notify all users in room
-      room.users.forEach(user => {
-        const userSocket = userSocketMap.get(user.userId);
-        if (userSocket) {
-          userSocket.emit('video-call:ended', {
-            endedBy: socket.user._id.toString(),
-            endedByName: socket.user.name,
-            roomId,
-            consultationId,
-            timestamp: new Date()
-          });
-          
-          // Make them leave the room
-          userSocket.leave(roomId);
-        }
-      });
-      
-      // Clean up room
-      activeRooms.delete(roomId);
-      console.log(`Room ${roomId} cleaned up`);
-    }
+    handleCallEnd(io, socket, roomId, consultationId); // Fixed: Use the function directly
   });
 
   // Handle disconnect
@@ -298,27 +348,7 @@ module.exports = (io, socket) => {
     
     // Remove user from all rooms
     activeRooms.forEach((room, roomId) => {
-      const userIndex = room.users.findIndex(u => u.socketId === socket.id);
-      if (userIndex > -1) {
-        const user = room.users[userIndex];
-        room.users.splice(userIndex, 1);
-        
-        if (room.users.length === 0) {
-          activeRooms.delete(roomId);
-        } else {
-          // Notify others in the room
-          room.users.forEach(remainingUser => {
-            const remainingSocket = userSocketMap.get(remainingUser.userId);
-            if (remainingSocket) {
-              remainingSocket.emit('video-call:user-left', {
-                userId: user.userId,
-                userName: user.userName,
-                timestamp: new Date()
-              });
-            }
-          });
-        }
-      }
+      handleUserLeave(socket, roomId); // Fixed: Use the function directly
     });
   });
 };
