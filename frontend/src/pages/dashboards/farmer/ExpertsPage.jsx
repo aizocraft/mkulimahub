@@ -29,7 +29,7 @@ const ExpertsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
   const [selectedAvailability, setSelectedAvailability] = useState('All');
-  const [maxRate, setMaxRate] = useState(10000);
+  const [maxRate, setMaxRate] = useState(1000);
   const [minRating, setMinRating] = useState(0);
   
   // Modal states

@@ -109,8 +109,11 @@ export const videoCallAPI = {
   sendMessage: (consultationId, messageData) => 
     api.post(`/video/consultations/${consultationId}/chat/messages`, messageData),
   
-  // Note: There's also a markMessagesAsRead endpoint in the backend
-  // but not in the provided routes. Add if needed.
+  getChatMessages: (consultationId) => 
+    api.get(`/video/consultations/${consultationId}/chat`),
+  
+  markMessagesAsRead: (consultationId, messageIds) => 
+    api.post(`/video/consultations/${consultationId}/chat/read`, { messageIds }),
 };
 
 // ========== FORUM API ==========

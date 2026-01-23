@@ -200,7 +200,41 @@ const videoCallController = {
         message: 'Server error'
       });
     }
+  },
+
+
+// Mark messages as read
+markMessagesAsRead: async (req, res) => {
+  try {
+    const { consultationId } = req.params;
+    const { messageIds } = req.body;
+    const userId = req.user._id;
+
+    await ChatMessageModel.updateMany(
+      {
+        _id: { $in: messageIds },
+        consultation: consultationId,
+        sender: { $ne: userId }
+      },
+      {
+        $addToSet: { readBy: userId }
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Messages marked as read'
+    });
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
   }
+}
+
+
 };
 
 module.exports = videoCallController;

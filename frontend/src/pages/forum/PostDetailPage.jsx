@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const PostDetailPage = () => {
-  const { postId } = useParams();
+const { id } = useParams();
   const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();

@@ -32,7 +32,7 @@ const SearchAndFilters = ({
   const isFilterActive = 
     selectedSpecialty !== 'All' || 
     selectedAvailability !== 'All' || 
-    maxRate < 10000 || 
+    maxRate < 1000 || 
     minRating > 0;
 
   return (
@@ -127,8 +127,8 @@ const SearchAndFilters = ({
             <input
               type="range"
               min="0"
-              max="10000"
-              step="500"
+              max="1000"
+              step="50"
               value={maxRate}
               onChange={(e) => onMaxRateChange(parseInt(e.target.value))}
               className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
@@ -136,7 +136,7 @@ const SearchAndFilters = ({
           </div>
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500 mt-1">
             <span>FREE</span>
-            <span>10,000/hr</span>
+            <span>1,000/hr</span>
           </div>
         </div>
 
@@ -197,7 +197,7 @@ const SearchAndFilters = ({
                 {selectedAvailability}
               </span>
             )}
-            {maxRate < 10000 && (
+            {maxRate < 1000 && (
               <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm">
                 Under KSh {maxRate.toLocaleString()}/hr
               </span>

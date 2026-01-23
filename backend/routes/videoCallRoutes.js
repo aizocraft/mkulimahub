@@ -13,5 +13,6 @@ router.post('/consultations/:consultationId/video-call', auth, videoCallControll
 // Chat routes
 router.get('/consultations/:consultationId/chat', auth, videoCallController.getConsultationChat);
 router.post('/consultations/:consultationId/chat/messages', auth, videoCallController.sendMessage);
+router.post('/consultations/:consultationId/chat/read', auth, videoCallController.markMessagesAsRead);
 
 module.exports = router;

@@ -7,6 +7,8 @@ import Overview from './farmer/Overview';
 import MyCrops from './farmer/MyCrops';
 import Consultations from './farmer/Consultations';
 import Weather from './admin/Weather';
+import ExpertsPage from './farmer/ExpertsPage'; 
+import ForumPages from '../ForumPages';
 import { 
   Activity, 
   Sprout, 
@@ -16,7 +18,9 @@ import {
   Star, 
   CheckCircle,
   TrendingUp,
-  Settings
+  Settings,
+  GraduationCap,
+  MessageSquare
 } from 'lucide-react';
 
 const FarmerDashboard = () => {
@@ -35,7 +39,7 @@ const FarmerDashboard = () => {
       setFarmerData({
         county: user.address?.county || 'Not specified',
         experienceLevel: user.experienceLevel || 'beginner',
-        isActive: user.isActive !== false // Default to true if not specified
+        isActive: user.isActive !== false
       });
     }
   }, [user]);
@@ -44,7 +48,9 @@ const FarmerDashboard = () => {
     { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'crops', label: 'My Crops', icon: Sprout },
     { id: 'consultations', label: 'Consultations', icon: Users },
-     { id: 'weather', label: 'Weather', icon: Cloud }
+    { id: 'experts', label: 'Experts', icon: GraduationCap }, 
+    { id: 'forum', label: 'Forum', icon: MessageSquare }, 
+    { id: 'weather', label: 'Weather', icon: Cloud }
   ];
 
   // Function to get experience level display text
@@ -100,8 +106,12 @@ const FarmerDashboard = () => {
         return <MyCrops />;
       case 'consultations':
         return <Consultations />;
-       case 'weather':
-      return <Weather />;
+      case 'experts':
+        return <ExpertsPage />;
+        case 'forum':
+      return <ForumPages />;  
+      case 'weather':
+        return <Weather />;
       default:
         return <Overview />;
     }

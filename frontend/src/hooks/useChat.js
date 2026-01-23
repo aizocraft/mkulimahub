@@ -16,25 +16,32 @@ const useChat = (consultationId, user) => {
   const hasJoinedRef = useRef(false);
 
   // Load previous messages
-  const loadPreviousMessages = useCallback(async () => {
-    try {
-      const response = await videoCallAPI.getChatMessages(consultationId);
-      setMessages(response.data.messages || []);
-      
-      // Mark messages as read
-      const unreadIds = response.data.messages
-        .filter(msg => !msg.readBy?.includes(user?.id) && msg.sender._id !== user?.id)
-        .map(msg => msg._id);
-      
-      if (unreadIds.length > 0) {
+const loadPreviousMessages = useCallback(async () => {
+  try {
+    // Use the correct function name
+    const response = await videoCallAPI.getConsultationChat(consultationId);
+    setMessages(response.data.messages || []);
+    
+    // Mark messages as read
+    const unreadIds = response.data.messages
+      .filter(msg => !msg.readBy?.includes(user?.id) && msg.sender._id !== user?.id)
+      .map(msg => msg._id);
+    
+    if (unreadIds.length > 0) {
+      try {
         await videoCallAPI.markMessagesAsRead(consultationId, unreadIds);
+      } catch (error) {
+        console.log('Could not mark messages as read:', error);
+        // Fallback: use socket
+        socketService.markMessagesAsRead(consultationId, unreadIds);
       }
-      
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-      setError('Failed to load chat messages');
     }
-  }, [consultationId, user?.id]);
+    
+  } catch (error) {
+    console.error('Failed to load messages:', error);
+    setError('Failed to load chat messages');
+  }
+}, [consultationId, user?.id]);
 
   // Join chat room
   const joinChat = useCallback(() => {

@@ -10,9 +10,7 @@ import {
   Settings, 
   LogOut, 
   LayoutDashboard,
-  MessageCircle, 
   HelpCircle,
-  Crop,
   Users,
   ChevronDown,
   Home,
@@ -91,17 +89,16 @@ const Navbar = () => {
     { path: '/', label: 'Home', icon: Home },
     { path: '/about', label: 'About', icon: Info },
     { path: '/contact', label: 'Contact', icon: Contact },
-    { path: '/forum', label: 'Forum', icon: MessageCircle }, 
+    
   ];
 
   // Role-specific navigation items
   const farmerItems = [
-    { path: '/crops', label: 'Crops', icon: Crop },
-    { path: '/experts', label: 'Experts', icon: Users },
+
   ];
 
   const expertItems = [
-    { path: '/questions', label: 'Q&A', icon: HelpCircle },
+   
   
   ];
 
@@ -455,14 +452,7 @@ const Navbar = () => {
 
                         {/* Menu Items */}
                         <div className="p-2">
-                          <Link
-                            to="/forum" // Added Forum link to dropdown
-                            onClick={() => setIsDropdownOpen(false)}
-                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors duration-200"
-                          >
-                            <MessageCircle size={18} />
-                            <span className="font-medium">Forum</span>
-                          </Link>
+                         
                           <Link
                             to="/settings"
                             onClick={() => setIsDropdownOpen(false)}

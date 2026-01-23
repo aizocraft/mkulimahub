@@ -1,32 +1,27 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import Overview from './expert/Overview';
 import Consultations from './expert/Consultations';
-import Questions from './expert/Questions';
 import Weather from './admin/Weather';
+import ForumPages from '../ForumPages';
 
 import { 
   BarChart3, 
   MessageCircle, 
   Users, 
-  Calendar, 
   Star, 
   Shield, 
   CheckCircle,
-  Sun,
-  Moon,
-  ChevronDown,
   Settings,
-  Bell,
   Clock,
   Target,
   Award,
   DollarSign,
   Globe,
-  Cloud
+  Cloud,
+  MessageSquare 
 } from 'lucide-react';
 
 const ExpertDashboard = () => {
@@ -59,7 +54,7 @@ const ExpertDashboard = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'consultations', label: 'Consultations', icon: MessageCircle },
-    { id: 'questions', label: 'Questions', icon: Users },
+    { id: 'forum', label: 'Forum', icon: MessageSquare }, 
     { id: 'weather', label: 'Weather', icon: Cloud } 
   ];
 
@@ -251,7 +246,7 @@ const ExpertDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'consultations' && <Consultations />}
-          {activeTab === 'questions' && <Questions />}
+          {activeTab === 'forum' && <ForumPages />}
           {activeTab === 'weather' && <Weather />}
        
         </div>

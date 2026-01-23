@@ -1,43 +1,80 @@
-// src/services/socketService.js
+// src/services/socketService.js - UPDATED
 import { io } from 'socket.io-client';
 
 class SocketService {
   constructor() {
     this.socket = null;
     this.listeners = new Map();
-    this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 5;
     this.user = null;
+    this.isInitializing = false;
   }
 
-  // Initialize socket connection
+  // Initialize socket connection - FIXED
   initialize(token, userId) {
+    // Prevent multiple initializations
+    if (this.isInitializing) {
+      console.log('Socket initialization in progress...');
+      return this.socket;
+    }
+    
     if (this.socket?.connected) {
       console.log('Socket already connected');
       return this.socket;
     }
 
+    // If userId is not provided, try to get it from localStorage or throw warning
+    let finalUserId = userId;
+    if (!finalUserId) {
+      console.warn('User ID not provided. Trying to get from localStorage...');
+      // Try to get from localStorage or auth context
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsedUser = JSON.parse(userData);
+          finalUserId = parsedUser._id || parsedUser.id;
+        } catch (e) {
+          console.error('Failed to parse user data:', e);
+        }
+      }
+    }
+
+    if (!finalUserId) {
+      console.error('User ID is required for socket connection');
+      // Don't throw error, just log and return null
+      return null;
+    }
+
     try {
+      this.isInitializing = true;
+      this.user = { id: finalUserId.toString() };
+      
       const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
       
+      console.log(`🔌 Initializing socket for user: ${finalUserId}`);
+      
       this.socket = io(SOCKET_URL, {
-        auth: { token },
+        auth: { 
+          token: token || 'dummy-token',
+          userId: finalUserId.toString()
+        },
         transports: ['websocket', 'polling'],
         reconnection: true,
-        reconnectionAttempts: this.maxReconnectAttempts,
+        reconnectionAttempts: 10,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
         timeout: 20000,
       });
 
       this.setupEventListeners();
-      this.user = { id: userId };
       
-      console.log('Socket initialized for user:', userId);
+      console.log('✅ Socket initialized');
+      this.isInitializing = false;
       return this.socket;
     } catch (error) {
       console.error('Failed to initialize socket:', error);
-      throw error;
+      this.isInitializing = false;
+      // Don't throw, just return null
+      return null;
     }
   }
 
@@ -46,31 +83,15 @@ class SocketService {
     if (!this.socket) return;
 
     this.socket.on('connect', () => {
-      console.log('✅ Socket connected:', this.socket.id);
-      this.reconnectAttempts = 0;
-      
-      // Rejoin rooms if user exists
-      if (this.user) {
-        this.socket.emit('join-user-room', { userId: this.user.id });
-      }
+      console.log('✅ Socket connected with ID:', this.socket.id);
     });
 
     this.socket.on('disconnect', (reason) => {
       console.log('❌ Socket disconnected:', reason);
-      
-      if (reason === 'io server disconnect') {
-        // Server initiated disconnect, try to reconnect
-        this.socket.connect();
-      }
     });
 
     this.socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error.message);
-      this.reconnectAttempts++;
-      
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached');
-      }
     });
 
     this.socket.on('error', (error) => {
@@ -78,7 +99,7 @@ class SocketService {
     });
   }
 
-  // Join a video call room
+  // Join a video call room - SAFE VERSION
   joinVideoRoom(consultationId) {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
@@ -86,10 +107,21 @@ class SocketService {
         return;
       }
 
+      console.log(`Joining video room for consultation: ${consultationId}`);
+      
+      // Set timeout for join operation
+      const timeout = setTimeout(() => {
+        reject(new Error('Join operation timed out'));
+      }, 10000);
+
       this.socket.emit('video-call:join', { consultationId }, (response) => {
+        clearTimeout(timeout);
+        
         if (response?.error) {
+          console.error('Error joining room:', response.error);
           reject(new Error(response.error));
         } else {
+          console.log('✅ Successfully joined room');
           resolve(response);
         }
       });
@@ -98,7 +130,10 @@ class SocketService {
 
   // Leave a video call room
   leaveVideoRoom(roomId) {
-    if (!this.socket?.connected) return;
+    if (!this.socket?.connected) {
+      console.log('Socket not connected, cannot leave room');
+      return;
+    }
     this.socket.emit('video-call:leave', { roomId });
   }
 
@@ -132,119 +167,18 @@ class SocketService {
     this.socket.emit('video-call:toggle-media', { roomId, mediaType, isEnabled });
   }
 
-  // Screen sharing
-  toggleScreenShare(roomId, streamId, isStarting) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('video-call:screen-share', { roomId, streamId, isStarting });
-  }
-
-  // Raise hand
-  raiseHand(roomId, isRaised) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('video-call:raise-hand', { roomId, isRaised });
-  }
-
-  // Send reaction
-  sendReaction(roomId, reaction) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('video-call:reaction', { roomId, reaction });
-  }
-
-  // CHAT FUNCTIONS
-  joinChat(consultationId) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('chat:join', { consultationId });
-  }
-
-  sendMessage(consultationId, content, type = 'text') {
-    if (!this.socket?.connected) return;
-    this.socket.emit('chat:send-message', { consultationId, content, type });
-  }
-
-  markMessagesAsRead(consultationId, messageIds) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('chat:mark-read', { consultationId, messageIds });
-  }
-
-  leaveChat(consultationId) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('chat:leave', { consultationId });
-  }
-
-  typingIndicator(consultationId, isTyping) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('chat:typing', { consultationId, isTyping });
-  }
-
-  // NOTIFICATION FUNCTIONS
-  sendConsultationRequest(consultationId, toUserId) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('notification:consultation-request', { consultationId, toUserId });
-  }
-
-  sendConsultationAccepted(consultationId, toUserId) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('notification:consultation-accepted', { consultationId, toUserId });
-  }
-
-  sendVideoCallNotification(consultationId, toUserId, callerName) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('notification:video-call-incoming', { 
-      consultationId, 
-      toUserId, 
-      callerName 
-    });
-  }
-
   // Event listeners management
   on(event, callback) {
     if (!this.socket) return;
-    
     this.socket.on(event, callback);
-    if (!this.listeners.has(event)) {
-      this.listeners.set(event, []);
-    }
-    this.listeners.get(event).push(callback);
   }
 
   off(event, callback) {
     if (!this.socket) return;
-    
     if (callback) {
       this.socket.off(event, callback);
     } else {
       this.socket.off(event);
-    }
-    
-    if (this.listeners.has(event)) {
-      const listeners = this.listeners.get(event);
-      const index = listeners.indexOf(callback);
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
-    }
-  }
-
-  // Clean up all listeners
-  removeAllListeners() {
-    if (!this.socket) return;
-    
-    this.listeners.forEach((callbacks, event) => {
-      callbacks.forEach(callback => {
-        this.socket.off(event, callback);
-      });
-    });
-    this.listeners.clear();
-  }
-
-  // Disconnect socket
-  disconnect() {
-    if (this.socket) {
-      this.removeAllListeners();
-      this.socket.disconnect();
-      this.socket = null;
-      this.user = null;
-      console.log('Socket disconnected');
     }
   }
 
@@ -255,7 +189,12 @@ class SocketService {
 
   // Get socket ID
   getSocketId() {
-    return this.socket?.id;
+    return this.socket?.id || null;
+  }
+
+  // Get user ID
+  getUserId() {
+    return this.user?.id || null;
   }
 }
 

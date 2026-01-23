@@ -1,179 +1,317 @@
-// src/components/VideoCall/VideoCallContainer.jsx
+// src/components/VideoCall/VideoCallContainer.jsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import useVideoCall from '../../hooks/useVideoCall';
-import useChat from '../../hooks/useChat';
-import VideoGrid from './VideoGrid';
-import VideoCallControls from './VideoCallControls';
-import ChatContainer from '../Chat/ChatContainer';
-import CallNotification from './CallNotification';
+import { Mic, MicOff, Video, VideoOff, Phone, PhoneOff, MessageSquare } from 'lucide-react';
 
 const VideoCallContainer = ({ consultation, user, onEndCall }) => {
-  const [showChat, setShowChat] = useState(true);
-  const [incomingCall, setIncomingCall] = useState(null);
+  const [showChat, setShowChat] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   const {
-    // Video call state
     localStream,
     remoteStream,
-    screenStream,
     isCallActive,
     isConnecting,
     isMuted,
     isVideoOff,
-    isScreenSharing,
     callDuration,
     error,
     roomInfo,
     connectedUsers,
+    isCallEstablished,
+    waitingMessage,
     
-    // Refs
     localVideoRef,
     remoteVideoRef,
-    screenVideoRef,
     
-    // Functions
     startVideoCall,
     endCall,
     toggleAudio,
     toggleVideo,
-    startScreenShare,
-    stopScreenShare,
   } = useVideoCall(consultation?._id, user);
 
-  const chat = useChat(consultation?._id, user);
-
-  // Handle incoming call notifications
+  // Handle responsive design
   useEffect(() => {
-    const handleIncomingCall = (data) => {
-      if (data.consultationId === consultation?._id) {
-        setIncomingCall({
-          callerName: data.callerName,
-          timestamp: data.timestamp,
-        });
-      }
-    };
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-    // You'll need to setup socket listener for incoming calls
-    // socketService.on('notification:incoming-call', handleIncomingCall);
+  const isMobile = windowWidth < 768;
 
-    return () => {
-      // socketService.off('notification:incoming-call', handleIncomingCall);
-    };
-  }, [consultation?._id]);
-
-  // Start call when consultation is accepted
-  useEffect(() => {
-    if (consultation?.status === 'accepted' && !isCallActive && !isConnecting) {
-      // Auto-start or show start button based on your logic
-    }
-  }, [consultation, isCallActive, isConnecting]);
-
-  // Handle call end
-  const handleEndCall = () => {
-    endCall();
-    if (onEndCall) onEndCall();
+  // Format call duration
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle incoming call response
-  const handleAcceptCall = () => {
-    setIncomingCall(null);
-    startVideoCall();
-  };
-
-  const handleRejectCall = () => {
-    setIncomingCall(null);
-    // Notify caller that call was rejected
-  };
-
+  // Error display
   if (error) {
     return (
-      <div className="video-call-error">
-        <div className="error-message">{error}</div>
-        <button onClick={() => window.location.reload()}>Reload</button>
+      <div className="h-full flex items-center justify-center bg-gray-900 p-6">
+        <div className="max-w-md w-full bg-gray-800 rounded-xl p-8 text-center">
+          <div className="text-red-500 text-5xl mb-4">⚠️</div>
+          <h3 className="text-white text-xl font-semibold mb-3">Connection Error</h3>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={startVideoCall}
+              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            >
+              <Phone size={20} />
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="video-call-container">
-      {/* Incoming call notification */}
-      {incomingCall && (
-        <CallNotification
-          callerName={incomingCall.callerName}
-          onAccept={handleAcceptCall}
-          onReject={handleRejectCall}
-        />
-      )}
-
-      {/* Connecting state */}
-      {isConnecting && (
-        <div className="connecting-overlay">
-          <div className="spinner"></div>
-          <p>Connecting to video call...</p>
-        </div>
-      )}
-
-      {/* Main video call interface */}
-      <div className="video-call-main">
-        <div className={`video-section ${showChat ? 'with-chat' : 'full-width'}`}>
-          <VideoGrid
-            localStream={localStream}
-            remoteStream={remoteStream}
-            screenStream={screenStream}
-            localVideoRef={localVideoRef}
-            remoteVideoRef={remoteVideoRef}
-            screenVideoRef={screenVideoRef}
-            connectedUsers={connectedUsers}
-            isScreenSharing={isScreenSharing}
-            callDuration={callDuration}
-            user={user}
-          />
-          
-          <VideoCallControls
-            isCallActive={isCallActive}
-            isMuted={isMuted}
-            isVideoOff={isVideoOff}
-            isScreenSharing={isScreenSharing}
-            onToggleAudio={toggleAudio}
-            onToggleVideo={toggleVideo}
-            onScreenShare={startScreenShare}
-            onStopScreenShare={stopScreenShare}
-            onEndCall={handleEndCall}
-            onToggleChat={() => setShowChat(!showChat)}
-            showChat={showChat}
-            canStartCall={consultation?.status === 'accepted' && !isCallActive}
-            onStartCall={startVideoCall}
-          />
-        </div>
-
-        {/* Chat panel */}
-        {showChat && (
-          <div className="chat-section">
-            <ChatContainer
-              messages={chat.messages}
-              onSendMessage={chat.sendMessage}
-              onTyping={chat.handleTyping}
-              typingUsers={chat.typingUsers}
-              messagesEndRef={chat.messagesEndRef}
-              user={user}
-            />
+  // Loading state
+  if (isConnecting) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-900">
+        <div className="text-center">
+          <div className="relative">
+            <div className="w-20 h-20 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Phone size={24} className="text-blue-500" />
+            </div>
           </div>
-        )}
+          <p className="text-white text-lg font-medium mt-6">Setting up video call...</p>
+          <p className="text-gray-400 mt-2">Please wait while we connect you</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Get room ID safely
+  const roomId = roomInfo?.roomId || 'Waiting...';
+
+  return (
+    <div className="video-call-container h-full flex flex-col bg-gray-900">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-gray-850 border-b border-gray-800">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className={`w-3 h-3 rounded-full ${isCallEstablished ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+          </div>
+          <div>
+            <h1 className="text-white font-semibold text-lg">
+              {consultation?.topic || 'Video Consultation'}
+            </h1>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-400">
+                {isCallEstablished ? 'Connected' : waitingMessage || 'Ready to connect'}
+              </span>
+              {isCallActive && (
+                <span className="text-blue-400 font-mono bg-blue-900/30 px-2 py-0.5 rounded">
+                  {formatDuration(callDuration)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {connectedUsers.length > 0 && (
+            <div className="hidden md:flex items-center gap-2 text-gray-300">
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm">
+                  {user?.name?.charAt(0) || 'Y'}
+                </div>
+                {connectedUsers.map((user, index) => (
+                  <div key={index} className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm">
+                    {user.userName?.charAt(0) || 'U'}
+                  </div>
+                ))}
+              </div>
+              <span className="text-sm">
+                {connectedUsers.length + 1} online
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Call info */}
-      <div className="call-info">
-        <div className="call-status">
-          {isCallActive ? 'Call in progress' : 'Ready to call'}
+      {/* Waiting overlay - FIXED: removed roomInfo access */}
+      {isCallActive && !isCallEstablished && waitingMessage && (
+        <div className="absolute inset-0 bg-gray-900/90 z-10 flex flex-col items-center justify-center">
+          <div className="text-center max-w-md p-8">
+            <div className="text-6xl mb-6 animate-pulse">📞</div>
+            <h3 className="text-white text-xl font-semibold mb-3">
+              {waitingMessage}
+            </h3>
+            <p className="text-gray-400">
+              {connectedUsers.length > 0 
+                ? `Connected with ${connectedUsers[0]?.userName || 'another user'}`
+                : 'The call will start automatically when someone joins'}
+            </p>
+            {/* SAFE ACCESS to roomInfo */}
+            {roomInfo && roomInfo.roomId && (
+              <div className="mt-6 p-3 bg-gray-800/50 rounded-lg">
+                <p className="text-gray-400 text-sm">Room ID:</p>
+                <p className="text-blue-400 font-mono text-sm">{roomInfo.roomId}</p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="call-participants">
-          {connectedUsers.length > 0 ? (
-            <span>
-              {connectedUsers.length + 1} participant{connectedUsers.length + 1 > 1 ? 's' : ''}
-            </span>
-          ) : (
-            <span>Waiting for participants...</span>
-          )}
+      )}
+
+      {/* Main video area */}
+      <div className="flex-1 p-4 md:p-6 overflow-hidden">
+        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 md:gap-6 h-full`}>
+          {/* Remote video (main) */}
+          <div className={`relative bg-gray-850 rounded-2xl overflow-hidden ${isMobile ? 'h-64' : 'h-full'}`}>
+            {remoteStream ? (
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-850">
+                <div className="text-7xl mb-4 text-gray-600">👤</div>
+                <p className="text-gray-400 text-lg font-medium">No one connected yet</p>
+                <p className="text-gray-500 text-sm mt-1">Waiting for other participant</p>
+              </div>
+            )}
+            <div className="absolute bottom-4 left-4 bg-black/60 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
+              <p className="font-medium">
+                {connectedUsers[0]?.userName || 'Remote'}
+              </p>
+              <p className="text-sm text-gray-300">
+                {isCallEstablished ? 'Connected' : 'Connecting...'}
+              </p>
+            </div>
+          </div>
+
+          {/* Local video (small) */}
+          <div className={`relative ${isMobile ? 'h-48' : 'h-64 lg:h-80'} bg-gray-850 rounded-2xl overflow-hidden`}>
+            <video
+              ref={localVideoRef}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            
+            {!localStream && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-850">
+                <div className="text-5xl mb-3 text-gray-600">📷</div>
+                <p className="text-gray-400">Camera off</p>
+              </div>
+            )}
+            
+            <div className="absolute top-4 left-4 bg-black/60 text-white px-3 py-1.5 rounded-lg backdrop-blur-sm">
+              <p className="font-medium text-sm">You ({user?.name || 'User'})</p>
+            </div>
+            
+            {/* Audio/video status indicators */}
+            <div className="absolute top-4 right-4 flex gap-2">
+              {isMuted && (
+                <div className="bg-red-600 text-white p-1.5 rounded-full">
+                  <MicOff size={16} />
+                </div>
+              )}
+              {isVideoOff && (
+                <div className="bg-red-600 text-white p-1.5 rounded-full">
+                  <VideoOff size={16} />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="border-t border-gray-800 bg-gray-850">
+        <div className="max-w-3xl mx-auto p-4">
+          <div className="flex items-center justify-center gap-4">
+            {/* Audio control */}
+            <button
+              onClick={toggleAudio}
+              className={`p-4 rounded-full transition-all ${
+                isMuted 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              title={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? (
+                <MicOff size={24} className="text-white" />
+              ) : (
+                <Mic size={24} className="text-white" />
+              )}
+            </button>
+
+            {/* Video control */}
+            <button
+              onClick={toggleVideo}
+              className={`p-4 rounded-full transition-all ${
+                isVideoOff 
+                  ? 'bg-red-600 hover:bg-red-700' 
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              title={isVideoOff ? 'Turn video on' : 'Turn video off'}
+            >
+              {isVideoOff ? (
+                <VideoOff size={24} className="text-white" />
+              ) : (
+                <Video size={24} className="text-white" />
+              )}
+            </button>
+
+            {/* End call button */}
+            <button
+              onClick={endCall}
+              className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-all"
+              title="End call"
+            >
+              <PhoneOff size={24} className="text-white" />
+            </button>
+
+            {/* Chat toggle */}
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className={`p-4 rounded-full transition-all ${
+                showChat 
+                  ? 'bg-blue-600 hover:bg-blue-700' 
+                  : 'bg-gray-700 hover:bg-gray-600'
+              }`}
+              title={showChat ? 'Hide chat' : 'Show chat'}
+            >
+              <MessageSquare size={24} className="text-white" />
+            </button>
+          </div>
+
+          {/* Call status */}
+          <div className="mt-4 text-center">
+            <div className="inline-flex items-center gap-2 text-sm text-gray-400">
+              <div className={`w-2 h-2 rounded-full ${isCallEstablished ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+              <span>
+                {isCallActive 
+                  ? isCallEstablished 
+                    ? 'Connected' 
+                    : waitingMessage || 'Connecting...'
+                  : 'Ready to start call'
+                }
+              </span>
+              {isCallActive && (
+                <span className="text-blue-400 font-mono">
+                  • {formatDuration(callDuration)}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

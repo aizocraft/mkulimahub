@@ -4,10 +4,10 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import GoogleAuthSuccess from './components/GoogleAuthSuccess.jsx';
 import RoleSelectionPage from './pages/RoleSelectionPage';
-
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import HelpPage from './pages/HelpPage';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Dashboard from './pages/Dashboard';
@@ -100,7 +100,11 @@ export default function App() {
                 <SettingsPage />
               </PageLayout>
             } />
-
+          <Route path="/help" element={
+            <PageLayout>
+              <HelpPage />
+            </PageLayout>
+          } />
 
  {/* Forum Routes */}
             <Route path="/forum" element={
@@ -113,7 +117,7 @@ export default function App() {
                 <CreatePostPage />
               </PageLayout>
             } />
-            <Route path="/forum/post/:id" element={
+            <Route path="/forum/posts/:id" element={
               <PageLayout>
                 <PostDetailPage />
               </PageLayout>
