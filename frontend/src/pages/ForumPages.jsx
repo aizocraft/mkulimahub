@@ -28,9 +28,10 @@ import {
   BarChart3,
   Loader2
 } from 'lucide-react';
+import AttachmentDisplay from '../components/AttachmentDisplay';
 
 const ForumPages = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
   
@@ -57,8 +58,9 @@ const ForumPages = () => {
 
   // Fetch data
   useEffect(() => {
+    if (isAuthLoading) return; // wait for auth to initialize to get correct userVote
     fetchForumData();
-  }, [filters, activeTab]);
+  }, [filters, activeTab, user?.id, isAuthLoading]);
 
   const fetchForumData = async () => {
     try {
@@ -77,7 +79,16 @@ const ForumPages = () => {
         limit: 10
       };
       const postsResponse = await forumAPI.getPosts(postParams);
-      setPosts(postsResponse.data.posts || []);
+      const fetchedPosts = postsResponse.data.posts || [];
+      setPosts(fetchedPosts);
+
+      // Sync votedPosts state with server data - this is the single source of truth
+      const newVoteMap = {};
+      fetchedPosts.forEach(p => {
+        // Use post.userVote from server as the definitive state
+        newVoteMap[p.id] = p.userVote || null;
+      });
+      setVotedPosts(newVoteMap);
 
       // Fetch pending reviews
       if (canModerate && activeTab === 'moderation') {
@@ -119,64 +130,114 @@ const ForumPages = () => {
 
     try {
       setVotingPostId(postId);
-      const currentVote = votedPosts[postId];
       
-      // Determine new vote type
+      // Get the post and use its current userVote as source of truth
+      const postIndex = posts.findIndex(p => p.id === postId);
+      if (postIndex === -1) return;
+     
+      const post = posts[postIndex];
+      const currentUserVote = post.userVote || null;
+      
+      // Determine new vote type - toggle if clicking same button
       let newVoteType = voteType;
-      if (currentVote === voteType) {
+      if (currentUserVote === voteType) {
         // Clicking same vote button removes vote
         newVoteType = null;
       }
       
-      const response = await forumAPI.votePost(postId, newVoteType);
-      
-      // Update voted posts state
-      setVotedPosts(prev => ({
-        ...prev,
-        [postId]: newVoteType
-      }));
-      
-      // Update post stats
-      setPosts(prev => prev.map(post => {
-        if (post.id === postId) {
+      // Create updated posts array with optimistic update
+      const updatedPosts = posts.map(p => {
+        if (p.id === postId) {
+          const oldUpvotes = p.stats?.upvotes || 0;
+          const oldDownvotes = p.stats?.downvotes || 0;
+          
+          let newUpvotes = oldUpvotes;
+          let newDownvotes = oldDownvotes;
+          
+          // Remove old vote if exists
+          if (currentUserVote === 'upvote') {
+            newUpvotes = Math.max(0, newUpvotes - 1);
+          } else if (currentUserVote === 'downvote') {
+            newDownvotes = Math.max(0, newDownvotes - 1);
+          }
+          
+          // Add new vote if applicable
+          if (newVoteType === 'upvote') {
+            newUpvotes++;
+          } else if (newVoteType === 'downvote') {
+            newDownvotes++;
+          }
+          
           return {
-            ...post,
-            stats: response.data.stats,
-            voteDifference: response.data.voteDifference,
-            userVote: response.data.userVote
+            ...p,
+            stats: {
+              ...p.stats,
+              upvotes: newUpvotes,
+              downvotes: newDownvotes
+            },
+            userVote: newVoteType,
+            voteDifference: newUpvotes - newDownvotes
           };
         }
-        return post;
+         return p;
+       });
+     
+       // Apply optimistic update
+       setPosts(updatedPosts);
+      
+      // Make API call
+      const response = await forumAPI.votePost(postId, newVoteType);
+      
+      // Update from server response for exact sync
+      setPosts(currentPosts => currentPosts.map(p => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            stats: response.data.stats,
+            userVote: response.data.userVote || null,
+            voteDifference: response.data.voteDifference
+          };
+        }
+        return p;
+      }));
+
+      // Also sync votedPosts
+      setVotedPosts(prev => ({
+        ...prev,
+        [postId]: response.data.userVote || null
       }));
 
       // Show success toast
       if (newVoteType === null) {
         toast.info('Vote removed', { 
           position: 'top-center',
-          autoClose: 2000,
+          autoClose: 1500,
           hideProgressBar: true
         });
       } else if (newVoteType === 'upvote') {
         toast.success('👍 Upvoted!', { 
           position: 'top-center',
-          autoClose: 2000,
+          autoClose: 1500,
           hideProgressBar: true
         });
       } else if (newVoteType === 'downvote') {
         toast.info('👎 Downvoted', { 
           position: 'top-center',
-          autoClose: 2000,
+          autoClose: 1500,
           hideProgressBar: true
         });
       }
     } catch (err) {
       console.error('Error voting:', err);
+      
+      // Refresh data to sync with server on error
+      await fetchForumData();
+      
       const errorMsg = err.response?.data?.message || 'Failed to vote. Please try again.';
       toast.error(errorMsg, { 
         position: 'top-center',
         autoClose: 3000 
       });
-      setError('');
     } finally {
       setVotingPostId(null);
     }
@@ -438,19 +499,21 @@ const ForumPages = () => {
           />
         ) : (
           <PostsTab 
-            posts={filteredPosts}
-            user={user}
-            onVote={handleVote}
-            onDelete={handleDelete}
-            canModerate={canModerate}
-            formatDate={formatDate}
-            activeTab={activeTab}
-            isAuthenticated={isAuthenticated}
-            navigate={navigate}
-            theme={theme}
-            votingPostId={votingPostId}
-            setVotingPostId={setVotingPostId}
-          />
+              posts={filteredPosts}
+              user={user}
+              onVote={handleVote}
+              onDelete={handleDelete}
+              canModerate={canModerate}
+              formatDate={formatDate}
+              activeTab={activeTab}
+              isAuthenticated={isAuthenticated}
+              navigate={navigate}
+              theme={theme}
+              votingPostId={votingPostId}
+              setVotingPostId={setVotingPostId}
+              votedPosts={votedPosts}
+              setVotedPosts={setVotedPosts}
+            />
         )}
       </div>
     </div>
@@ -760,7 +823,9 @@ const PostsTab = ({
   navigate,
   theme,
   votingPostId,
-  setVotingPostId
+  setVotingPostId,
+  votedPosts,
+  setVotedPosts
 }) => {
   if (!isAuthenticated() && activeTab === 'my') {
     return (
@@ -827,6 +892,8 @@ const PostsTab = ({
           theme={theme}
           votingPostId={votingPostId}
           setVotingPostId={setVotingPostId}
+          votedPosts={votedPosts}
+          setVotedPosts={setVotedPosts}
         />
       ))}
     </div>
@@ -834,9 +901,12 @@ const PostsTab = ({
 };
 
 // Post Card Component
-const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme, votingPostId, setVotingPostId }) => {
+const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme, votingPostId, setVotingPostId, votedPosts, setVotedPosts }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const canEdit = post.author?._id === user?.id || canModerate;
+  
+  // Use post.userVote directly - always kept in sync with server
+  const localUserVote = post.userVote || null;
 
   return (
     <div className={`rounded-lg p-6 hover:shadow-md transition-all duration-300 ${
@@ -912,6 +982,11 @@ const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navig
         }
       </p>
 
+      {/* Attachments preview */}
+      {post.attachments && post.attachments.length > 0 && (
+        <AttachmentDisplay attachments={post.attachments} compact={true} />
+      )}
+
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
@@ -940,60 +1015,67 @@ const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navig
             <button
               onClick={() => onVote(post.id, 'upvote')}
               disabled={!user}
-              className={`p-2 rounded-lg transition-all duration-300 transform origin-center ${
+              className={`p-2 rounded-lg transition-all duration-200 transform origin-center ${
                 votingPostId === post.id ? 'scale-95' : 'hover:scale-110'
               } ${
                 user 
                   ? `${
-                      post.userVote === 'upvote'
-                        ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 shadow-md shadow-green-500/50 animate-pulse'
-                        : theme === 'dark' ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
+                      localUserVote === 'upvote'
+                        ? 'text-green-600 dark:text-green-500 bg-green-100 dark:bg-green-900/30'
+                        : theme === 'dark' ? 'text-gray-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={user ? `${post.userVote === 'upvote' ? 'Remove upvote' : 'Upvote'}` : 'Login to vote'}
+              title={user ? `${localUserVote === 'upvote' ? 'Remove upvote' : 'Upvote'}` : 'Login to vote'}
             >
-              <ThumbsUp className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-300 ${
-                post.userVote === 'upvote' ? 'fill-current' : ''
+              <ThumbsUp className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-200 ${
+                localUserVote === 'upvote' ? 'fill-current' : ''
               }`} />
             </button>
-            <span className={`text-xs sm:text-sm font-bold min-w-[24px] text-center transition-all duration-300 ${
+            <span className={`text-xs sm:text-sm font-bold min-w-[24px] text-center transition-all duration-200 ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
             } ${
-              post.userVote === 'upvote' ? 'text-green-600 dark:text-green-400 text-sm' : ''
+              localUserVote === 'upvote' ? 'text-green-600 dark:text-green-500' : ''
             }`}>
               {post.stats?.upvotes || 0}
             </span>
             <button
               onClick={() => onVote(post.id, 'downvote')}
               disabled={!user}
-              className={`p-2 rounded-lg transition-all duration-300 transform origin-center ${
+              className={`p-2 rounded-lg transition-all duration-200 transform origin-center ${
                 votingPostId === post.id ? 'scale-95' : 'hover:scale-110'
               } ${
                 user 
                   ? `${
-                      post.userVote === 'downvote'
-                        ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 shadow-md shadow-red-500/50 animate-pulse'
-                        : theme === 'dark' ? 'text-gray-300 hover:text-red-400' : 'text-gray-600 hover:text-red-600'
+                      localUserVote === 'downvote'
+                        ? 'text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-900/30'
+                        : theme === 'dark' ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-600'
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={user ? `${post.userVote === 'downvote' ? 'Remove downvote' : 'Downvote'}` : 'Login to vote'}
+              title={user ? `${localUserVote === 'downvote' ? 'Remove downvote' : 'Downvote'}` : 'Login to vote'}
             >
-              <ThumbsDown className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-300 ${
-                post.userVote === 'downvote' ? 'fill-current' : ''
+              <ThumbsDown className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-200 ${
+                localUserVote === 'downvote' ? 'fill-current' : ''
               }`} />
             </button>
           </div>
 
           {/* Comments */}
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <MessageSquare className={`w-4 sm:w-5 h-4 sm:h-5 ${
-              theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-            }`} />
-            <span className={`text-xs sm:text-sm ${
-              theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-            }`}>{post.stats?.commentCount || 0}</span>
+            <button
+              type="button"
+              onClick={() => navigate(`/forum/posts/${post.id}`)}
+              className="flex items-center space-x-2 focus:outline-none"
+              title="View post and comments"
+            >
+              <MessageSquare className={`w-4 sm:w-5 h-4 sm:h-5 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+              }`} />
+              <span className={`text-xs sm:text-sm ${
+                theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+              }`}>{post.stats?.commentCount || 0}</span>
+            </button>
           </div>
 
           {/* Views */}
@@ -1060,6 +1142,18 @@ const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navig
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Custom comparison - only re-render if post or voting state actually changed
+  return (
+    prevProps.post.id === nextProps.post.id &&
+    prevProps.post.userVote === nextProps.post.userVote &&
+    prevProps.post.stats?.upvotes === nextProps.post.stats?.upvotes &&
+    prevProps.post.stats?.downvotes === nextProps.post.stats?.downvotes &&
+    prevProps.votingPostId === nextProps.votingPostId &&
+    prevProps.theme === nextProps.theme &&
+    prevProps.user?.id === nextProps.user?.id
+  );
+});
 
+PostCard.displayName = 'PostCard';
 export default ForumPages;

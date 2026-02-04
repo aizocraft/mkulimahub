@@ -63,7 +63,11 @@ const AttachmentDisplay = ({ attachments = [], onDelete = null, canDelete = fals
             }`}
             title={`${attachment.filename} - ${formatDate(attachment.uploadedAt)}`}
           >
-            {getFileIcon(attachment.fileType)}
+            {attachment.fileType?.toLowerCase().startsWith('image/') ? (
+              <img src={attachment.url} alt={attachment.filename} className="w-8 h-8 rounded object-cover" />
+            ) : (
+              getFileIcon(attachment.fileType)
+            )}
             <span className="truncate max-w-[150px]">{attachment.filename}</span>
             {canDelete && (
               <button
@@ -111,10 +115,20 @@ const AttachmentDisplay = ({ attachments = [], onDelete = null, canDelete = fals
             }`}
           >
             <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className={`flex-shrink-0 ${
-                theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
-              }`}>
-                {getFileIcon(attachment.fileType)}
+              <div className="flex-shrink-0">
+                {attachment.fileType?.toLowerCase().startsWith('image/') ? (
+                  <img src={attachment.url} alt={attachment.filename} className="w-28 h-20 rounded object-cover" />
+                ) : attachment.fileType?.toLowerCase().startsWith('video/') ? (
+                  <video src={attachment.url} className="w-28 h-20 rounded object-cover" controls />
+                ) : attachment.fileType?.toLowerCase().includes('pdf') ? (
+                  <div className="w-28 h-20 rounded flex items-center justify-center bg-gray-100">
+                    <FileText className="w-8 h-8 text-gray-500" />
+                  </div>
+                ) : (
+                  <div className="w-28 h-20 rounded flex items-center justify-center bg-gray-100">
+                    {getFileIcon(attachment.fileType)}
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <a

@@ -11,6 +11,9 @@ import {
   CheckCircle,
   Loader2
 } from 'lucide-react';
+import AttachmentDisplay from '../../components/AttachmentDisplay';
+import { uploadAPI } from '../../api';
+import { toast } from 'react-toastify';
 
 const EditPostPage = () => {
   const { id } = useParams();
@@ -33,6 +36,8 @@ const EditPostPage = () => {
   });
   
   const [tagInput, setTagInput] = useState('');
+  const [attachments, setAttachments] = useState([]);
+  const [uploading, setUploading] = useState({});
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -66,6 +71,7 @@ const EditPostPage = () => {
         category: post.category?._id || post.category || '',
         tags: post.tags || []
       });
++      setAttachments(post.attachments || []);
     } catch (err) {
       console.error('Error fetching post:', err);
       setError('Failed to load post');
@@ -110,6 +116,71 @@ const EditPostPage = () => {
     }));
   };
 
+  const MAX_FILE_SIZE = 5242880; // 5MB
+  const ALLOWED_TYPES = ['image/jpeg','image/png','image/gif','application/pdf'];
+
+  const handleFilesSelected = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} is too large. Max file size is 5MB.`, { position: 'top-center' });
+        continue;
+      }
+      if (ALLOWED_TYPES.length && !ALLOWED_TYPES.includes(file.type)) {
+        toast.error(`${file.name} is not an allowed file type.`, { position: 'top-center' });
+        continue;
+      }
+
+      try {
+        setUploading(prev => ({ ...prev, [file.name]: 0 }));
+        const resp = await uploadAPI.uploadFile(file, (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / (progressEvent.total || file.size));
+          setUploading(prev => ({ ...prev, [file.name]: percent }));
+        });
+
+        const fileData = resp.data.file || resp.data.attachment || resp.data;
+        const attachment = {
+          id: fileData.id || fileData._id || fileData.name,
+          url: fileData.url || fileData.path || fileData.location || fileData.fileUrl || resp.data.url,
+          filename: fileData.originalName || fileData.filename || file.name,
+          size: fileData.size || file.size,
+          fileType: fileData.mimeType || file.type || fileData.fileType,
+          uploadedAt: fileData.createdAt || new Date().toISOString()
+        };
+
+        setAttachments(prev => [...prev, attachment]);
+        toast.success(`${attachment.filename} uploaded`, { position: 'top-center', autoClose: 1500, hideProgressBar: true });
+      } catch (err) {
+        console.error('Upload error:', err);
+        toast.error(`Failed to upload ${file.name}`, { position: 'top-center' });
+      } finally {
+        setUploading(prev => {
+          const next = { ...prev };
+          delete next[file.name];
+          return next;
+        });
+      }
+    }
+
+    e.target.value = '';
+  };
+
+  const handleRemoveAttachment = async (index) => {
+    const att = attachments[index];
+    if (!att) return;
+    if (att.id) {
+      try {
+        await uploadAPI.deleteFile(att.id);
+      } catch (err) {
+        console.warn('Failed to delete file on server:', err);
+      }
+    }
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+    toast.info(`${att.filename} removed`, { position: 'top-center', autoClose: 1200, hideProgressBar: true });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -134,7 +205,15 @@ const EditPostPage = () => {
     setSuccess('');
     
     try {
-      const response = await forumAPI.updatePost(postId, formData);
+      const payload = {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        category: formData.category.trim(),
+        tags: formData.tags.map(t => t.trim().toLowerCase()),
+        attachments: attachments.map(a => ({ id: a.id, url: a.url, filename: a.filename, size: a.size, fileType: a.fileType }))
+      };
+
+      const response = await forumAPI.updatePost(postId, payload);
       
       if (response.data.requiresReview) {
         setSuccess('Post updated successfully! It will be reviewed by an expert before changes appear publicly.');
@@ -368,7 +447,33 @@ const EditPostPage = () => {
                 required
               />
             </div>
-            
+
+            {/* Attachments */}
+            <div className="mb-4">
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Attachments (optional)</label>
+              <div className="flex items-center gap-3 mb-2">
+                <input type="file" multiple onChange={handleFilesSelected} className="text-sm" />
+              </div>
+
+              {Object.keys(uploading).length > 0 && (
+                <div className="space-y-2 mb-2">
+                  {Object.entries(uploading).map(([name, percent]) => (
+                    <div key={name} className="text-sm">
+                      <div className="flex justify-between">
+                        <span className="truncate max-w-[60%]">{name}</span>
+                        <span className="ml-2">{percent}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded h-2 mt-1 overflow-hidden">
+                        <div className="h-2 bg-green-600" style={{ width: `${percent}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} />
+            </div>
+
             {/* Submit Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
               <button

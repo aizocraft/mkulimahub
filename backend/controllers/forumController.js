@@ -8,6 +8,11 @@ const { logger } = require('../middleware/logger');
 const generatePostResponse = (post, user) => {
   const canModify = user ? post.canModify(user.id, user.role) : false;
   
+  // Get user's vote on this post
+  const userVote = user ? (post.votedUsers || []).find(
+    v => v.userId && v.userId.toString() === user.id
+  ) : null;
+  
   const response = {
     id: post._id,
     title: post.title,
@@ -26,7 +31,8 @@ const generatePostResponse = (post, user) => {
     canEdit: canModify,
     canDelete: canModify,
     voteDifference: (post.stats?.upvotes || 0) - (post.stats?.downvotes || 0),
-    isActive: post.isActive !== false
+    isActive: post.isActive !== false,
+    userVote: userVote?.voteType || null
   };
   
   return response;
@@ -321,6 +327,15 @@ exports.createPost = async (req, res, next) => {
     if (user.role === 'farmer') {
       status = 'pending_review'; // Farmer posts need expert review
     }
+
+    // Filter attachments to match schema (remove id field if present)
+    const cleanedAttachments = (attachments || []).map(att => ({
+      url: att.url,
+      filename: att.filename,
+      fileType: att.fileType,
+      size: att.size,
+      uploadedAt: att.uploadedAt || new Date()
+    }));
     
     const postData = {
       title: title.trim(),
@@ -329,7 +344,7 @@ exports.createPost = async (req, res, next) => {
       category,
       tags: tags ? tags.map(tag => tag.trim().toLowerCase()) : [],
       status,
-      attachments: attachments || [],
+      attachments: cleanedAttachments,
       stats: {
         views: 0,
         upvotes: 0,
@@ -425,7 +440,16 @@ exports.updatePost = async (req, res, next) => {
     if (title) updates.title = title.trim();
     if (content) updates.content = content.trim();
     if (tags) updates.tags = tags.map(tag => tag.trim().toLowerCase());
-    if (attachments) updates.attachments = attachments;
+    if (attachments) {
+      // Filter attachments to match schema (remove id field)
+      updates.attachments = attachments.map(att => ({
+        url: att.url,
+        filename: att.filename,
+        fileType: att.fileType,
+        size: att.size,
+        uploadedAt: att.uploadedAt || new Date()
+      }));
+    }
     
     // If farmer edits, send back for review
     if (user.role === 'farmer' && post.status === 'published') {
@@ -786,14 +810,6 @@ exports.votePost = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: 'Post not found'
-      });
-    }
-    
-    // Check if user can vote (not the author)
-    if (post.author._id.toString() === user.id) {
-      return res.status(400).json({
-        success: false,
-        message: 'You cannot vote on your own post'
       });
     }
     
