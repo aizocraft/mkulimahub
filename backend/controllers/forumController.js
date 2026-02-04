@@ -518,13 +518,21 @@ exports.deletePost = async (req, res, next) => {
 exports.createComment = async (req, res, next) => {
   try {
     const { postId } = req.params;
-    const { content, parentComment, attachments, mentions } = req.body;
+    const { content, parentComment, attachments = [], mentions = [] } = req.body;
     const user = req.user;
     
+    // Validate content
     if (!content || !content.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Comment content is required'
+      });
+    }
+    
+    if (content.length > 2000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Comment cannot exceed 2000 characters'
       });
     }
     
@@ -538,11 +546,22 @@ exports.createComment = async (req, res, next) => {
     }
     
     // Check if post is locked
-    if (post.isLocked) {
+    if (post.isLocked && user.role !== 'admin' && user.role !== 'expert') {
       return res.status(400).json({
         success: false,
         message: 'This post is locked and cannot be commented on'
       });
+    }
+    
+    // Validate parent comment if replying
+    if (parentComment) {
+      const parentCommentDoc = await ForumComment.findById(parentComment);
+      if (!parentCommentDoc) {
+        return res.status(404).json({
+          success: false,
+          message: 'Parent comment not found'
+        });
+      }
     }
     
     // Determine comment status based on user role
@@ -551,6 +570,15 @@ exports.createComment = async (req, res, next) => {
       status = 'pending_review'; // Farmer comments need expert review
     }
     
+    // Process attachments - validate and sanitize
+    const processedAttachments = attachments.map(att => ({
+      url: att.url || '',
+      filename: att.filename || 'Attachment',
+      fileType: att.fileType || 'unknown',
+      size: att.size || 0,
+      uploadedAt: new Date()
+    })).filter(att => att.url);
+    
     const commentData = {
       content: content.trim(),
       author: user.id,
@@ -558,8 +586,8 @@ exports.createComment = async (req, res, next) => {
       parentComment: parentComment || null,
       isExpertAnswer: user.role === 'expert' || user.role === 'admin',
       status,
-      attachments: attachments || [],
-      mentions: mentions || [],
+      attachments: processedAttachments,
+      mentions: mentions.filter(m => m), // Remove empty mentions
       votes: {
         upvotes: 0,
         downvotes: 0,
@@ -570,8 +598,11 @@ exports.createComment = async (req, res, next) => {
     const comment = new ForumComment(commentData);
     await comment.save();
     
+    // Populate author info
+    await comment.populate('author', 'name email role profilePicture');
+    
     // Update post stats
-    if (!post.stats) post.stats = {};
+    if (!post.stats) post.stats = { views: 0, upvotes: 0, downvotes: 0, commentCount: 0 };
     post.stats.commentCount = (post.stats.commentCount || 0) + 1;
     if (!post.metadata) post.metadata = {};
     post.metadata.lastCommentAt = new Date();
@@ -584,15 +615,13 @@ exports.createComment = async (req, res, next) => {
       $set: { 'stats.lastActivity': new Date() }
     });
     
-    // Populate author info
-    await comment.populate('author', 'name email role profilePicture');
-    
     logger.info('Forum comment created', {
       userId: user.id,
       postId,
       commentId: comment._id,
       parentComment: parentComment || 'none',
-      status
+      status,
+      attachmentCount: processedAttachments.length
     });
     
     res.status(201).json({
@@ -601,7 +630,8 @@ exports.createComment = async (req, res, next) => {
         ? 'Comment created and sent for expert review'
         : 'Comment created successfully',
       comment: generateCommentResponse(comment, user),
-      requiresReview: status === 'pending_review'
+      requiresReview: status === 'pending_review',
+      attachments: processedAttachments
     });
   } catch (error) {
     logger.error('Error creating comment:', error);
@@ -739,17 +769,18 @@ exports.deleteComment = async (req, res, next) => {
 exports.votePost = async (req, res, next) => {
   try {
     const { postId } = req.params;
-    const { voteType } = req.body; // 'upvote' or 'downvote'
+    const { voteType } = req.body; // 'upvote', 'downvote', or null to remove
     const user = req.user;
     
-    if (!['upvote', 'downvote'].includes(voteType)) {
+    if (voteType && !['upvote', 'downvote'].includes(voteType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid vote type. Must be "upvote" or "downvote"'
+        message: 'Invalid vote type. Must be "upvote", "downvote", or null'
       });
     }
     
-    const post = await ForumPost.findById(postId);
+    // Get post without lean for updates
+    const post = await ForumPost.findById(postId).populate('author', 'id name role');
     
     if (!post) {
       return res.status(404).json({
@@ -759,7 +790,7 @@ exports.votePost = async (req, res, next) => {
     }
     
     // Check if user can vote (not the author)
-    if (post.author.toString() === user.id) {
+    if (post.author._id.toString() === user.id) {
       return res.status(400).json({
         success: false,
         message: 'You cannot vote on your own post'
@@ -771,33 +802,100 @@ exports.votePost = async (req, res, next) => {
       post.stats = { upvotes: 0, downvotes: 0, views: 0, commentCount: 0 };
     }
     
-    // Update vote count
-    const update = { $inc: {} };
-    if (voteType === 'upvote') {
-      update.$inc['stats.upvotes'] = 1;
-    } else {
-      update.$inc['stats.downvotes'] = 1;
+    // Initialize votedUsers array if not present
+    if (!post.votedUsers) {
+      post.votedUsers = [];
     }
     
-    const updatedPost = await ForumPost.findByIdAndUpdate(
-      postId,
-      update,
-      { new: true }
+    const existingVoteIndex = post.votedUsers.findIndex(
+      v => v.userId && v.userId.toString() === user.id
+    );
+    
+    let previousVoteType = null;
+    
+    if (existingVoteIndex > -1) {
+      // User already voted
+      previousVoteType = post.votedUsers[existingVoteIndex].voteType;
+      
+      if (!voteType) {
+        // Remove vote
+        const removedVote = post.votedUsers.splice(existingVoteIndex, 1)[0];
+        if (removedVote.voteType === 'upvote') {
+          post.stats.upvotes = Math.max(0, (post.stats.upvotes || 0) - 1);
+        } else {
+          post.stats.downvotes = Math.max(0, (post.stats.downvotes || 0) - 1);
+        }
+      } else if (previousVoteType === voteType) {
+        // Same vote type - remove it
+        post.votedUsers.splice(existingVoteIndex, 1);
+        if (voteType === 'upvote') {
+          post.stats.upvotes = Math.max(0, (post.stats.upvotes || 0) - 1);
+        } else {
+          post.stats.downvotes = Math.max(0, (post.stats.downvotes || 0) - 1);
+        }
+      } else {
+        // Change vote type
+        post.votedUsers[existingVoteIndex].voteType = voteType;
+        post.votedUsers[existingVoteIndex].votedAt = new Date();
+        
+        if (previousVoteType === 'upvote') {
+          post.stats.upvotes = Math.max(0, (post.stats.upvotes || 0) - 1);
+        } else {
+          post.stats.downvotes = Math.max(0, (post.stats.downvotes || 0) - 1);
+        }
+        
+        if (voteType === 'upvote') {
+          post.stats.upvotes = (post.stats.upvotes || 0) + 1;
+        } else {
+          post.stats.downvotes = (post.stats.downvotes || 0) + 1;
+        }
+      }
+    } else if (voteType) {
+      // New vote
+      post.votedUsers.push({
+        userId: user.id,
+        voteType,
+        votedAt: new Date()
+      });
+      
+      if (voteType === 'upvote') {
+        post.stats.upvotes = (post.stats.upvotes || 0) + 1;
+      } else {
+        post.stats.downvotes = (post.stats.downvotes || 0) + 1;
+      }
+    } else {
+      // User hasn't voted and trying to remove - no-op
+      return res.status(200).json({
+        success: true,
+        message: 'No vote to remove',
+        stats: post.stats,
+        voteDifference: post.stats.upvotes - post.stats.downvotes,
+        userVote: null
+      });
+    }
+    
+    await post.save();
+    
+    // Get user's current vote
+    const userVote = post.votedUsers?.find(
+      v => v.userId?.toString() === user.id
     );
     
     logger.info('Forum post voted', {
       userId: user.id,
       postId,
       voteType,
-      upvotes: updatedPost.stats.upvotes,
-      downvotes: updatedPost.stats.downvotes
+      previousVoteType,
+      upvotes: post.stats.upvotes,
+      downvotes: post.stats.downvotes
     });
     
     res.status(200).json({
       success: true,
-      message: 'Vote recorded successfully',
-      stats: updatedPost.stats,
-      voteDifference: updatedPost.stats.upvotes - updatedPost.stats.downvotes
+      message: voteType ? 'Vote recorded successfully' : 'Vote removed successfully',
+      stats: post.stats,
+      voteDifference: post.stats.upvotes - post.stats.downvotes,
+      userVote: userVote?.voteType || null
     });
   } catch (error) {
     logger.error('Error voting on post:', error);
@@ -1006,82 +1104,167 @@ exports.getUserPosts = async (req, res, next) => {
 // Search posts and comments
 exports.searchForum = async (req, res, next) => {
   try {
-    const { q, type = 'both', page = 1, limit = 20 } = req.query;
+    const { q, type = 'both', page = 1, limit = 20, category = '' } = req.query;
     const user = req.user;
     
-    if (!q || q.trim().length < 3) {
+    if (!q || q.trim().length < 2) {
       return res.status(400).json({
         success: false,
-        message: 'Search query must be at least 3 characters'
+        message: 'Search query must be at least 2 characters'
       });
     }
+    
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+    const skip = (pageNum - 1) * limitNum;
     
     const results = {
       posts: [],
       comments: [],
-      total: 0
+      total: 0,
+      page: pageNum,
+      limit: limitNum
+    };
+    
+    // Build status filter based on user role
+    const statusFilter = user && (user.role === 'admin' || user.role === 'expert') 
+      ? { $in: ['published', 'pending_review'] } 
+      : 'published';
+    
+    // Base filter
+    const baseFilter = {
+      status: statusFilter,
+      ...(category && { category })
     };
     
     // Search posts
     if (type === 'posts' || type === 'both') {
+      // Search using text index for title and content
       const postFilter = {
-        $text: { $search: q },
-        status: user && (user.role === 'admin' || user.role === 'expert') 
-          ? { $in: ['published', 'pending_review'] } 
-          : 'published'
+        ...baseFilter,
+        $or: [
+          { title: { $regex: q, $options: 'i' } },
+          { content: { $regex: q, $options: 'i' } },
+          { tags: { $regex: q, $options: 'i' } }
+        ]
       };
+      
+      const postCount = await ForumPost.countDocuments(postFilter);
       
       const posts = await ForumPost.find(postFilter)
         .populate('author', 'name role profilePicture')
         .populate('category', 'name slug')
-        .sort({ score: { $meta: 'textScore' } })
-        .limit(parseInt(limit))
-        .skip((parseInt(page) - 1) * parseInt(limit));
+        .sort({ 
+          'stats.upvotes': -1,
+          'metadata.lastCommentAt': -1,
+          createdAt: -1 
+        })
+        .limit(limitNum)
+        .skip(skip)
+        .lean();
       
-      results.posts = posts.map(post => generatePostResponse(post, user));
+      results.posts = posts.map(post => ({
+        ...generatePostResponse(post, user),
+        matchType: 'post',
+        relevanceScore: calculateRelevance(post, q)
+      }));
+      
+      results.totalPosts = postCount;
     }
     
     // Search comments
     if (type === 'comments' || type === 'both') {
       const commentFilter = {
-        content: { $regex: q, $options: 'i' },
-        status: user && (user.role === 'admin' || user.role === 'expert') 
-          ? { $in: ['published', 'pending_review'] } 
-          : 'published'
+        ...baseFilter,
+        content: { $regex: q, $options: 'i' }
       };
+      
+      const commentCount = await ForumComment.countDocuments(commentFilter);
       
       const comments = await ForumComment.find(commentFilter)
         .populate('author', 'name role profilePicture')
         .populate('post', 'title')
-        .sort({ createdAt: -1 })
-        .limit(parseInt(limit))
-        .skip((parseInt(page) - 1) * parseInt(limit));
+        .sort({ 
+          'votes.upvotes': -1,
+          createdAt: -1 
+        })
+        .limit(limitNum)
+        .skip(skip)
+        .lean();
       
       results.comments = comments.map(comment => ({
         ...generateCommentResponse(comment, user),
-        postTitle: comment.post?.title || 'Unknown'
+        postTitle: comment.post?.title || 'Deleted Post',
+        matchType: 'comment',
+        relevanceScore: calculateRelevance(comment, q)
       }));
+      
+      results.totalComments = commentCount;
     }
     
-    results.total = results.posts.length + results.comments.length;
+    // Combine and sort by relevance
+    const combined = [...results.posts, ...results.comments]
+      .sort((a, b) => b.relevanceScore - a.relevanceScore);
+    
+    results.total = results.totalPosts + results.totalComments;
+    results.combined = combined.slice(0, limitNum);
     
     logger.info('Forum search performed', {
       userId: user?.id,
       query: q,
       type,
       postResults: results.posts.length,
-      commentResults: results.comments.length
+      commentResults: results.comments.length,
+      totalResults: results.total
     });
     
     res.status(200).json({
       success: true,
       query: q,
-      results
+      results,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: results.total,
+        pages: Math.ceil(results.total / limitNum)
+      }
     });
   } catch (error) {
     logger.error('Error searching forum:', error);
     next(error);
   }
+};
+
+// Helper function to calculate relevance score
+const calculateRelevance = (doc, query) => {
+  let score = 0;
+  const lowerQuery = query.toLowerCase();
+  
+  if (doc.title) {
+    const titleLower = doc.title.toLowerCase();
+    if (titleLower.includes(lowerQuery)) {
+      score += titleLower === lowerQuery ? 100 : 50; // Exact match gets higher score
+    }
+  }
+  
+  if (doc.content) {
+    const contentLower = doc.content.toLowerCase();
+    if (contentLower.includes(lowerQuery)) {
+      score += 30;
+    }
+  }
+  
+  if (doc.tags && Array.isArray(doc.tags)) {
+    doc.tags.forEach(tag => {
+      if (tag.toLowerCase().includes(lowerQuery)) score += 40;
+    });
+  }
+  
+  // Boost score for popular posts/comments
+  if (doc.stats?.upvotes) score += doc.stats.upvotes * 2;
+  if (doc.votes?.upvotes) score += doc.votes.upvotes * 2;
+  
+  return score;
 };
 
 // Get forum statistics

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { forumAPI } from '../../api';
+import AttachmentDisplay from '../../components/AttachmentDisplay';
 import {
   ArrowLeft,
   Edit,
@@ -16,7 +17,8 @@ import {
   AlertCircle,
   Send,
   User,
-  Loader2
+  Loader2,
+  File
 } from 'lucide-react';
 
 const PostDetailPage = () => {
@@ -28,10 +30,12 @@ const { id } = useParams();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [attachments, setAttachments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [replyTo, setReplyTo] = useState(null);
+  const [votedComments, setVotedComments] = useState({}); // Track comment votes
 
   useEffect(() => {
     fetchPostDetails();
@@ -93,24 +97,38 @@ const { id } = useParams();
     }
 
     try {
-      await forumAPI.voteComment(commentId, voteType);
-      // Update local state
+      const currentVote = votedComments[commentId];
+      
+      // Determine new vote type - toggle if clicking same button
+      let newVoteType = voteType;
+      if (currentVote === voteType) {
+        newVoteType = null;
+      }
+      
+      const response = await forumAPI.voteComment(commentId, newVoteType);
+      
+      // Update voted comments state
+      setVotedComments(prev => ({
+        ...prev,
+        [commentId]: newVoteType
+      }));
+      
+      // Update comments
       setComments(prev => prev.map(comment => {
         if (comment.id === commentId) {
           return {
             ...comment,
-            votes: {
-              ...comment.votes,
-              [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
-                (comment.votes[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) + 1
-            }
+            votes: response.data.votes,
+            userVote: response.data.userVote
           };
         }
         return comment;
       }));
     } catch (err) {
       console.error('Error voting on comment:', err);
-      setError('Failed to vote on comment');
+      const errorMsg = err.response?.data?.message || 'Failed to vote on comment';
+      setError(errorMsg);
+      setTimeout(() => setError(''), 3000);
     }
   };
 
@@ -372,6 +390,14 @@ const { id } = useParams();
               theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
             }`}>{post.content}</p>
           </div>
+
+          {/* Attachments */}
+          {post.attachments && post.attachments.length > 0 && (
+            <AttachmentDisplay 
+              attachments={post.attachments}
+              canDelete={false}
+            />
+          )}
 
           {/* Tags */}
           {post.tags && post.tags.length > 0 && (
@@ -700,24 +726,36 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
         theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
       }`}>{comment.content}</p>
 
+      {/* Comment Attachments */}
+      {comment.attachments && comment.attachments.length > 0 && (
+        <AttachmentDisplay 
+          attachments={comment.attachments}
+          canDelete={false}
+          compact={true}
+        />
+      )}
+
       {/* Comment Stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <button
               onClick={() => onVote(comment.id, 'upvote')}
               disabled={!user}
-              className={`p-1 transition-colors duration-200 ${
+              className={`p-2 rounded transition-all duration-200 ${
                 user 
                   ? `hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                      comment.userVote === 'upvote'
+                        ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
+                        : theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
+              title={user ? 'Click to upvote or remove vote' : 'Login to vote'}
             >
               <ThumbsUp className="w-4 h-4" />
             </button>
-            <span className={`text-sm ${
+            <span className={`text-sm font-medium min-w-[30px] text-center ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
             }`}>
               {(comment.votes?.upvotes || 0) - (comment.votes?.downvotes || 0)}
@@ -725,13 +763,16 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
             <button
               onClick={() => onVote(comment.id, 'downvote')}
               disabled={!user}
-              className={`p-1 transition-colors duration-200 ${
+              className={`p-2 rounded transition-all duration-200 ${
                 user 
                   ? `hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                      comment.userVote === 'downvote'
+                        ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
+                        : theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
+              title={user ? 'Click to downvote or remove vote' : 'Login to vote'}
             >
               <ThumbsDown className="w-4 h-4" />
             </button>

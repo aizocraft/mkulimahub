@@ -72,6 +72,20 @@ const forumPostSchema = new mongoose.Schema(
         default: 0
       }
     },
+    votedUsers: [{
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      voteType: {
+        type: String,
+        enum: ['upvote', 'downvote']
+      },
+      votedAt: {
+        type: Date,
+        default: Date.now
+      }
+    }],
     attachments: [{
       url: String,
       filename: String,

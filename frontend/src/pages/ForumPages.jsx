@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { forumAPI } from '../api';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import {
   Search,
   Filter,
@@ -41,6 +42,8 @@ const ForumPages = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
+  const [votedPosts, setVotedPosts] = useState({}); // Track user votes
+  const [votingPostId, setVotingPostId] = useState(null); // Track voting animation
   
   // Filters
   const [filters, setFilters] = useState({
@@ -106,33 +109,76 @@ const ForumPages = () => {
     return date.toLocaleDateString();
   };
 
-  // Handle vote
+  // Handle vote - improved with toggle functionality and animations
   const handleVote = async (postId, voteType) => {
     if (!isAuthenticated()) {
+      toast.info('Please login to vote on posts', { position: 'top-center' });
       navigate('/login');
       return;
     }
 
     try {
-      await forumAPI.votePost(postId, voteType);
+      setVotingPostId(postId);
+      const currentVote = votedPosts[postId];
       
-      // Update local state
+      // Determine new vote type
+      let newVoteType = voteType;
+      if (currentVote === voteType) {
+        // Clicking same vote button removes vote
+        newVoteType = null;
+      }
+      
+      const response = await forumAPI.votePost(postId, newVoteType);
+      
+      // Update voted posts state
+      setVotedPosts(prev => ({
+        ...prev,
+        [postId]: newVoteType
+      }));
+      
+      // Update post stats
       setPosts(prev => prev.map(post => {
         if (post.id === postId) {
-          const updatedPost = { ...post };
-          if (!updatedPost.stats) updatedPost.stats = {};
-          if (voteType === 'upvote') {
-            updatedPost.stats.upvotes = (updatedPost.stats.upvotes || 0) + 1;
-          } else {
-            updatedPost.stats.downvotes = (updatedPost.stats.downvotes || 0) + 1;
-          }
-          return updatedPost;
+          return {
+            ...post,
+            stats: response.data.stats,
+            voteDifference: response.data.voteDifference,
+            userVote: response.data.userVote
+          };
         }
         return post;
       }));
+
+      // Show success toast
+      if (newVoteType === null) {
+        toast.info('Vote removed', { 
+          position: 'top-center',
+          autoClose: 2000,
+          hideProgressBar: true
+        });
+      } else if (newVoteType === 'upvote') {
+        toast.success('👍 Upvoted!', { 
+          position: 'top-center',
+          autoClose: 2000,
+          hideProgressBar: true
+        });
+      } else if (newVoteType === 'downvote') {
+        toast.info('👎 Downvoted', { 
+          position: 'top-center',
+          autoClose: 2000,
+          hideProgressBar: true
+        });
+      }
     } catch (err) {
       console.error('Error voting:', err);
-      setError('Failed to vote. Please try again.');
+      const errorMsg = err.response?.data?.message || 'Failed to vote. Please try again.';
+      toast.error(errorMsg, { 
+        position: 'top-center',
+        autoClose: 3000 
+      });
+      setError('');
+    } finally {
+      setVotingPostId(null);
     }
   };
 
@@ -143,9 +189,17 @@ const ForumPages = () => {
     try {
       await forumAPI.deletePost(postId);
       setPosts(prev => prev.filter(post => post.id !== postId));
+      toast.success('Post deleted successfully', { 
+        position: 'top-center',
+        autoClose: 2000 
+      });
     } catch (err) {
       console.error('Error deleting post:', err);
-      setError('Failed to delete post.');
+      const errorMsg = err.response?.data?.message || 'Failed to delete post.';
+      toast.error(errorMsg, { 
+        position: 'top-center',
+        autoClose: 3000 
+      });
     }
   };
 
@@ -154,8 +208,16 @@ const ForumPages = () => {
     try {
       if (action === 'approve') {
         await forumAPI.approveContent(type, id, 'Approved by moderator');
+        toast.success('Content approved ✓', { 
+          position: 'top-center',
+          autoClose: 2000 
+        });
       } else {
         await forumAPI.rejectContent(type, id, reason);
+        toast.info('Content rejected', { 
+          position: 'top-center',
+          autoClose: 2000 
+        });
       }
       
       setPendingReviews(prev => prev.filter(item => 
@@ -165,7 +227,11 @@ const ForumPages = () => {
       fetchForumData();
     } catch (err) {
       console.error('Error moderating content:', err);
-      setError('Failed to moderate content.');
+      const errorMsg = err.response?.data?.message || 'Failed to moderate content.';
+      toast.error(errorMsg, { 
+        position: 'top-center',
+        autoClose: 3000 
+      });
     }
   };
 
@@ -382,6 +448,8 @@ const ForumPages = () => {
             isAuthenticated={isAuthenticated}
             navigate={navigate}
             theme={theme}
+            votingPostId={votingPostId}
+            setVotingPostId={setVotingPostId}
           />
         )}
       </div>
@@ -690,7 +758,9 @@ const PostsTab = ({
   activeTab,
   isAuthenticated,
   navigate,
-  theme 
+  theme,
+  votingPostId,
+  setVotingPostId
 }) => {
   if (!isAuthenticated() && activeTab === 'my') {
     return (
@@ -755,6 +825,8 @@ const PostsTab = ({
           formatDate={formatDate}
           navigate={navigate}
           theme={theme}
+          votingPostId={votingPostId}
+          setVotingPostId={setVotingPostId}
         />
       ))}
     </div>
@@ -762,7 +834,7 @@ const PostsTab = ({
 };
 
 // Post Card Component
-const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme }) => {
+const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme, votingPostId, setVotingPostId }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const canEdit = post.author?._id === user?.id || canModerate;
 
@@ -859,58 +931,74 @@ const PostCard = ({ post, user, onVote, onDelete, canModerate, formatDate, navig
       )}
 
       {/* Stats and Actions */}
-      <div className={`flex items-center justify-between border-t pt-4 ${
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t pt-4 ${
         theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
       }`}>
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4 sm:space-x-6 overflow-x-auto">
           {/* Votes */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 flex-shrink-0">
             <button
               onClick={() => onVote(post.id, 'upvote')}
               disabled={!user}
-              className={`p-1 rounded transition-colors duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-300 transform origin-center ${
+                votingPostId === post.id ? 'scale-95' : 'hover:scale-110'
+              } ${
                 user 
-                  ? `hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  ? `${
+                      post.userVote === 'upvote'
+                        ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 shadow-md shadow-green-500/50 animate-pulse'
+                        : theme === 'dark' ? 'text-gray-300 hover:text-green-400' : 'text-gray-600 hover:text-green-600'
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
+              title={user ? `${post.userVote === 'upvote' ? 'Remove upvote' : 'Upvote'}` : 'Login to vote'}
             >
-              <ThumbsUp className="w-5 h-5" />
+              <ThumbsUp className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-300 ${
+                post.userVote === 'upvote' ? 'fill-current' : ''
+              }`} />
             </button>
-            <span className={`text-sm font-medium ${
+            <span className={`text-xs sm:text-sm font-bold min-w-[24px] text-center transition-all duration-300 ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
+            } ${
+              post.userVote === 'upvote' ? 'text-green-600 dark:text-green-400 text-sm' : ''
             }`}>
               {post.stats?.upvotes || 0}
             </span>
             <button
               onClick={() => onVote(post.id, 'downvote')}
               disabled={!user}
-              className={`p-1 rounded transition-colors duration-200 ${
+              className={`p-2 rounded-lg transition-all duration-300 transform origin-center ${
+                votingPostId === post.id ? 'scale-95' : 'hover:scale-110'
+              } ${
                 user 
-                  ? `hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                  ? `${
+                      post.userVote === 'downvote'
+                        ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 shadow-md shadow-red-500/50 animate-pulse'
+                        : theme === 'dark' ? 'text-gray-300 hover:text-red-400' : 'text-gray-600 hover:text-red-600'
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
+              title={user ? `${post.userVote === 'downvote' ? 'Remove downvote' : 'Downvote'}` : 'Login to vote'}
             >
-              <ThumbsDown className="w-5 h-5" />
+              <ThumbsDown className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-300 ${
+                post.userVote === 'downvote' ? 'fill-current' : ''
+              }`} />
             </button>
           </div>
 
           {/* Comments */}
-          <div className="flex items-center space-x-2">
-            <MessageSquare className={`w-5 h-5 ${
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <MessageSquare className={`w-4 sm:w-5 h-4 sm:h-5 ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             }`} />
-            <span className={`text-sm ${
+            <span className={`text-xs sm:text-sm ${
               theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
             }`}>{post.stats?.commentCount || 0}</span>
           </div>
 
           {/* Views */}
-          <div className="flex items-center space-x-2">
-            <Eye className={`w-5 h-5 ${
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <Eye className={`w-4 sm:w-5 h-4 sm:h-5 ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
             }`} />
             <span className={`text-sm ${
