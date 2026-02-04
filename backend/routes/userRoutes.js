@@ -22,6 +22,10 @@ router.put('/profile', (req, res) => {
   userController.updateUserProfile(req, res);
 });
 
+// Account management routes (authenticated users)
+router.put('/reactivate', userController.reactivateAccount);
+router.delete('/delete-account', userController.deleteAccountPermanently);
+
 // Admin only routes
 router.get('/', admin, userController.getAllUsers);
 router.post('/', admin, userController.createUser);

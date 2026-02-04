@@ -717,3 +717,138 @@ exports.toggleActiveStatus = async (req, res, next) => {
     next(error);
   }
 };
+
+// Reactivate account (user can reactivate their own deactivated account)
+exports.reactivateAccount = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    logger.info('User attempting to reactivate account', {
+      userId: userId
+    });
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      logger.warn('Reactivation failed - user not found', {
+        userId: userId
+      });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.isActive) {
+      logger.info('Reactivation attempt failed - account already active', {
+        userId: userId
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Your account is already active'
+      });
+    }
+
+    user.isActive = true;
+    await user.save();
+
+    logger.info('User account reactivated successfully', {
+      userId: userId,
+      userEmail: user.email
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Your account has been reactivated successfully',
+      user: generateUserResponse(user)
+    });
+  } catch (error) {
+    logger.error('Error reactivating account', {
+      error: error.message,
+      userId: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
+// Delete account permanently (user can delete their own account)
+exports.deleteAccountPermanently = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { password } = req.body;
+
+    logger.info('User attempting to delete account permanently', {
+      userId: userId
+    });
+
+    if (!password) {
+      logger.warn('Permanent account deletion failed - password not provided', {
+        userId: userId
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required to delete your account'
+      });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      logger.warn('Permanent deletion failed - user not found', {
+        userId: userId
+      });
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify password for security
+    if (!user.password) {
+      logger.warn('Permanent deletion failed - user uses Google OAuth', {
+        userId: userId
+      });
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot verify password for Google-authenticated accounts. Please contact support.'
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      logger.warn('Permanent deletion failed - incorrect password', {
+        userId: userId
+      });
+      return res.status(401).json({
+        success: false,
+        message: 'Incorrect password. Account deletion failed.'
+      });
+    }
+
+    const userEmail = user.email;
+    const userName = user.name;
+
+    // Delete the user account permanently
+    await User.findByIdAndDelete(userId);
+
+    logger.info('User account deleted permanently', {
+      userId: userId,
+      userEmail: userEmail,
+      userName: userName
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Your account has been permanently deleted'
+    });
+  } catch (error) {
+    logger.error('Error deleting account permanently', {
+      error: error.message,
+      userId: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};

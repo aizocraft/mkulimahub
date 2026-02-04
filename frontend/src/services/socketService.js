@@ -91,6 +91,7 @@ class SocketService {
     });
   }
 
+  // ========== VIDEO CALL FUNCTIONS ==========
   joinVideoRoom(consultationId) {
     return new Promise((resolve, reject) => {
       if (!this.socket?.connected) {
@@ -146,16 +147,53 @@ class SocketService {
     this.socket.emit('video-call:ice-candidate', { roomId, candidate, targetUserId });
   }
 
-  toggleMedia(roomId, mediaType, isEnabled) {
-    if (!this.socket?.connected) return;
-    this.socket.emit('video-call:toggle-media', { roomId, mediaType, isEnabled });
-  }
-
   sendConnectionEstablished(roomId) {
     if (!this.socket?.connected) return;
     this.socket.emit('video-call:connected', { roomId });
   }
+  // Add to socketService class methods
+toggleMedia(roomId, mediaType, isEnabled) {
+  if (!this.socket?.connected) return;
+  this.socket.emit('video-call:toggle-media', { roomId, mediaType, isEnabled });
+}
 
+raiseHand(roomId, isRaised) {
+  if (!this.socket?.connected) return;
+  this.socket.emit('video-call:raise-hand', { roomId, isRaised });
+}
+
+sendReaction(roomId, reaction) {
+  if (!this.socket?.connected) return;
+  this.socket.emit('video-call:reaction', { roomId, reaction });
+}
+
+  // ========== CHAT FUNCTIONS ==========
+  joinChat(consultationId) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('chat:join', { consultationId });
+  }
+
+  sendMessage(consultationId, content, type = 'text') {
+    if (!this.socket?.connected) return;
+    this.socket.emit('chat:send-message', { consultationId, content, type });
+  }
+
+  typingIndicator(consultationId, isTyping) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('chat:typing', { consultationId, isTyping });
+  }
+
+  leaveChat(consultationId) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('chat:leave', { consultationId });
+  }
+
+  markMessagesAsRead(consultationId, messageIds) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('chat:mark-read', { consultationId, messageIds });
+  }
+
+  // ========== UTILITY FUNCTIONS ==========
   on(event, callback) {
     if (!this.socket) return;
     this.socket.on(event, callback);
@@ -180,6 +218,13 @@ class SocketService {
 
   getUserId() {
     return this.user?.id || null;
+  }
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
   }
 }
 

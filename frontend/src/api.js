@@ -69,6 +69,10 @@ export const userAPI = {
   toggleVerification: (id) => api.put(`/users/${id}/verify`),
   toggleActiveStatus: (id) => api.put(`/users/${id}/active`),
 
+  // Account management (authenticated users)
+  reactivateAccount: () => api.put('/users/reactivate'),
+  deleteAccountPermanently: (password) => api.delete('/users/delete-account', { data: { password } }),
+
   // Public access
   getExperts: (params = {}) => api.get('/users/experts', { params }),
   getFarmers: (params = {}) => api.get('/users/farmers', { params }),

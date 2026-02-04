@@ -27,6 +27,9 @@ const generateUserResponse = (user) => {
     rating: user.rating || { average: 0, count: 0 },
     isVerified: user.isVerified || false,
     isActive: user.isActive !== undefined ? user.isActive : true,
+    // Google Auth field
+    googleId: user.googleId || null,
+    isGoogleAuth: !!user.googleId,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };

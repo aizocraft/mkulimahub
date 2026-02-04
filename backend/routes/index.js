@@ -9,6 +9,8 @@ const dbRoutes = require('./dbRoutes');
 const forumRoutes = require('./forumRoutes');
 const weatherRoutes = require('./weatherRoutes');
 const videoCallRoutes = require('./videoCallRoutes');
+const aiChatRoutes = require('./aiChatRoutes');
+
 const { requestLogger, errorLogger } = require('../middleware/logger');
 
 // Apply request logger to all routes
@@ -23,6 +25,8 @@ router.use('/db', dbRoutes);
 router.use('/forum', forumRoutes);
 router.use('/weather', weatherRoutes);
 router.use('/video', videoCallRoutes);
+router.use('/ai', aiChatRoutes);
+
 
 // Apply error logger 
 router.use(errorLogger);

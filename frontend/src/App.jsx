@@ -27,6 +27,7 @@ import UserPage from './pages/dashboards/admin/UserPage.jsx';
 import Analytics from './pages/dashboards/admin/Analytics.jsx';
 import ExpertsPage from './pages/dashboards/farmer/ExpertsPage.jsx';
 import CropsPage from './pages/CropsPage'; 
+import NotificationPage from './pages/NotificationPage';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 
@@ -98,6 +99,11 @@ export default function App() {
             <Route path="/settings" element={
               <PageLayout>
                 <SettingsPage />
+              </PageLayout>
+            } />
+            <Route path="/notifications" element={
+              <PageLayout>
+                <NotificationPage />
               </PageLayout>
             } />
           <Route path="/help" element={

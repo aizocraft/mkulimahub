@@ -204,12 +204,12 @@ const Navbar = () => {
                 {user ? (
                   <>
                     {/* Notifications */}
-                    <button className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-all duration-200">
+                    <Link to="/notifications" className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 block">
                       <NotificationIcon 
                         size={16} 
                         className="text-gray-600 dark:text-gray-400" 
                       />
-                    </button>
+                    </Link>
 
                     {/* Quick Logout */}
                     <button
@@ -358,12 +358,12 @@ const Navbar = () => {
               {user ? (
                 <div className="flex items-center space-x-3">
                   {/* Notifications */}
-                  <button className="p-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-all duration-200">
+                  <Link to="/notifications" className="p-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 block">
                     <NotificationIcon 
                       size={18} 
                       className="text-gray-600 dark:text-gray-400" 
                     />
-                  </button>
+                  </Link>
 
                   {/* Profile Dropdown */}
                   <div className="relative" ref={dropdownRef}>
