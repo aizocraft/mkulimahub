@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 
 const PostDetailPage = () => {
-const { id } = useParams();
+  const { id } = useParams();
+  const postId = id; // Map the route param to postId
   const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
