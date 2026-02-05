@@ -68,10 +68,19 @@ const forumCommentSchema = new mongoose.Schema(
       }]
     },
     attachments: [{
-      url: String,
+      fileId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'File',
+        required: true
+      },
       filename: String,
-      fileType: String,
-      size: Number
+      originalName: String,
+      mimeType: String,
+      size: Number,
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      }
     }],
     mentions: [{
       type: mongoose.Schema.Types.ObjectId,

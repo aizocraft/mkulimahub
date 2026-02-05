@@ -87,9 +87,14 @@ const forumPostSchema = new mongoose.Schema(
       }
     }],
     attachments: [{
-      url: String,
+      fileId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'File',
+        required: true
+      },
       filename: String,
-      fileType: String,
+      originalName: String,
+      mimeType: String,
       size: Number,
       uploadedAt: {
         type: Date,

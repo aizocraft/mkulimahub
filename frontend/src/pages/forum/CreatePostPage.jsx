@@ -8,7 +8,6 @@ import {
   Plus,
   X,
   AlertCircle,
-  CheckCircle,
   Loader2
 } from 'lucide-react';
 import AttachmentDisplay from '../../components/AttachmentDisplay';
@@ -19,20 +18,18 @@ const CreatePostPage = () => {
   const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
-  
+
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [debugInfo, setDebugInfo] = useState('');
-  
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
     category: '',
     tags: []
   });
-  
+
   const [tagInput, setTagInput] = useState('');
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState({}); // fileName -> percent
@@ -42,7 +39,7 @@ const CreatePostPage = () => {
       navigate('/login');
       return;
     }
-    
+
     fetchCategories();
   }, [isAuthenticated, navigate]);
 
@@ -50,7 +47,6 @@ const CreatePostPage = () => {
     try {
       const response = await forumAPI.getCategories();
       setCategories(response.data.categories || []);
-      console.log('Categories loaded:', response.data.categories);
     } catch (err) {
       console.error('Error fetching categories:', err);
       setError('Failed to load categories');
@@ -132,57 +128,35 @@ const CreatePostPage = () => {
 
     setIsLoading(true);
     setError('');
-    setSuccess('');
-    setDebugInfo('');
-    
+
     try {
-      // Create a clean object to send - Use 'category' (not 'categoryId')
       const postData = {
         title: formData.title.trim(),
         content: formData.content.trim(),
-        category: formData.category.trim(), // CORRECT FIELD NAME
+        category: formData.category.trim(),
         tags: formData.tags.map(tag => tag.trim().toLowerCase()),
         attachments: attachments.map(a => ({
-          id: a.id,
-          url: a.url,
+          fileId: a.fileId,
           filename: a.filename,
           size: a.size,
           fileType: a.fileType
         }))
       };
-      
-      // Debug information
-      console.log('=== DEBUG: Form Submission ===');
-      console.log('Post Data:', postData);
-      console.log('Field names:', Object.keys(postData));
-      console.log('Selected Category:', selectedCategory);
-      console.log('User Role:', user?.role);
-      console.log('=============================');
-      
-      setDebugInfo(`
-        Sending data to server:
-        - Title: ${postData.title}
-        - Content length: ${postData.content.length} characters
-        - Category: ${postData.category} (field name: "category")
-        - Category Name: ${selectedCategory?.name || 'Unknown'}
-        - User Role: ${user?.role}
-        - Tags: ${postData.tags.join(', ') || 'None'}
-        - Full Payload: ${JSON.stringify(postData, null, 2)}
-      `);
-      
+
       const response = await forumAPI.createPost(postData);
-      
-      console.log('=== DEBUG: API Response ===');
-      console.log('Response:', response);
-      console.log('Response Data:', response.data);
-      console.log('==========================');
-      
+
       if (response.data.requiresReview) {
-        setSuccess('Post created successfully! It will be reviewed by an expert before appearing publicly.');
+        toast.success('Post created successfully! It will be reviewed by an expert before appearing publicly.', {
+          position: 'top-center',
+          autoClose: 3000
+        });
       } else {
-        setSuccess('Post created successfully!');
+        toast.success('Post created successfully!', {
+          position: 'top-center',
+          autoClose: 2000
+        });
       }
-      
+
       // Reset form
       setFormData({
         title: '',
@@ -190,28 +164,17 @@ const CreatePostPage = () => {
         category: '',
         tags: []
       });
-      
+
       setTimeout(() => {
         navigate(`/forum/posts/${response.data.post?.id || response.data.post?._id}`);
       }, 2000);
       
     } catch (err) {
-      console.error('=== DEBUG: Full Error Details ===');
-      console.error('Error:', err);
-      console.error('Error Message:', err.message);
-      console.error('Response Data:', err.response?.data);
-      console.error('Response Status:', err.response?.status);
-      console.error('Request Headers:', err.config?.headers);
-      console.error('Request Data:', err.config?.data);
-      console.error('==============================');
-      
       let errorMessage = 'Failed to create post';
-      let detailedError = '';
-      
+
       if (err.response?.data) {
         const errorData = err.response.data;
-        console.log('Error Data Structure:', errorData);
-        
+
         if (errorData.errors && Array.isArray(errorData.errors)) {
           errorMessage = errorData.errors.join(', ');
         } else if (errorData.message) {
@@ -231,11 +194,8 @@ const CreatePostPage = () => {
             .map(([field, message]) => `${field}: ${message}`)
             .join(', ');
         }
-        
-        detailedError = JSON.stringify(errorData, null, 2);
       } else if (!err.response) {
         errorMessage = 'Network error. Please check your connection.';
-        detailedError = 'No response received from server';
       } else if (err.response?.status === 400) {
         errorMessage = 'Bad request. Please check your input.';
       } else if (err.response?.status === 403) {
@@ -243,28 +203,8 @@ const CreatePostPage = () => {
       } else if (err.response?.status === 404) {
         errorMessage = 'Category not found. Please refresh the page and try again.';
       }
-      
+
       setError(errorMessage);
-      setDebugInfo(prev => `
-        ${prev}
-        
-        Error Details:
-        - Status: ${err.response?.status || 'No response'}
-        - Message: ${errorMessage}
-        - Detailed: ${detailedError}
-        
-        Category Debug:
-        1. Selected Category ID: ${formData.category}
-        2. Category Exists in List: ${categories.find(c => c._id === formData.category) ? 'Yes' : 'No'}
-        3. Category Active: ${categories.find(c => c._id === formData.category)?.isActive}
-        4. Category Expert Only: ${categories.find(c => c._id === formData.category)?.expertOnly}
-        5. User Role: ${user?.role}
-        6. Can Post: ${!(categories.find(c => c._id === formData.category)?.expertOnly) || user?.role === 'expert' || user?.role === 'admin'}
-        
-        What we sent:
-        - Field names: ${Object.keys(err.config?.data ? JSON.parse(err.config.data) : {})}
-        - Full payload: ${err.config?.data}
-      `);
       
     } finally {
       setIsLoading(false);
@@ -297,8 +237,7 @@ const CreatePostPage = () => {
 
         const fileData = resp.data.file || resp.data.attachment || resp.data;
         const attachment = {
-          id: fileData.id || fileData._id || fileData.name,
-          url: fileData.url || fileData.path || fileData.location || fileData.fileUrl || resp.data.url,
+          fileId: fileData.id || fileData._id,
           filename: fileData.originalName || fileData.filename || file.name,
           size: fileData.size || file.size,
           fileType: fileData.mimeType || file.type || fileData.fileType,
@@ -325,9 +264,9 @@ const CreatePostPage = () => {
   const handleRemoveAttachment = async (index) => {
     const att = attachments[index];
     if (!att) return;
-    if (att.id) {
+    if (att.fileId) {
       try {
-        await uploadAPI.deleteFile(att.id);
+        await uploadAPI.deleteFile(att.fileId);
       } catch (err) {
         console.warn('Failed to delete file on server:', err);
       }
@@ -342,32 +281,6 @@ const CreatePostPage = () => {
       navigate('/login', { state: { from: '/forum/create' } });
     }
   }, [isAuthenticated, navigate]);
-
-  // Test API function - FIXED
-  const testAPICall = async () => {
-    try {
-      setIsLoading(true);
-      setError('');
-      
-      const testData = {
-        title: 'Test Post - ' + new Date().toISOString(),
-        content: 'This is a test post for debugging purposes.',
-        category: formData.category || categories[0]?._id, // FIXED: 'category' not 'categoryId'
-        tags: ['test', 'debug']
-      };
-      
-      console.log('Testing API call with:', testData);
-      console.log('Field names:', Object.keys(testData));
-      const response = await forumAPI.createPost(testData);
-      console.log('Test response:', response.data);
-      setSuccess('API test successful! Post created: ' + response.data.post?.title);
-    } catch (error) {
-      console.error('Test API error:', error.response?.data);
-      setError(`Test failed: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   if (!isAuthenticated()) {
     return (
@@ -412,55 +325,12 @@ const CreatePostPage = () => {
             Share your knowledge or ask questions to the community.
             {user?.role === 'farmer' && ' Your post will be reviewed by experts before appearing publicly.'}
           </p>
-          
-          {/* Debug Panel */}
-          <div className={`mb-6 p-4 rounded-lg ${
-            theme === 'dark' 
-              ? 'bg-gray-900 border-gray-700' 
-              : 'bg-gray-50 border-gray-200'
-          } border`}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-sm font-medium ${
-                theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
-              }`}>Debug Information</h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={testAPICall}
-                  disabled={isLoading}
-                  className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors disabled:opacity-50"
-                >
-                  Test API
-                </button>
-                <button
-                  onClick={() => setDebugInfo('')}
-                  className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-            {debugInfo ? (
-              <pre className={`text-xs font-mono whitespace-pre-wrap max-h-48 overflow-auto p-2 rounded ${
-                theme === 'dark' 
-                  ? 'bg-gray-800 text-gray-300' 
-                  : 'bg-white text-gray-700'
-              }`}>
-                {debugInfo}
-              </pre>
-            ) : (
-              <p className={`text-xs ${
-                theme === 'dark' ? 'text-gray-500' : 'text-gray-600'
-              }`}>
-                Debug information will appear here when you try to submit
-              </p>
-            )}
-          </div>
-          
+
           {/* Error Alert */}
           {error && (
             <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
-              theme === 'dark' 
-                ? 'bg-red-900/20 border-red-800' 
+              theme === 'dark'
+                ? 'bg-red-900/20 border-red-800'
                 : 'bg-red-50 border-red-200'
             }`}>
               <div className="flex items-start">
@@ -479,38 +349,8 @@ const CreatePostPage = () => {
                     >
                       Refresh Categories
                     </button>
-                    <button
-                      onClick={() => console.log('Manual test:', {
-                        formData,
-                        categories,
-                        selectedCategory: categories.find(c => c._id === formData.category),
-                        payload: {
-                          title: formData.title.trim(),
-                          content: formData.content.trim(),
-                          category: formData.category.trim(),
-                          tags: formData.tags.map(tag => tag.trim().toLowerCase())
-                        }
-                      })}
-                      className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
-                    >
-                      Log to Console
-                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Success Alert */}
-          {success && (
-            <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
-              theme === 'dark' 
-                ? 'bg-green-900/20 border-green-800' 
-                : 'bg-green-50 border-green-200'
-            }`}>
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                <p className={theme === 'dark' ? 'text-green-300' : 'text-green-700'}>{success}</p>
               </div>
             </div>
           )}
@@ -747,7 +587,7 @@ const CreatePostPage = () => {
               )}
 
               {/* attachments list */}
-              <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} />
+              <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} theme={theme} />
             </div>
 
             {/* User Info */}

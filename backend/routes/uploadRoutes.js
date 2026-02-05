@@ -1,23 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const uploadController = require('../controllers/uploadController');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-// Configure multer for file storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadsDir = path.join(__dirname, '../uploads');
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    // Create unique filename with timestamp and original name
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
-  }
-});
+// Configure multer for memory storage (files stored in buffer for MongoDB)
+const storage = multer.memoryStorage();
 
 // File filter - allow various file types
 const fileFilter = (req, file, cb) => {
@@ -56,7 +45,8 @@ const upload = multer({
 });
 
 // Routes
-router.post('/', upload.single('file'), uploadController.uploadFile);
+router.post('/', auth, upload.single('file'), uploadController.uploadFile);
+router.get('/:fileId', uploadController.getFile); // Serve files from MongoDB
 router.delete('/:fileId', auth, uploadController.deleteFile);
 
 module.exports = router;

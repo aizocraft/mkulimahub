@@ -984,7 +984,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
 
       {/* Attachments preview */}
       {post.attachments && post.attachments.length > 0 && (
-        <AttachmentDisplay attachments={post.attachments} compact={true} />
+        <AttachmentDisplay attachments={post.attachments} compact={true} theme={theme} />
       )}
 
       {/* Tags */}

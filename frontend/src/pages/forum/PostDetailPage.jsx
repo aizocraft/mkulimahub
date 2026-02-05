@@ -394,9 +394,10 @@ const PostDetailPage = () => {
 
           {/* Attachments */}
           {post.attachments && post.attachments.length > 0 && (
-            <AttachmentDisplay 
+            <AttachmentDisplay
               attachments={post.attachments}
               canDelete={false}
+              theme={theme}
             />
           )}
 
@@ -729,10 +730,11 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
 
       {/* Comment Attachments */}
       {comment.attachments && comment.attachments.length > 0 && (
-        <AttachmentDisplay 
+        <AttachmentDisplay
           attachments={comment.attachments}
           canDelete={false}
           compact={true}
+          theme={theme}
         />
       )}
 

@@ -471,7 +471,7 @@ const EditPostPage = () => {
                 </div>
               )}
 
-              <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} />
+              <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} theme={theme} />
             </div>
 
             {/* Submit Buttons */}

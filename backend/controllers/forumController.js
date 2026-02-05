@@ -2,7 +2,10 @@ const ForumPost = require('../models/ForumPost');
 const ForumComment = require('../models/ForumComment');
 const ForumCategory = require('../models/ForumCategory');
 const User = require('../models/User');
+const File = require('../models/File');
 const { logger } = require('../middleware/logger');
+const multer = require('multer');
+const path = require('path');
 
 // Helper function to generate post response - FIXED VERSION
 const generatePostResponse = (post, user) => {
@@ -328,14 +331,34 @@ exports.createPost = async (req, res, next) => {
       status = 'pending_review'; // Farmer posts need expert review
     }
 
-    // Filter attachments to match schema (remove id field if present)
-    const cleanedAttachments = (attachments || []).map(att => ({
-      url: att.url,
-      filename: att.filename,
-      fileType: att.fileType,
-      size: att.size,
-      uploadedAt: att.uploadedAt || new Date()
-    }));
+    // Process attachments - now expecting file IDs from separate uploads
+    const cleanedAttachments = [];
+    if (attachments && attachments.length > 0) {
+      for (const att of attachments) {
+        if (att.fileId) {
+          // Verify file exists and user can access it
+          const fileDoc = await File.findById(att.fileId);
+          if (fileDoc && fileDoc.uploadedBy.toString() === user.id.toString()) {
+            cleanedAttachments.push({
+              fileId: att.fileId,
+              filename: fileDoc.originalName,
+              originalName: fileDoc.originalName,
+              mimeType: fileDoc.mimeType,
+              size: fileDoc.size,
+              uploadedAt: fileDoc.createdAt
+            });
+
+            // Update file's attachedTo reference
+            await File.findByIdAndUpdate(att.fileId, {
+              attachedTo: {
+                model: 'ForumPost',
+                id: null // Will be set after post creation
+              }
+            });
+          }
+        }
+      }
+    }
     
     const postData = {
       title: title.trim(),
@@ -596,12 +619,12 @@ exports.createComment = async (req, res, next) => {
     
     // Process attachments - validate and sanitize
     const processedAttachments = attachments.map(att => ({
-      url: att.url || '',
       filename: att.filename || 'Attachment',
       fileType: att.fileType || 'unknown',
       size: att.size || 0,
+      data: att.data, // Binary data from multer memory storage
       uploadedAt: new Date()
-    })).filter(att => att.url);
+    })).filter(att => att.data);
     
     const commentData = {
       content: content.trim(),
@@ -667,25 +690,25 @@ exports.createComment = async (req, res, next) => {
 exports.updateComment = async (req, res, next) => {
   try {
     const { commentId } = req.params;
-    const { content } = req.body;
+    const { content, attachments } = req.body;
     const user = req.user;
-    
+
     if (!content || !content.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Comment content is required'
       });
     }
-    
+
     const comment = await ForumComment.findById(commentId);
-    
+
     if (!comment) {
       return res.status(404).json({
         success: false,
         message: 'Comment not found'
       });
     }
-    
+
     // Check permissions
     if (!comment.canModify || !comment.canModify(user.id, user.role)) {
       return res.status(403).json({
@@ -693,19 +716,29 @@ exports.updateComment = async (req, res, next) => {
         message: 'You do not have permission to edit this comment'
       });
     }
-    
+
     // Save edit history
     const editHistory = comment.editHistory || [];
     editHistory.push({
       content: comment.content,
       editedAt: comment.editedAt || comment.updatedAt
     });
-    
+
+    // Process attachments - validate and sanitize
+    const processedAttachments = (attachments || []).map(att => ({
+      url: att.url || '',
+      filename: att.filename || 'Attachment',
+      fileType: att.fileType || 'unknown',
+      size: att.size || 0,
+      uploadedAt: att.uploadedAt || new Date()
+    })).filter(att => att.url);
+
     // Update comment
     comment.content = content.trim();
+    comment.attachments = processedAttachments;
     comment.editedAt = new Date();
     comment.editHistory = editHistory;
-    
+
     // If farmer edits, send back for review
     if (user.role === 'farmer' && comment.status === 'published') {
       comment.status = 'pending_review';
@@ -716,16 +749,17 @@ exports.updateComment = async (req, res, next) => {
         rejectionReason: null
       };
     }
-    
+
     await comment.save();
     await comment.populate('author', 'name email role profilePicture');
-    
+
     logger.info('Forum comment updated', {
       userId: user.id,
       commentId,
-      editCount: editHistory.length + 1
+      editCount: editHistory.length + 1,
+      attachmentCount: processedAttachments.length
     });
-    
+
     res.status(200).json({
       success: true,
       message: comment.status === 'pending_review'
