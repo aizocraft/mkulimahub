@@ -398,7 +398,8 @@ export const apiUtils = {
         errors.push('Consultation must be accepted before starting video call');
       }
       
-      if (!consultation.payment.isFree && consultation.payment.status !== 'paid') {
+      const payment = consultation.payment;
+      if (payment && !payment.isFree && payment.status !== 'paid') {
         errors.push('Payment must be completed before starting video call');
       }
       

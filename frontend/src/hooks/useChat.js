@@ -128,21 +128,14 @@ const loadPreviousMessages = useCallback(async () => {
     });
   }, [consultationId, user?.id]);
 
-  // Send message
+  // Send message - socket handler persists to DB and broadcasts, no need for duplicate API call
   const sendMessage = useCallback(async (content, type = 'text') => {
     if (!content || !content.trim()) return;
     
     try {
-      // Send via socket for real-time
       socketService.sendMessage(consultationId, content.trim(), type);
-      
-      // Also save to database via API
-      await videoCallAPI.sendMessage(consultationId, { content: content.trim(), type });
-      
-      // Clear typing indicator
       socketService.typingIndicator(consultationId, false);
       clearTimeout(typingTimeoutRef.current);
-      
     } catch (error) {
       console.error('Failed to send message:', error);
       setError('Failed to send message');

@@ -4,6 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import GoogleAuthSuccess from './components/GoogleAuthSuccess.jsx';
 import RoleSelectionPage from './pages/RoleSelectionPage';
+import SocketInitializer from './components/SocketInitializer';
+
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -30,6 +32,7 @@ import CropsPage from './pages/CropsPage';
 import NotificationPage from './pages/NotificationPage';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import { Toaster } from 'react-hot-toast';
 
 // Layout wrapper component
 const PageLayout = ({ children }) => (
@@ -46,6 +49,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
+        <SocketInitializer />
         <BrowserRouter>
           <ScrollToTop /> 
           <Routes>
@@ -171,6 +175,7 @@ export default function App() {
           draggable
           pauseOnHover
         />
+        <Toaster position="top-center" />
       </AuthProvider>
     </ThemeProvider>
   );

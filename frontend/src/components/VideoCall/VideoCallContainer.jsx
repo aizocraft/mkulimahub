@@ -1,7 +1,9 @@
 // src/components/VideoCall/VideoCallContainer.jsx - FIXED VERSION
 import React, { useState, useEffect } from 'react';
 import useVideoCall from '../../hooks/useVideoCall';
-import { Mic, MicOff, Video, VideoOff, Phone, PhoneOff, MessageSquare } from 'lucide-react';
+import useChat from '../../hooks/useChat';
+import ChatContainer from '../Chat/ChatContainer';
+import { Mic, MicOff, Video, VideoOff, Phone, PhoneOff, MessageSquare, X } from 'lucide-react';
 
 const VideoCallContainer = ({ consultation, user, onEndCall }) => {
   const [showChat, setShowChat] = useState(false);
@@ -20,15 +22,25 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
     connectedUsers,
     isCallEstablished,
     waitingMessage,
-    
+
     localVideoRef,
     remoteVideoRef,
-    
+
     startVideoCall,
     endCall,
     toggleAudio,
     toggleVideo,
   } = useVideoCall(consultation?._id, user);
+
+  const chat = useChat(consultation?._id, user);
+
+  // Sync local stream to video element when it becomes available
+  useEffect(() => {
+    if (localStream && localVideoRef.current && !localVideoRef.current.srcObject) {
+      localVideoRef.current.srcObject = localStream;
+      localVideoRef.current.muted = true;
+    }
+  }, [localStream]);
 
   // Handle responsive design
   useEffect(() => {
@@ -36,6 +48,23 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Start video call when component mounts (only once, no retry on error)
+  const hasAttemptedRef = React.useRef(false);
+  useEffect(() => {
+    if (
+      consultation?._id &&
+      user &&
+      !isCallActive &&
+      !isConnecting &&
+      !error &&
+      !hasAttemptedRef.current
+    ) {
+      hasAttemptedRef.current = true;
+      console.log('Starting video call from VideoCallContainer...');
+      startVideoCall();
+    }
+  }, [consultation?._id, user, isCallActive, isConnecting, error, startVideoCall]);
 
   const isMobile = windowWidth < 768;
 
@@ -56,7 +85,10 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
           <p className="text-gray-300 mb-6">{error}</p>
           <div className="flex flex-col sm:flex-row gap-3">
             <button
-              onClick={startVideoCall}
+              onClick={() => {
+                hasAttemptedRef.current = false;
+                startVideoCall();
+              }}
               className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
               <Phone size={20} />
@@ -96,7 +128,7 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
   const roomId = roomInfo?.roomId || 'Waiting...';
 
   return (
-    <div className="video-call-container h-full flex flex-col bg-gray-900">
+    <div className="video-call-container h-full flex flex-col bg-gray-900 relative">
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gray-850 border-b border-gray-800">
         <div className="flex items-center gap-3">
@@ -141,33 +173,24 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
         </div>
       </div>
 
-      {/* Waiting overlay - FIXED: removed roomInfo access */}
+      {/* Waiting banner - compact, doesn't cover video */}
       {isCallActive && !isCallEstablished && waitingMessage && (
-        <div className="absolute inset-0 bg-gray-900/90 z-10 flex flex-col items-center justify-center">
-          <div className="text-center max-w-md p-8">
-            <div className="text-6xl mb-6 animate-pulse">📞</div>
-            <h3 className="text-white text-xl font-semibold mb-3">
-              {waitingMessage}
-            </h3>
-            <p className="text-gray-400">
-              {connectedUsers.length > 0 
-                ? `Connected with ${connectedUsers[0]?.userName || 'another user'}`
-                : 'The call will start automatically when someone joins'}
+        <div className="absolute top-16 left-4 right-4 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-96 z-10 bg-blue-600/90 backdrop-blur-sm rounded-lg px-4 py-3 flex items-center gap-3">
+          <div className="text-2xl animate-pulse">📞</div>
+          <div>
+            <p className="text-white font-medium text-sm">{waitingMessage}</p>
+            <p className="text-blue-100 text-xs">
+              {connectedUsers.length > 0 ? 'Establishing connection...' : 'Share this consultation with the other participant'}
             </p>
-            {/* SAFE ACCESS to roomInfo */}
-            {roomInfo && roomInfo.roomId && (
-              <div className="mt-6 p-3 bg-gray-800/50 rounded-lg">
-                <p className="text-gray-400 text-sm">Room ID:</p>
-                <p className="text-blue-400 font-mono text-sm">{roomInfo.roomId}</p>
-              </div>
-            )}
           </div>
         </div>
       )}
 
-      {/* Main video area */}
-      <div className="flex-1 p-4 md:p-6 overflow-hidden">
-        <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 md:gap-6 h-full`}>
+      {/* Main content: video + optional chat */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Video area */}
+        <div className={`flex-1 p-4 md:p-6 overflow-hidden ${showChat ? (isMobile ? 'hidden' : 'min-w-0') : ''}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 md:gap-6 h-full`}>
           {/* Remote video (main) */}
           <div className={`relative bg-gray-850 rounded-2xl overflow-hidden ${isMobile ? 'h-64' : 'h-full'}`}>
             {remoteStream ? (
@@ -230,6 +253,33 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Chat panel - slides in from right */}
+      {showChat && (
+        <div className={`${isMobile ? 'fixed inset-0 z-20' : 'w-80 lg:w-96 border-l border-gray-800'} flex flex-col bg-gray-800`}>
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <ChatContainer
+              messages={chat.messages}
+              onSendMessage={(content) => chat.sendMessage(content)}
+              onTyping={chat.handleTyping}
+              typingUsers={chat.typingUsers}
+              messagesEndRef={chat.messagesEndRef}
+              user={user}
+            />
+          </div>
+          {isMobile && (
+            <button
+              onClick={() => setShowChat(false)}
+              className="absolute top-2 right-2 p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white z-10"
+              aria-label="Close chat"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
+      )}
+
       </div>
 
       {/* Controls */}

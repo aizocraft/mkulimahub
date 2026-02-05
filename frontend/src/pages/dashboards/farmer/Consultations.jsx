@@ -8,10 +8,12 @@ import {
 import { bookingAPI, apiUtils, videoCallAPI } from '../../../api';
 import toast from 'react-hot-toast';
 import VideoCallModal from '../../../components/VideoCall/VideoCallModal'; 
-import socketService from '../../../services/socketService'; 
+import socketService from '../../../services/socketService';
+import { useAuth } from '../../../context/AuthContext';
 
 
 const Consultations = () => {
+  const { user: authUser } = useAuth();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [loading, setLoading] = useState(false);
   const [consultations, setConsultations] = useState([]);
@@ -19,21 +21,9 @@ const Consultations = () => {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showVideoCallModal, setShowVideoCallModal] = useState(false); 
-  const [user, setUser] = useState(null); 
 
-  // Get user from localStorage
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-      
-      // Initialize socket with token
-      const token = localStorage.getItem('token');
-      if (token) {
-        socketService.initialize(token, JSON.parse(userData)._id);
-      }
-    }
-  }, []);
+  // Use auth user, with localStorage fallback for compatibility
+  const user = authUser || JSON.parse(localStorage.getItem('user') || 'null');
 
   // Fetch consultations based on active tab
   useEffect(() => {
@@ -79,56 +69,22 @@ const Consultations = () => {
     }
   };
 
-  // handleJoinCall function to use WebRTC
-  const handleJoinCall = async (consultation) => {
-    try {
-      // Validate consultation for video call
-      const validation = apiUtils.videoCall.validateConsultationForVideoCall(consultation);
-      
-      if (!validation.isValid) {
-        toast.error(validation.errors[0] || 'Cannot start video call');
-        return;
-      }
-      
-      // Check browser support
-      const browserSupport = apiUtils.videoCall.checkBrowserSupport();
-      if (!browserSupport.allSupported) {
-        toast.error(browserSupport.message);
-        return;
-      }
-      
-      // Check camera/microphone permissions
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      } catch (error) {
-        toast.error('Please allow camera and microphone access');
-        return;
-      }
-      
-      // Set selected consultation and open video call modal
-      setSelectedConsultation(consultation);
-      setShowVideoCallModal(true);
-      
-    } catch (error) {
-      console.error('Error starting video call:', error);
-      toast.error('Failed to start video call');
+  // handleJoinCall - Open modal immediately; VideoCallContainer handles connection/setup
+  const handleJoinCall = (consultation) => {
+    if (consultation.status !== 'accepted') {
+      toast.error('Consultation must be accepted before starting video call');
+      return;
     }
-  };
 
-  const handleCancelConsultation = async (consultationId) => {
-    if (!window.confirm('Are you sure you want to cancel this consultation?')) return;
-    
-    try {
-      const response = await bookingAPI.cancelConsultation(consultationId, 'Cancelled by farmer');
-      if (response.data.success) {
-        toast.success('Consultation cancelled successfully');
-        fetchConsultations();
-        setShowDetailsModal(false);
-      }
-    } catch (error) {
-      const errorMsg = apiUtils.handleError(error).message;
-      toast.error(errorMsg);
+    const browserSupport = apiUtils.videoCall.checkBrowserSupport();
+    if (!browserSupport.allSupported) {
+      toast.error('Your browser does not support video calls. Please use Chrome, Firefox, or Edge.');
+      return;
     }
+
+    // Open modal immediately - socket connection and media permissions are handled inside
+    setSelectedConsultation(consultation);
+    setShowVideoCallModal(true);
   };
 
   const handleAddReview = async (consultationId, rating, review) => {
@@ -185,9 +141,10 @@ const Consultations = () => {
     const totalAmount = selectedConsultation.payment?.amount || 0;
     const isFree = selectedConsultation.payment?.isFree;
 
-    // Check if video call is available
+    // Check if video call is available (accepted + free or paid)
+    const payment = selectedConsultation.payment;
     const canStartVideoCall = selectedConsultation.status === 'accepted' && 
-      (!selectedConsultation.payment.isFree || selectedConsultation.payment.status === 'paid');
+      (!payment || payment.isFree || payment.status === 'paid');
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -681,7 +638,7 @@ const Consultations = () => {
       {showVideoCallModal && selectedConsultation && user && (
         <VideoCallModal
           consultation={selectedConsultation}
-          user={user}
+          user={{ ...user, id: user.id || user._id }}
           isOpen={showVideoCallModal}
           onClose={() => setShowVideoCallModal(false)}
           onEndCall={() => {

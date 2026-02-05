@@ -84,11 +84,22 @@ module.exports = (io, socket) => {
   // Create or join video room
   socket.on('video-call:join', async ({ consultationId }, callback) => {
     try {
-      console.log(`📞 User ${socket.user?._id} joining consultation: ${consultationId}`);
+      // Ensure we have a valid callback for Socket.IO acknowledgement
+      const cb = typeof callback === 'function' ? callback : () => {};
+
+      if (!consultationId) {
+        cb({ error: 'Consultation ID is required' });
+        return;
+      }
+
+      // Strip 'consultation_' prefix if client sent roomId by mistake
+      const rawId = String(consultationId).replace(/^consultation_/, '');
+
+      console.log(`📞 User ${socket.user?._id} joining consultation: ${rawId}`);
 
       // Validate user
       if (!socket.user?._id) {
-        if (callback) callback({ error: 'User not authenticated' });
+        cb({ error: 'User not authenticated' });
         return;
       }
 
@@ -96,24 +107,24 @@ module.exports = (io, socket) => {
       const userName = socket.user.name || 'User';
 
       // Verify consultation
-      const consultation = await Consultation.findById(consultationId)
+      const consultation = await Consultation.findById(rawId)
         .populate('farmer expert', '_id name');
 
       if (!consultation) {
-        if (callback) callback({ error: 'Consultation not found' });
+        cb({ error: 'Consultation not found' });
         return;
       }
 
       // Check authorization
-      const isFarmer = consultation.farmer._id.toString() === userId;
-      const isExpert = consultation.expert._id.toString() === userId;
-      
+      const isFarmer = consultation.farmer?._id?.toString() === userId;
+      const isExpert = consultation.expert?._id?.toString() === userId;
+
       if (!isFarmer && !isExpert) {
-        if (callback) callback({ error: 'Not authorized' });
+        cb({ error: 'Not authorized to join this consultation' });
         return;
       }
 
-      const roomId = `consultation_${consultationId}`;
+      const roomId = `consultation_${consultation._id}`;
       
       // Join the socket room
       await socket.join(roomId);
@@ -159,7 +170,7 @@ module.exports = (io, socket) => {
       // Prepare response
       const responseData = {
         roomId,
-        consultationId,
+        consultationId: consultation._id.toString(),
         user: userInfo,
         connectedUsers: otherUsers,
         isInitiator,
@@ -167,8 +178,8 @@ module.exports = (io, socket) => {
         otherUser: otherUsers.length > 0 ? otherUsers[0] : null
       };
 
-      // Send success response
-      if (callback) callback(responseData);
+      // Send success response (Socket.IO acknowledgement)
+      cb(responseData);
       
       // Also emit event for consistency
       socket.emit('video-call:joined', responseData);
@@ -204,7 +215,8 @@ module.exports = (io, socket) => {
 
     } catch (error) {
       console.error('Error joining video call:', error);
-      if (callback) callback({ error: 'Failed to join video call' });
+      const cb = typeof callback === 'function' ? callback : () => {};
+      cb({ error: error.message || 'Failed to join video call' });
     }
   });
 

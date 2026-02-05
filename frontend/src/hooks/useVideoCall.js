@@ -27,6 +27,8 @@ const useVideoCall = (consultationId, user) => {
   const pendingIceCandidatesRef = useRef([]);
   const hasSetRemoteDescriptionRef = useRef(false);
   const isNegotiatingRef = useRef(false);
+  const isInitiatorRef = useRef(false);
+  const connectedUsersRef = useRef([]);
 
   // ========== WEBRTC FUNCTIONS ==========
   const initializeWebRTC = useCallback(() => {
@@ -177,8 +179,9 @@ const useVideoCall = (consultationId, user) => {
   };
 
   const createAndSendOffer = async () => {
-    if (!peerConnectionRef.current || !roomInfo?.roomId || connectedUsers.length === 0) {
-      console.log('Cannot create offer yet');
+    const users = connectedUsersRef.current;
+    if (!peerConnectionRef.current || !roomInfo?.roomId || users.length === 0) {
+      console.log('Cannot create offer yet - missing:', { pc: !!peerConnectionRef.current, room: !!roomInfo?.roomId, users: users.length });
       return;
     }
     
@@ -195,7 +198,7 @@ const useVideoCall = (consultationId, user) => {
       console.log('✅ Offer created and local description set');
       
       // Send offer to other user
-      const otherUser = connectedUsers.find(u => u.userId !== user?.id);
+      const otherUser = users.find(u => u.userId !== user?.id);
       if (otherUser) {
         socketService.sendOffer(roomInfo.roomId, offer, otherUser.userId);
         console.log(`📤 Offer sent to ${otherUser.userName}`);
@@ -273,12 +276,15 @@ const useVideoCall = (consultationId, user) => {
         event: 'video-call:joined',
         handler: (data) => {
           console.log('✅ Joined room:', data);
+          isInitiatorRef.current = data.isInitiator;
           setRoomInfo({
             roomId: data.roomId,
             consultationId: data.consultationId,
             otherUser: data.otherUser
           });
-          setConnectedUsers(data.connectedUsers || []);
+          const users = data.connectedUsers || [];
+          connectedUsersRef.current = users;
+          setConnectedUsers(users);
           setIsInitiator(data.isInitiator);
           
           // If we're the initiator and there's another user, create offer immediately
@@ -298,18 +304,15 @@ const useVideoCall = (consultationId, user) => {
         event: 'video-call:user-joined',
         handler: (data) => {
           console.log('👤 User joined:', data.userName);
+          const newUser = { userId: data.userId, userName: data.userName };
           setConnectedUsers(prev => {
             const exists = prev.find(u => u.userId === data.userId);
-            return exists ? prev : [...prev, { 
-              userId: data.userId, 
-              userName: data.userName 
-            }];
+            return exists ? prev : [...prev, newUser];
           });
-          
-          // If we're the initiator and someone joined, create offer
-          if (isInitiator && data.shouldCreateOffer) {
+          connectedUsersRef.current = [...connectedUsersRef.current.filter(u => u.userId !== data.userId), newUser];
+          if (isInitiatorRef.current && data.shouldCreateOffer) {
             console.log('New user joined, creating offer...');
-            setTimeout(() => createAndSendOffer(), 1000);
+            setTimeout(() => createAndSendOffer(), 800);
           }
         }
       },
@@ -318,8 +321,7 @@ const useVideoCall = (consultationId, user) => {
         event: 'video-call:ready',
         handler: (data) => {
           console.log('🎯 Call is ready with', data.users.length, 'users');
-          // If we're the initiator, create offer
-          if (isInitiator) {
+          if (isInitiatorRef.current) {
             setTimeout(() => createAndSendOffer(), 500);
           }
         }
@@ -408,7 +410,7 @@ const useVideoCall = (consultationId, user) => {
       socketService.on(event, handler);
       socketListenersRef.current.push({ event, handler });
     });
-  }, [isInitiator, localStream]);
+  }, [localStream]);
 
   // ========== CALL MANAGEMENT ==========
   const startCallTimer = () => {
@@ -447,8 +449,12 @@ const useVideoCall = (consultationId, user) => {
         peerConnectionRef.current.addTrack(track, stream);
       });
 
-      // 5. Join socket room
+      // 5. Ensure socket is connected, then join room
       console.log('Step 5: Joining socket room...');
+      if (!socketService.isSocketConnected()) {
+        console.log('Socket not ready, waiting for connection...');
+        await socketService.waitForConnection();
+      }
       await socketService.joinVideoRoom(consultationId);
 
       // 6. Setup listeners
@@ -461,7 +467,8 @@ const useVideoCall = (consultationId, user) => {
       
     } catch (error) {
       console.error('❌ Failed to start video call:', error);
-      setError(error.message || 'Failed to start video call');
+      const msg = error?.message || error?.toString?.() || 'Failed to start video call. Check your connection and try again.';
+      setError(msg);
       setIsConnecting(false);
       cleanup();
     }
@@ -521,13 +528,7 @@ const useVideoCall = (consultationId, user) => {
     cleanup();
   };
 
-  // Auto-start call
-  useEffect(() => {
-    if (consultationId && !isCallActive && !isConnecting) {
-      console.log('Auto-starting video call...');
-      startVideoCall();
-    }
-  }, [consultationId]);
+  // Remove auto-start - call will be started manually
 
   // Control functions
   const toggleAudio = () => {
@@ -550,6 +551,13 @@ const useVideoCall = (consultationId, user) => {
     }
   };
 
+  // User-friendly waiting message
+  const waitingMessage = isCallActive && !isCallEstablished
+    ? connectedUsers.length > 0
+      ? `Connecting with ${connectedUsers[0]?.userName || 'participant'}...`
+      : 'Waiting for the other participant to join...'
+    : null;
+
   return {
     // State
     localStream,
@@ -564,6 +572,7 @@ const useVideoCall = (consultationId, user) => {
     connectedUsers,
     isCallEstablished,
     isInitiator,
+    waitingMessage,
     
     // Refs
     localVideoRef,

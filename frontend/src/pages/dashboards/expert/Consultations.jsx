@@ -4,12 +4,13 @@ import {
   Users, Calendar, Clock, CheckCircle, XCircle, Search, Filter, 
   Video, MessageCircle, ChevronDown, DollarSign, CreditCard 
 } from 'lucide-react';
-import { bookingAPI, apiUtils, videoCallAPI } from '../../../api';
+import { bookingAPI, apiUtils } from '../../../api';
 import toast from 'react-hot-toast';
 import VideoCallModal from '../../../components/VideoCall/VideoCallModal';
-import socketService from '../../../services/socketService';
+import { useAuth } from '../../../context/AuthContext';
 
 const Consultations = () => {
+  const { user: authUser } = useAuth();
   const [activeFilter, setActiveFilter] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [consultations, setConsultations] = useState([]);
@@ -17,21 +18,8 @@ const Consultations = () => {
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showVideoCallModal, setShowVideoCallModal] = useState(false);
-  const [user, setUser] = useState(null);
 
-  // Get user from localStorage
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-      
-      // Initialize socket with token
-      const token = localStorage.getItem('token');
-      if (token) {
-        socketService.initialize(token, JSON.parse(userData)._id);
-      }
-    }
-  }, []);
+  const user = authUser || JSON.parse(localStorage.getItem('user') || 'null');
 
   useEffect(() => {
     fetchConsultations();
@@ -56,39 +44,19 @@ const Consultations = () => {
     }
   };
 
-  const handleStartVideoCall = async (consultation) => {
-    try {
-      // Validate consultation for video call
-      const validation = apiUtils.videoCall.validateConsultationForVideoCall(consultation);
-      
-      if (!validation.isValid) {
-        toast.error(validation.errors[0] || 'Cannot start video call');
-        return;
-      }
-      
-      // Check browser support
-      const browserSupport = apiUtils.videoCall.checkBrowserSupport();
-      if (!browserSupport.allSupported) {
-        toast.error(browserSupport.message);
-        return;
-      }
-      
-      // Check camera/microphone permissions
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      } catch (error) {
-        toast.error('Please allow camera and microphone access');
-        return;
-      }
-      
-      // Set selected consultation and open video call modal
-      setSelectedConsultation(consultation);
-      setShowVideoCallModal(true);
-      
-    } catch (error) {
-      console.error('Error starting video call:', error);
-      toast.error('Failed to start video call');
+  const handleStartVideoCall = (consultation) => {
+    const validation = apiUtils.videoCall.validateConsultationForVideoCall(consultation);
+    if (!validation.isValid) {
+      toast.error(validation.errors[0] || 'Cannot start video call');
+      return;
     }
+    const browserSupport = apiUtils.videoCall.checkBrowserSupport();
+    if (!browserSupport.allSupported) {
+      toast.error(browserSupport.message);
+      return;
+    }
+    setSelectedConsultation(consultation);
+    setShowVideoCallModal(true);
   };
 
   const handleAccept = async (consultationId) => {
@@ -577,7 +545,7 @@ const Consultations = () => {
       {showVideoCallModal && selectedConsultation && user && (
         <VideoCallModal
           consultation={selectedConsultation}
-          user={user}
+          user={{ ...user, id: user.id || user._id }}
           isOpen={showVideoCallModal}
           onClose={() => setShowVideoCallModal(false)}
           onEndCall={() => {
