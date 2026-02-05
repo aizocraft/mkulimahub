@@ -8,7 +8,6 @@ import {
   Plus,
   X,
   AlertCircle,
-  CheckCircle,
   Loader2
 } from 'lucide-react';
 import AttachmentDisplay from '../../components/AttachmentDisplay';
@@ -26,7 +25,6 @@ const EditPostPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -202,7 +200,6 @@ const EditPostPage = () => {
     
     setIsSubmitting(true);
     setError('');
-    setSuccess('');
     
     try {
       const payload = {
@@ -214,13 +211,21 @@ const EditPostPage = () => {
       };
 
       const response = await forumAPI.updatePost(postId, payload);
-      
+
       if (response.data.requiresReview) {
-        setSuccess('Post updated successfully! It will be reviewed by an expert before changes appear publicly.');
+        toast.success('Post updated successfully! It will be reviewed by an expert before changes appear publicly.', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: false
+        });
       } else {
-        setSuccess('Post updated successfully!');
+        toast.success('Post updated successfully!', {
+          position: 'top-center',
+          autoClose: 3000,
+          hideProgressBar: false
+        });
       }
-      
+
       setTimeout(() => {
         navigate(`/forum/posts/${postId}`);
       }, 2000);
@@ -291,19 +296,7 @@ const EditPostPage = () => {
             </div>
           )}
           
-          {/* Success Alert */}
-          {success && (
-            <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
-              theme === 'dark' 
-                ? 'bg-green-900/20 border-green-800' 
-                : 'bg-green-50 border-green-200'
-            }`}>
-              <div className="flex items-center">
-                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                <p className={theme === 'dark' ? 'text-green-300' : 'text-green-700'}>{success}</p>
-              </div>
-            </div>
-          )}
+
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Title */}

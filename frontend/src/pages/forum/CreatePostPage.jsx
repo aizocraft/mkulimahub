@@ -15,12 +15,12 @@ import { uploadAPI } from '../../api';
 import { toast } from 'react-toastify';
 
 const CreatePostPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
@@ -35,13 +35,15 @@ const CreatePostPage = () => {
   const [uploading, setUploading] = useState({}); // fileName -> percent
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (isLoading) return; // Wait for auth to load
+
+    if (!user) {
       navigate('/login');
       return;
     }
 
     fetchCategories();
-  }, [isAuthenticated, navigate]);
+  }, [user, isLoading, navigate]);
 
   const fetchCategories = async () => {
     try {
@@ -126,7 +128,7 @@ const CreatePostPage = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError('');
 
     try {
@@ -207,12 +209,21 @@ const CreatePostPage = () => {
       setError(errorMessage);
       
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const MAX_FILE_SIZE = 5242880; // 5MB
-  const ALLOWED_TYPES = ['image/jpeg','image/png','image/gif','application/pdf'];
+  const ALLOWED_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  ];
 
   const handleFilesSelected = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -275,14 +286,9 @@ const CreatePostPage = () => {
     toast.info(`${att.filename} removed`, { position: 'top-center', autoClose: 1200, hideProgressBar: true });
   };
 
-  // Check if user is logged in
-  useEffect(() => {
-    if (!isAuthenticated()) {
-      navigate('/login', { state: { from: '/forum/create' } });
-    }
-  }, [isAuthenticated, navigate]);
 
-  if (!isAuthenticated()) {
+
+  if (isLoading) {
     return (
       <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
         theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
@@ -290,6 +296,10 @@ const CreatePostPage = () => {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
+  }
+
+  if (!isAuthenticated()) {
+    return null; // Let the useEffect handle navigation
   }
 
   return (
@@ -609,22 +619,22 @@ const CreatePostPage = () => {
               <button
                 type="button"
                 onClick={() => navigate('/forum')}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className={`px-6 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 ${
-                  theme === 'dark' 
-                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                  theme === 'dark'
+                    ? 'border-gray-600 text-gray-300 hover:bg-gray-700'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 } border`}
               >
                 Cancel
               </button>
-              
+
               <button
                 type="submit"
-                disabled={isLoading || !formData.category || formData.title.trim().length < 5 || formData.content.trim().length < 10}
+                disabled={isSubmitting || !formData.category || formData.title.trim().length < 5 || formData.content.trim().length < 10}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center"
               >
-                {isLoading ? (
+                {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Creating...

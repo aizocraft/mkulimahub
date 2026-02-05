@@ -438,18 +438,18 @@ exports.createPost = async (req, res, next) => {
 exports.updatePost = async (req, res, next) => {
   try {
     const { postId } = req.params;
-    const { title, content, tags, attachments } = req.body;
+    const { title, content, category, tags, attachments } = req.body;
     const user = req.user;
-    
+
     const post = await ForumPost.findById(postId);
-    
+
     if (!post) {
       return res.status(404).json({
         success: false,
         message: 'Post not found'
       });
     }
-    
+
     // Check permissions
     if (!post.canModify || !post.canModify(user.id, user.role)) {
       return res.status(403).json({
@@ -457,23 +457,37 @@ exports.updatePost = async (req, res, next) => {
         message: 'You do not have permission to edit this post'
       });
     }
-    
+
     // Update fields
     const updates = {};
     if (title) updates.title = title.trim();
     if (content) updates.content = content.trim();
+    if (category) updates.category = category;
     if (tags) updates.tags = tags.map(tag => tag.trim().toLowerCase());
+
+    // Process attachments - similar to createPost
     if (attachments) {
-      // Filter attachments to match schema (remove id field)
-      updates.attachments = attachments.map(att => ({
-        url: att.url,
-        filename: att.filename,
-        fileType: att.fileType,
-        size: att.size,
-        uploadedAt: att.uploadedAt || new Date()
-      }));
+      const cleanedAttachments = [];
+      for (const att of attachments) {
+        const fileId = att.fileId || att.id;
+        if (fileId) {
+          // Verify file exists and user can access it
+          const fileDoc = await File.findById(fileId);
+          if (fileDoc && fileDoc.uploadedBy.toString() === user.id.toString()) {
+            cleanedAttachments.push({
+              fileId: fileId,
+              filename: fileDoc.originalName,
+              originalName: fileDoc.originalName,
+              mimeType: fileDoc.mimeType,
+              size: fileDoc.size,
+              uploadedAt: fileDoc.createdAt
+            });
+          }
+        }
+      }
+      updates.attachments = cleanedAttachments;
     }
-    
+
     // If farmer edits, send back for review
     if (user.role === 'farmer' && post.status === 'published') {
       updates.status = 'pending_review';
@@ -483,21 +497,21 @@ exports.updatePost = async (req, res, next) => {
         reviewNotes: null
       };
     }
-    
+
     updates.updatedAt = new Date();
-    
+
     const updatedPost = await ForumPost.findByIdAndUpdate(
       postId,
       updates,
       { new: true, runValidators: true }
     ).populate('author', 'name email role profilePicture');
-    
+
     logger.info('Forum post updated', {
       userId: user.id,
       postId,
       updatedFields: Object.keys(updates)
     });
-    
+
     res.status(200).json({
       success: true,
       message: updatedPost.status === 'pending_review'
