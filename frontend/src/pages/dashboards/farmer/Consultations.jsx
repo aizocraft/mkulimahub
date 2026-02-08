@@ -7,7 +7,8 @@ import {
 } from 'lucide-react';
 import { bookingAPI, apiUtils, videoCallAPI } from '../../../api';
 import toast from 'react-hot-toast';
-import VideoCallModal from '../../../components/VideoCall/VideoCallModal'; 
+import VideoCallModal from '../../../components/VideoCall/VideoCallModal';
+import MpesaPaymentModal from '../../../components/MpesaPaymentModal';
 import socketService from '../../../services/socketService';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -20,7 +21,8 @@ const Consultations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showVideoCallModal, setShowVideoCallModal] = useState(false); 
+  const [showVideoCallModal, setShowVideoCallModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Use auth user, with localStorage fallback for compatibility
   const user = authUser || JSON.parse(localStorage.getItem('user') || 'null');
@@ -253,7 +255,7 @@ const Consultations = () => {
               {/* Action Buttons - UPDATED */}
               <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                 {canStartVideoCall && (
-                  <button 
+                  <button
                     onClick={() => {
                       setShowDetailsModal(false);
                       handleJoinCall(selectedConsultation);
@@ -264,18 +266,30 @@ const Consultations = () => {
                     Start Video Call
                   </button>
                 )}
-                
+
+                {selectedConsultation.payment?.status === 'pending' && !selectedConsultation.payment?.isFree && (
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      setShowPaymentModal(true);
+                    }}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    Pay Now
+                  </button>
+                )}
+
                 {selectedConsultation.status === 'accepted' && (
-                  <button 
+                  <button
                     onClick={() => handleCancelConsultation(selectedConsultation._id)}
                     className="px-4 py-2 border border-red-600 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                   >
                     Cancel Consultation
                   </button>
                 )}
-                
+
                 {selectedConsultation.status === 'completed' && !selectedConsultation.rating && (
-                  <button 
+                  <button
                     onClick={() => {
                       const rating = prompt('Rate this consultation (1-5 stars):', '5');
                       const review = prompt('Add a review (optional):');
@@ -294,10 +308,10 @@ const Consultations = () => {
                   <div className="flex items-center space-x-2">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={16} 
-                          className={`${i < selectedConsultation.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
+                        <Star
+                          key={i}
+                          size={16}
+                          className={`${i < selectedConsultation.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`}
                         />
                       ))}
                     </div>
@@ -307,7 +321,7 @@ const Consultations = () => {
                   </div>
                 )}
 
-                <button 
+                <button
                   onClick={() => setShowDetailsModal(false)}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
                 >
@@ -446,7 +460,7 @@ const Consultations = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button 
+                        <button
                           onClick={() => {
                             setSelectedConsultation(consultation);
                             setShowDetailsModal(true);
@@ -455,8 +469,19 @@ const Consultations = () => {
                         >
                           Details
                         </button>
+                        {consultation.payment?.status === 'pending' && !consultation.payment?.isFree && (
+                          <button
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setShowPaymentModal(true);
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                          >
+                            Pay
+                          </button>
+                        )}
                         {consultation.status === 'accepted' && (
-                          <button 
+                          <button
                             onClick={() => handleJoinCall(consultation)}
                             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
                           >
@@ -789,6 +814,17 @@ const Consultations = () => {
                         >
                           Details
                         </button>
+                        {consultation.payment?.status === 'pending' && !consultation.payment?.isFree && (
+                          <button
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setShowPaymentModal(true);
+                            }}
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200"
+                          >
+                            Pay
+                          </button>
+                        )}
                         {consultation.status === 'accepted' && (
                           <button
                             onClick={() => handleJoinCall(consultation)}
@@ -899,7 +935,16 @@ const Consultations = () => {
 
       {/* Details Modal */}
       {showDetailsModal && <ConsultationDetailsModal />}
-      
+
+      {/* Payment Modal */}
+      {showPaymentModal && selectedConsultation && (
+        <MpesaPaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          consultation={selectedConsultation}
+        />
+      )}
+
       {/* Video Call Modal */}
       {showVideoCallModal && selectedConsultation && user && (
         <VideoCallModal
