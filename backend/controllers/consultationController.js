@@ -193,6 +193,14 @@ exports.acceptConsultation = async (req, res, next) => {
       });
     }
 
+    // Check if consultation has valid expert data
+    if (!consultation.expert) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid consultation data'
+      });
+    }
+
     // Check if expert owns this consultation
     if (consultation.expert._id.toString() !== expertId) {
       return res.status(403).json({
@@ -279,13 +287,15 @@ exports.rejectConsultation = async (req, res, next) => {
       });
     }
 
-    // Check if expert owns this consultation
-    if (consultation.expert._id.toString() !== expertId) {
-      return res.status(403).json({
+    // Check if consultation has valid expert data
+    if (!consultation.expert) {
+      return res.status(400).json({
         success: false,
-        message: 'Not authorized to reject this consultation'
+        message: 'Invalid consultation data'
       });
     }
+
+    // Check if expert owns this consultation
 
     // Check if consultation is still pending
     if (consultation.status !== 'pending') {
@@ -348,7 +358,7 @@ exports.getExpertConsultations = async (req, res, next) => {
     
     if (status) {
       if (status === 'pending_payment') {
-        query.status = 'pending';
+        query.status = 'accepted';
         query['payment.status'] = 'pending';
         query['payment.isFree'] = false;
       } else {
@@ -405,11 +415,27 @@ exports.getFarmerConsultations = async (req, res, next) => {
     });
 
     let query = { farmer: farmerId };
-    
+
     if (status) {
-      query.status = status;
+      if (status === 'upcoming') {
+        query.status = 'accepted';
+      } else if (status === 'past') {
+        query.status = { $in: ['completed', 'cancelled'] };
+      } else if (status === 'pending') {
+        query.status = 'pending';
+      } else if (status === 'rejected') {
+        query.status = 'rejected';
+      } else if (status === 'pending_payment') {
+        query.status = 'accepted';
+        query['payment.status'] = 'pending';
+        query['payment.isFree'] = false;
+      } else if (status === 'all') {
+        // No status filter for 'all'
+      } else {
+        query.status = status;
+      }
     }
-    
+
     if (date) {
       query.bookingDate = new Date(date);
     }

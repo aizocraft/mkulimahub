@@ -33,18 +33,14 @@ const Consultations = () => {
   const fetchConsultations = async () => {
     try {
       setLoading(true);
-      
+
       let params = {};
-      
-      // Set status based on active tab
-      if (activeTab === 'upcoming') {
-        params.status = 'accepted'; // Show upcoming/accepted consultations
-      } else if (activeTab === 'past') {
-        params.status = 'completed'; // Show completed consultations
-      } else if (activeTab === 'all') {
-        params = {}; // Show all consultations
+
+      // Send activeTab as status parameter - backend handles the logic
+      if (activeTab !== 'all') {
+        params.status = activeTab;
       }
-      
+
       const response = await bookingAPI.getFarmerConsultations(params);
       
       if (response.data.success) {
@@ -105,20 +101,13 @@ const Consultations = () => {
     window.location.href = '/experts';
   };
 
-  // Filter consultations based on search term
+  // Filter consultations based on search term (backend handles status filtering)
   const filteredConsultations = consultations.filter(consult => {
-    const matchesSearch = 
+    const matchesSearch =
       consult.expert?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       consult.topic?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       consult.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    // Additional filtering based on active tab
-    if (activeTab === 'upcoming') {
-      return matchesSearch && (consult.status === 'accepted' || consult.status === 'pending');
-    } else if (activeTab === 'past') {
-      return matchesSearch && (consult.status === 'completed' || consult.status === 'cancelled');
-    }
-    
+
     return matchesSearch;
   });
 
@@ -368,12 +357,15 @@ const Consultations = () => {
 
           {/* Filters */}
           <div className="flex items-center space-x-4">
-            <select 
+            <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
               <option value="upcoming">Upcoming</option>
+              <option value="pending">Pending Acceptance</option>
+              <option value="rejected">Rejected</option>
+              <option value="pending_payment">Pending Payment</option>
               <option value="past">Past Sessions</option>
               <option value="all">All Consultations</option>
             </select>
@@ -555,13 +547,287 @@ const Consultations = () => {
             </div>
           )}
 
+          {activeTab === 'pending' && (
+            <div className="space-y-4">
+              {filteredConsultations.map(consultation => (
+                <div key={consultation._id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex-1 mb-4 lg:mb-0">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl">
+                          <Clock size={24} className="text-yellow-600 dark:text-yellow-400" />
+                        </div>
+                        <div>
+                          <h3
+                            className="font-semibold text-gray-900 dark:text-white text-lg cursor-pointer hover:text-emerald-600"
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setShowDetailsModal(true);
+                            }}
+                          >
+                            {consultation.expert?.name || 'Unknown Expert'}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-400">{consultation.topic}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex items-center space-x-1">
+                              <Star size={14} className="text-yellow-500 fill-current" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {consultation.expert?.rating?.average || 'No rating'}
+                              </span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                              <Calendar size={14} />
+                              <span>{consultation.formattedDate}</span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                              <Clock size={14} />
+                              <span>{consultation.startTime}</span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                              <span>{consultation.duration} mins</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {consultation.payment?.isFree ? 'FREE' : `KSh ${consultation.payment?.amount?.toLocaleString() || '0'}`}
+                        </div>
+                        <div className="flex items-center justify-end space-x-2">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusDisplay(consultation.status).color}`}>
+                            {getStatusDisplay(consultation.status).label}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedConsultation(consultation);
+                            setShowDetailsModal(true);
+                          }}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200"
+                        >
+                          Details
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {filteredConsultations.length === 0 && (
+                <div className="text-center py-12">
+                  <Clock className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No pending consultations</h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">Your consultation requests are being reviewed by experts</p>
+                  <button
+                    onClick={handleBookConsultation}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    <Plus size={18} />
+                    <span>Book New Consultation</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'rejected' && (
+            <div className="space-y-4">
+              {filteredConsultations.map(consultation => (
+                <div key={consultation._id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex-1 mb-4 lg:mb-0">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-xl">
+                          <XCircle size={24} className="text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                          <h3
+                            className="font-semibold text-gray-900 dark:text-white text-lg cursor-pointer hover:text-emerald-600"
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setShowDetailsModal(true);
+                            }}
+                          >
+                            {consultation.expert?.name || 'Unknown Expert'}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-400">{consultation.topic}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex items-center space-x-1">
+                              <Star size={14} className="text-yellow-500 fill-current" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {consultation.expert?.rating?.average || 'No rating'}
+                              </span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{consultation.formattedDate}</span>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-400">{consultation.duration} mins</span>
+                          </div>
+                          {consultation.cancellationReason && (
+                            <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 rounded text-sm text-red-700 dark:text-red-300">
+                              <strong>Reason:</strong> {consultation.cancellationReason}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {consultation.payment?.isFree ? 'FREE' : `KSh ${consultation.payment?.amount?.toLocaleString() || '0'}`}
+                        </div>
+                        <div className="text-sm text-red-600 dark:text-red-400">Rejected</div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedConsultation(consultation);
+                          setShowDetailsModal(true);
+                        }}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {filteredConsultations.length === 0 && (
+                <div className="text-center py-12">
+                  <XCircle className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No rejected consultations</h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">Your consultation requests have been accepted or are still pending</p>
+                  <button
+                    onClick={handleBookConsultation}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    <Plus size={18} />
+                    <span>Book New Consultation</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'pending_payment' && (
+            <div className="space-y-4">
+              {filteredConsultations.map(consultation => (
+                <div key={consultation._id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex-1 mb-4 lg:mb-0">
+                      <div className="flex items-center space-x-4">
+                        <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                          <span className="text-orange-600 dark:text-orange-400 font-bold text-lg">💳</span>
+                        </div>
+                        <div>
+                          <h3
+                            className="font-semibold text-gray-900 dark:text-white text-lg cursor-pointer hover:text-emerald-600"
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setShowDetailsModal(true);
+                            }}
+                          >
+                            {consultation.expert?.name || 'Unknown Expert'}
+                          </h3>
+                          <p className="text-gray-600 dark:text-gray-400">{consultation.topic}</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <div className="flex items-center space-x-1">
+                              <Star size={14} className="text-yellow-500 fill-current" />
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                {consultation.expert?.rating?.average || 'No rating'}
+                              </span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                              <Calendar size={14} />
+                              <span>{consultation.formattedDate}</span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                              <Clock size={14} />
+                              <span>{consultation.startTime}</span>
+                            </div>
+                            <span className="text-gray-400">•</span>
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-400">
+                              <span>{consultation.duration} mins</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          KSh {consultation.payment?.amount?.toLocaleString() || '0'}
+                        </div>
+                        <div className="flex items-center justify-end space-x-2">
+                          <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">
+                            Payment Pending
+                          </span>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                            Scheduled
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => {
+                            setSelectedConsultation(consultation);
+                            setShowDetailsModal(true);
+                          }}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200"
+                        >
+                          Details
+                        </button>
+                        {consultation.status === 'accepted' && (
+                          <button
+                            onClick={() => handleJoinCall(consultation)}
+                            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+                          >
+                            <Video size={16} />
+                            <span>Video Call</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {filteredConsultations.length === 0 && (
+                <div className="text-center py-12">
+                  <span className="text-6xl">💳</span>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No pending payments</h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-6">All your consultations are either free or paid</p>
+                  <button
+                    onClick={handleBookConsultation}
+                    className="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200"
+                  >
+                    <Plus size={18} />
+                    <span>Book New Consultation</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {activeTab === 'all' && (
             <div className="space-y-4">
               {filteredConsultations.map(consultation => (
                 <div key={consultation._id} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center space-x-4 mb-4 lg:mb-0">
-                      <div 
+                      <div
                         className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center text-white font-semibold cursor-pointer"
                         onClick={() => {
                           setSelectedConsultation(consultation);
@@ -571,7 +837,7 @@ const Consultations = () => {
                         {consultation.expert?.name?.split(' ').map(n => n[0]).join('')}
                       </div>
                       <div>
-                        <h3 
+                        <h3
                           className="font-semibold text-gray-900 dark:text-white text-lg cursor-pointer hover:text-emerald-600"
                           onClick={() => {
                             setSelectedConsultation(consultation);
@@ -613,7 +879,7 @@ const Consultations = () => {
                           )}
                         </div>
                       </div>
-                      <button 
+                      <button
                         onClick={() => {
                           setSelectedConsultation(consultation);
                           setShowDetailsModal(true);

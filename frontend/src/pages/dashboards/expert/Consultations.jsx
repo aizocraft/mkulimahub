@@ -75,7 +75,7 @@ const Consultations = () => {
 
   const handleReject = async (consultationId, reason = 'Not available') => {
     try {
-      const response = await bookingAPI.rejectConsultation(consultationId, { reason });
+      const response = await bookingAPI.rejectConsultation(consultationId, reason);
       if (response.data.success) {
         toast.success('Consultation declined');
         fetchConsultations();
@@ -123,7 +123,7 @@ const Consultations = () => {
     
     if (activeFilter === 'all') return matchesSearch;
     if (activeFilter === 'pending_payment') {
-      return matchesSearch && consult.status === 'pending' && 
+      return matchesSearch && consult.status === 'accepted' &&
              consult.payment?.status === 'pending' && !consult.payment?.isFree;
     }
     return matchesSearch && consult.status === activeFilter;
