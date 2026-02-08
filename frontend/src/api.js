@@ -162,12 +162,36 @@ export const forumAPI = {
     api.get(`/forum/moderation/users/${userId}/history`, { params }),
 };
 
+// ========== CROP API ==========
+export const cropAPI = {
+  // Get all crops for farmer
+  getFarmerCrops: () => api.get('/crops'),
+
+  // Get crop statistics
+  getCropStats: () => api.get('/crops/stats'),
+
+  // Get single crop
+  getCropById: (cropId) => api.get(`/crops/${cropId}`),
+
+  // Create new crop
+  createCrop: (cropData) => api.post('/crops', cropData),
+
+  // Update crop
+  updateCrop: (cropId, cropData) => api.put(`/crops/${cropId}`, cropData),
+
+  // Update crop progress/health
+  updateCropProgress: (cropId, progressData) => api.patch(`/crops/${cropId}/progress`, progressData),
+
+  // Delete crop
+  deleteCrop: (cropId) => api.delete(`/crops/${cropId}`),
+};
+
 // ========== UPLOAD API ==========
 export const uploadAPI = {
   uploadFile: (file, onUploadProgress) => {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return api.post('/uploads', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -175,7 +199,7 @@ export const uploadAPI = {
       onUploadProgress,
     });
   },
-  
+
   deleteFile: (fileId) => api.delete(`/uploads/${fileId}`),
 };
 

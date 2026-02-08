@@ -11,6 +11,7 @@ const weatherRoutes = require('./weatherRoutes');
 const videoCallRoutes = require('./videoCallRoutes');
 const aiChatRoutes = require('./aiChatRoutes');
 const uploadRoutes = require('./uploadRoutes');
+const cropRoutes = require('./cropRoutes');
 
 const { requestLogger, errorLogger } = require('../middleware/logger');
 
@@ -28,6 +29,7 @@ router.use('/weather', weatherRoutes);
 router.use('/video', videoCallRoutes);
 router.use('/ai', aiChatRoutes);
 router.use('/uploads', uploadRoutes);
+router.use('/crops', cropRoutes);
 
 
 // Apply error logger 
