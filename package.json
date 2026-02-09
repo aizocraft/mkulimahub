@@ -1,0 +1,25 @@
+{
+  "name": "mkulimahub",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  
+ "scripts": {
+  "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+},
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aizocraft/mkulimahub.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aizocraft/mkulimahub/issues"
+  },
+  "homepage": "https://github.com/aizocraft/mkulimahub#readme",
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

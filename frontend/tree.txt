@@ -1,0 +1,96 @@
+ tree -I "node_modules"
+.
+├── eslint.config.js
+├── index.html
+├── package.json
+├── package-lock.json
+├── postcss.config.cjs
+├── public
+│   ├── favicon_io
+│   │   ├── android-chrome-192x192.png
+│   │   ├── android-chrome-512x512.png
+│   │   ├── apple-touch-icon.png
+│   │   ├── favicon-16x16.png
+│   │   ├── favicon-32x32.png
+│   │   ├── favicon.ico
+│   │   └── site.webmanifest
+│   ├── logo.png
+│   ├── mh-logo.png
+│   └── mh-trans.png
+├── README.md
+├── src
+│   ├── api.js
+│   ├── App.css
+│   ├── App.jsx
+│   ├── assets
+│   │   └── react.svg
+│   ├── components
+│   │   ├── CreateUserModal.jsx
+│   │   ├── DbStats.jsx
+│   │   ├── Footer.jsx
+│   │   ├── GoogleAuthButton.jsx
+│   │   ├── GoogleAuthSuccess.jsx
+│   │   ├── LoadingSpinner.jsx
+│   │   ├── Navbar.jsx
+│   │   ├── NotificationIcon.jsx
+│   │   ├── ScrollToTop.jsx
+│   │   ├── UserManagement.jsx
+│   │   ├── UserProfileModal.jsx
+│   │   ├── UserSearch.jsx
+│   │   ├── UserStats.jsx
+│   │   └── UserTable.jsx
+│   ├── context
+│   │   ├── AuthContext.jsx
+│   │   └── ThemeContext.jsx
+│   ├── index.css
+│   ├── main.jsx
+│   ├── pages
+│   │   ├── AboutPage.jsx
+│   │   ├── ContactPage.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── dashboards
+│   │   │   ├── admin
+│   │   │   │   ├── Analytics.jsx
+│   │   │   │   ├── logs
+│   │   │   │   │   ├── AuthLogs.jsx
+│   │   │   │   │   ├── components
+│   │   │   │   │   │   ├── LogFilters.jsx
+│   │   │   │   │   │   ├── LogStats.jsx
+│   │   │   │   │   │   ├── LogTable.jsx
+│   │   │   │   │   │   └── Pagination.jsx
+│   │   │   │   │   ├── ConsultationLogs.jsx
+│   │   │   │   │   ├── SystemLogs.jsx
+│   │   │   │   │   └── UserLogs.jsx
+│   │   │   │   ├── Logs.jsx
+│   │   │   │   ├── Overview.jsx
+│   │   │   │   ├── UserDistribution.jsx
+│   │   │   │   ├── UserPage.jsx
+│   │   │   │   └── Weather.jsx
+│   │   │   ├── AdminDashboard.jsx
+│   │   │   ├── expert
+│   │   │   │   ├── Consultations.jsx
+│   │   │   │   ├── Overview.jsx
+│   │   │   │   ├── Questions.jsx
+│   │   │   │   └── Schedule.jsx
+│   │   │   ├── ExpertDashboard.jsx
+│   │   │   ├── farmer
+│   │   │   │   ├── Consultations.jsx
+│   │   │   │   ├── ExpertsPage.jsx
+│   │   │   │   ├── Knowledge.jsx
+│   │   │   │   ├── MyCrops.jsx
+│   │   │   │   └── Overview.jsx
+│   │   │   └── FarmerDashboard.jsx
+│   │   ├── HomePage.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── ProfilePage.jsx
+│   │   ├── RegisterPage.jsx
+│   │   ├── RoleSelectionPage.jsx
+│   │   └── SettingsPage.jsx
+│   └── services
+│       └── logService.js
+├── tailwind.config.js
+├── tree.txt
+├── vercel.json
+└── vite.config.js
+
+15 directories, 78 files

@@ -1,0 +1,120 @@
+Render
+sudo kill -9 $(sudo lsof -t -i:5000)
+
+https://mkulimahub.onrender.com - Link
+srv-d3tsnhre5dus7398aff0 - Service ID
+
+
+VITE_API_URL=https://mkulimahub.onrender.com 
+mkulimahub.vercel.app
+
+
+/mkulimahub$ tree -I "node_modules"
+.
+├── backend
+│   ├── config
+│   │   ├── db.js
+│   │   └── passport.js
+│   ├── controllers
+│   │   ├── authController.js
+│   │   └── userController.js
+│   ├── logs
+│   ├── middleware
+│   │   ├── admin.js
+│   │   ├── auth.js
+│   │   ├── errorHandler.js
+│   │   └── logger.js
+│   ├── models
+│   │   └── User.js
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── routes
+│   │   ├── authRoutes.js
+│   │   ├── index.js
+│   │   ├── logs.js
+│   │   └── userRoutes.js
+│   ├── server.js
+│   └── tree.txt
+├── frontend
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── postcss.config.cjs
+│   ├── public
+│   │   ├── favicon_io
+│   │   │   ├── android-chrome-192x192.png
+│   │   │   ├── android-chrome-512x512.png
+│   │   │   ├── apple-touch-icon.png
+│   │   │   ├── favicon-16x16.png
+│   │   │   ├── favicon-32x32.png
+│   │   │   ├── favicon.ico
+│   │   │   └── site.webmanifest
+│   │   ├── logo.png
+│   │   ├── mh-logo.png
+│   │   └── mh-trans.png
+│   ├── README.md
+│   ├── src
+│   │   ├── api.js
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── assets
+│   │   │   └── react.svg
+│   │   ├── components
+│   │   │   ├── CreateUserModal.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── GoogleAuthButton.jsx
+│   │   │   ├── GoogleAuthSuccess.jsx
+│   │   │   ├── LoadingSpinner.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── NotificationIcon.jsx
+│   │   │   ├── ScrollToTop.jsx
+│   │   │   ├── UserManagement.jsx
+│   │   │   ├── UserProfileModal.jsx
+│   │   │   ├── UserSearch.jsx
+│   │   │   ├── UserStats.jsx
+│   │   │   └── UserTable.jsx
+│   │   ├── context
+│   │   │   ├── AuthContext.jsx
+│   │   │   └── ThemeContext.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   ├── pages
+│   │   │   ├── AboutPage.jsx
+│   │   │   ├── ContactPage.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── dashboards
+│   │   │   │   ├── admin
+│   │   │   │   │   ├── Logs.jsx
+│   │   │   │   │   ├── Overview.jsx
+│   │   │   │   │   ├── UserDistribution.jsx
+│   │   │   │   │   ├── UserPage.jsx
+│   │   │   │   │   └── Weather.jsx
+│   │   │   │   ├── AdminDashboard.jsx
+│   │   │   │   ├── expert
+│   │   │   │   │   ├── Consultations.jsx
+│   │   │   │   │   ├── Overview.jsx
+│   │   │   │   │   ├── Questions.jsx
+│   │   │   │   │   └── Schedule.jsx
+│   │   │   │   ├── ExpertDashboard.jsx
+│   │   │   │   ├── farmer
+│   │   │   │   │   ├── Consultations.jsx
+│   │   │   │   │   ├── ExpertsPage.jsx
+│   │   │   │   │   ├── Knowledge.jsx
+│   │   │   │   │   ├── MyCrops.jsx
+│   │   │   │   │   └── Overview.jsx
+│   │   │   │   └── FarmerDashboard.jsx
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── ProfilePage.jsx
+│   │   │   ├── RegisterPage.jsx
+│   │   │   ├── RoleSelectionPage.jsx
+│   │   │   └── SettingsPage.jsx
+│   │   └── services
+│   │       └── logService.js
+│   ├── tailwind.config.js
+│   ├── tree.txt
+│   ├── vercel.json
+│   └── vite.config.js
+├── package.json
+├── package-lock.json  

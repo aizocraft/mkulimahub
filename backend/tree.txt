@@ -1,0 +1,24 @@
+aizo@aizocraft:~/mh/backend$ tree -I "node_modules"
+.
+├── config
+│   └── db.js
+├── controllers
+│   ├── authController.js
+│   └── userController.js
+├── middleware
+│   ├── admin.js
+│   ├── auth.js
+│   ├── errorHandler.js
+│   └── logger.js
+├── models
+│   └── User.js
+├── package.json
+├── package-lock.json
+├── routes
+│   ├── authRoutes.js
+│   ├── index.js
+│   └── userRoutes.js
+├── server.js
+└── tree.txt
+
+6 directories, 15 files
