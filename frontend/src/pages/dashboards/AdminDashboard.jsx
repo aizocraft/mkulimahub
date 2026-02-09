@@ -4,14 +4,16 @@ import UserManagement from '../../components/UserManagement';
 import Overview from './admin/Overview';
 import Weather from './admin/Weather';
 import Logs from './admin/Logs';
-import { 
-  BarChart3, 
-  Users, 
-  Cloud, 
-  Shield, 
-  CheckCircle, 
+import Transactions from './admin/Transactions';
+import {
+  BarChart3,
+  Users,
+  Cloud,
+  Shield,
+  CheckCircle,
   Settings,
-  FileText 
+  FileText,
+  CreditCard
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -28,7 +30,8 @@ const AdminDashboard = () => {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'User Management', icon: Users },
     { id: 'weather', label: 'Weather', icon: Cloud },
-    { id: 'logs', label: 'System Logs', icon: FileText }, 
+    { id: 'transactions', label: 'Transactions', icon: CreditCard },
+    { id: 'logs', label: 'System Logs', icon: FileText },
   ];
 
   return (
@@ -124,7 +127,8 @@ const AdminDashboard = () => {
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'users' && <UserManagement />}
           {activeTab === 'weather' && <Weather />}
-          {activeTab === 'logs' && <Logs />} 
+          {activeTab === 'transactions' && <Transactions />}
+          {activeTab === 'logs' && <Logs />}
         </div>
       </div>
     </div>
