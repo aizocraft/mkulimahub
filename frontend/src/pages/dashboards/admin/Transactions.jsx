@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CreditCard, TrendingUp, TrendingDown, Calendar, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { mpesaAPI, transactionAPI, apiUtils } from '../../../api';
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -9,69 +10,34 @@ const Transactions = () => {
   const [pageSize] = useState(10);
 
   useEffect(() => {
-    // Simulate loading transactions data
     const loadTransactions = async () => {
       setLoading(true);
-      // TODO: Replace with actual API call
-      setTimeout(() => {
-        setTransactions([
-          {
-            id: 1,
-            type: 'payment',
-            amount: 2500,
-            description: 'Consultation Payment - Crop Disease Diagnosis',
-            user: 'John Farmer',
-            date: '2024-01-15',
-            status: 'completed'
-          },
-          {
-            id: 2,
-            type: 'refund',
-            amount: -500,
-            description: 'Refund - Consultation Cancellation',
-            user: 'Jane Expert',
-            date: '2024-01-14',
-            status: 'completed'
-          },
-          {
-            id: 3,
-            type: 'payment',
-            amount: 1500,
-            description: 'Consultation Payment - Irrigation Advice',
-            user: 'Mike Grower',
-            date: '2024-01-13',
-            status: 'pending'
-          },
-          {
-            id: 4,
-            type: 'payment',
-            amount: 3000,
-            description: 'Consultation Payment - Pest Control',
-            user: 'Sarah Farmer',
-            date: '2024-01-12',
-            status: 'completed'
-          },
-          {
-            id: 5,
-            type: 'payment',
-            amount: 2000,
-            description: 'Consultation Payment - Soil Testing',
-            user: 'David Expert',
-            date: '2024-01-11',
-            status: 'completed'
-          },
-          {
-            id: 6,
-            type: 'refund',
-            amount: -1000,
-            description: 'Refund - Service Dissatisfaction',
-            user: 'Emma User',
-            date: '2024-01-10',
-            status: 'completed'
-          }
-        ]);
+      try {
+        // Fetch all transactions from the unified endpoint
+        const response = await transactionAPI.getAllTransactions({ page: 1, limit: 100 });
+
+        // Map transactions to component format
+        const mappedTransactions = response.data.data.transactions?.map(transaction => ({
+          id: transaction._id,
+          type: transaction.type,
+          amount: transaction.amount,
+          description: transaction.consultation?.topic || `Transaction - ${transaction.type}`,
+          user: transaction.farmer?.name || transaction.expert?.name || transaction.farmer?.email || transaction.expert?.email || 'Unknown User',
+          date: transaction.createdAt,
+          status: transaction.status
+        })) || [];
+
+        // Sort by date (newest first)
+        const sortedTransactions = mappedTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        setTransactions(sortedTransactions);
+      } catch (error) {
+        console.error('Error loading transactions:', error);
+        // Set empty array on error to show no transactions message
+        setTransactions([]);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     loadTransactions();
@@ -136,7 +102,7 @@ const Transactions = () => {
             <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-6 translate-x-6"></div>
             <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-4 -translate-x-4"></div>
             <div className="relative">
-              <h3 className="text-lg font-semibold">Recent Transactions</h3>
+              <h3 className="text-lg font-semibold">All Transactions</h3>
             </div>
           </div>
 
