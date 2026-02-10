@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import AccessDenied from '../../components/AccessDenied';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import Overview from './expert/Overview';
 import Consultations from './expert/Consultations';
 import Weather from './admin/Weather';
@@ -27,7 +29,18 @@ import {
 } from 'lucide-react';
 
 const ExpertDashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Show loading spinner while auth is initializing
+  if (isLoading) {
+    return <LoadingSpinner text="Loading dashboard..." />;
+  }
+
+  // Check if user is expert
+  if (!user || user.role !== 'expert') {
+    return <AccessDenied restrictedTo="expert" />;
+  }
+
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('expertDashboardActiveTab') || 'overview');
   const [expertData, setExpertData] = useState({

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import AccessDenied from '../../components/AccessDenied';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import MyCrops from './farmer/MyCrops';
 import Consultations from './farmer/Consultations';
 import Weather from './admin/Weather';
@@ -25,7 +27,18 @@ import {
 } from 'lucide-react';
 
 const FarmerDashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Show loading spinner while auth is initializing
+  if (isLoading) {
+    return <LoadingSpinner text="Loading dashboard..." />;
+  }
+
+  // Check if user is farmer
+  if (!user || user.role !== 'farmer') {
+    return <AccessDenied restrictedTo="farmer" />;
+  }
+
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('farmerDashboardActiveTab') || 'crops');
   const [farmerData, setFarmerData] = useState({

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import UserManagement from '../../components/UserManagement';
+import AccessDenied from '../../components/AccessDenied';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import Overview from './admin/Overview';
 import Weather from './admin/Weather';
 import Logs from './admin/Logs';
@@ -18,7 +20,18 @@ import {
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  // Show loading spinner while auth is initializing
+  if (isLoading) {
+    return <LoadingSpinner text="Loading dashboard..." />;
+  }
+
+  // Check if user is admin
+  if (!user || user.role !== 'admin') {
+    return <AccessDenied />;
+  }
+
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('adminDashboardActiveTab') || 'overview');
 
   // Save active tab to localStorage whenever it changes
