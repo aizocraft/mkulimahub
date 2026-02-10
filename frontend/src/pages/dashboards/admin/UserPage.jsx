@@ -722,16 +722,7 @@ if (loading) {
         </div>
       </div>
       
-      {/* Add custom animation styles */}
-      <style jsx>{`
-        @keyframes loading-bar {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-loading-bar {
-          animation: loading-bar 2s ease-in-out infinite;
-        }
-      `}</style>
+
     </div>
   );
 }
