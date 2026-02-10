@@ -10,10 +10,10 @@ const path = require('path');
 // Helper function to generate post response - FIXED VERSION
 const generatePostResponse = (post, user) => {
   const canModify = user ? post.canModify(user.id, user.role) : false;
-  
+
   // Get user's vote on this post
   const userVote = user ? (post.votedUsers || []).find(
-    v => v.userId && v.userId.toString() === user.id
+    v => v.userId && v.userId.toString() === user.id.toString()
   ) : null;
   
   const response = {
@@ -843,120 +843,97 @@ exports.votePost = async (req, res, next) => {
     const { postId } = req.params;
     const { voteType } = req.body; // 'upvote', 'downvote', or null to remove
     const user = req.user;
-    
+
     if (voteType && !['upvote', 'downvote'].includes(voteType)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid vote type. Must be "upvote", "downvote", or null'
       });
     }
-    
-    // Get post without lean for updates
+
+    // Get post
     const post = await ForumPost.findById(postId).populate('author', 'id name role');
-    
+
     if (!post) {
       return res.status(404).json({
         success: false,
         message: 'Post not found'
       });
     }
-    
-    // Initialize stats if not present
-    if (!post.stats) {
-      post.stats = { upvotes: 0, downvotes: 0, views: 0, commentCount: 0 };
-    }
-    
+
     // Initialize votedUsers array if not present
     if (!post.votedUsers) {
       post.votedUsers = [];
     }
-    
+
     const existingVoteIndex = post.votedUsers.findIndex(
-      v => v.userId && v.userId.toString() === user.id
+      v => v.userId && String(v.userId) === String(user.id)
     );
-    
+
+    let action = 'none';
     let previousVoteType = null;
-    
+
     if (existingVoteIndex > -1) {
-      // User already voted
       previousVoteType = post.votedUsers[existingVoteIndex].voteType;
-      
+
       if (!voteType) {
         // Remove vote
-        const removedVote = post.votedUsers.splice(existingVoteIndex, 1)[0];
-        if (removedVote.voteType === 'upvote') {
-          post.stats.upvotes = Math.max(0, (post.stats.upvotes || 0) - 1);
-        } else {
-          post.stats.downvotes = Math.max(0, (post.stats.downvotes || 0) - 1);
-        }
+        post.votedUsers.splice(existingVoteIndex, 1);
+        action = 'removed';
       } else if (previousVoteType === voteType) {
         // Same vote type - remove it
         post.votedUsers.splice(existingVoteIndex, 1);
-        if (voteType === 'upvote') {
-          post.stats.upvotes = Math.max(0, (post.stats.upvotes || 0) - 1);
-        } else {
-          post.stats.downvotes = Math.max(0, (post.stats.downvotes || 0) - 1);
-        }
+        action = 'removed';
       } else {
         // Change vote type
         post.votedUsers[existingVoteIndex].voteType = voteType;
         post.votedUsers[existingVoteIndex].votedAt = new Date();
-        
-        if (previousVoteType === 'upvote') {
-          post.stats.upvotes = Math.max(0, (post.stats.upvotes || 0) - 1);
-        } else {
-          post.stats.downvotes = Math.max(0, (post.stats.downvotes || 0) - 1);
-        }
-        
-        if (voteType === 'upvote') {
-          post.stats.upvotes = (post.stats.upvotes || 0) + 1;
-        } else {
-          post.stats.downvotes = (post.stats.downvotes || 0) + 1;
-        }
+        action = 'changed';
       }
     } else if (voteType) {
       // New vote
       post.votedUsers.push({
-        userId: user.id,
+        userId: String(user.id),
         voteType,
         votedAt: new Date()
       });
-      
-      if (voteType === 'upvote') {
-        post.stats.upvotes = (post.stats.upvotes || 0) + 1;
-      } else {
-        post.stats.downvotes = (post.stats.downvotes || 0) + 1;
-      }
-    } else {
-      // User hasn't voted and trying to remove - no-op
-      return res.status(200).json({
-        success: true,
-        message: 'No vote to remove',
-        stats: post.stats,
-        voteDifference: post.stats.upvotes - post.stats.downvotes,
-        userVote: null
-      });
+      action = 'added';
     }
-    
+
+    // Recalculate stats from votedUsers
+    post.stats = post.stats || { upvotes: 0, downvotes: 0, views: 0, commentCount: 0 };
+    post.stats.upvotes = post.votedUsers.filter(v => v.voteType === 'upvote').length;
+    post.stats.downvotes = post.votedUsers.filter(v => v.voteType === 'downvote').length;
+
     await post.save();
-    
+
     // Get user's current vote
-    const userVote = post.votedUsers?.find(
-      v => v.userId?.toString() === user.id
+    const userVote = post.votedUsers.find(
+      v => v.userId && String(v.userId) === String(user.id)
     );
-    
+
+    let message = 'Vote updated successfully';
+    if (action === 'added') {
+      message = `Vote ${voteType}d successfully`;
+    } else if (action === 'removed') {
+      message = 'Vote removed successfully';
+    } else if (action === 'changed') {
+      message = `Vote changed to ${voteType}`;
+    }
+
     logger.info('Forum post voted', {
       userId: user.id,
       postId,
       voteType,
+      action,
       previousVoteType,
       upvotes: post.stats.upvotes,
       downvotes: post.stats.downvotes
     });
-    
+
     res.status(200).json({
       success: true,
-      message: voteType ? 'Vote recorded successfully' : 'Vote removed successfully',
+      message,
       stats: post.stats,
       voteDifference: post.stats.upvotes - post.stats.downvotes,
       userVote: userVote?.voteType || null

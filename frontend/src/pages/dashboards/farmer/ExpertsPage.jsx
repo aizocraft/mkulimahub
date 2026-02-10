@@ -45,15 +45,13 @@ const ExpertsPage = () => {
     const fetchExperts = async () => {
       try {
         setLoading(true);
-        console.log('Fetching experts from API...');
-        
+
         const response = await userAPI.getExperts();
-        console.log('API Response:', response);
-        
+
         if (response.data) {
           // Check different possible response structures
           let expertsData = [];
-          
+
           if (Array.isArray(response.data)) {
             // Case 1: Response.data is directly an array
             expertsData = response.data;
@@ -67,32 +65,17 @@ const ExpertsPage = () => {
             // Case 4: Response.data has success flag and data array
             expertsData = response.data.data;
           }
-          
-          console.log('Processed experts data:', expertsData);
-          
-          if (expertsData.length > 0) {
-            // Log first expert to debug structure
-            console.log('First expert structure:', {
-              id: expertsData[0]._id || expertsData[0].id,
-              name: expertsData[0].name,
-              role: expertsData[0].role,
-              hourlyRate: expertsData[0].hourlyRate,
-              keys: Object.keys(expertsData[0])
-            });
-          }
-          
+
           setExperts(expertsData);
-          
+
           if (expertsData.length === 0) {
             toast.info('No experts found in the system');
           }
         } else {
-          console.error('No data in response');
           setError('No data received from server');
           toast.error('Failed to load experts: No data received');
         }
       } catch (err) {
-        console.error('Error fetching experts:', err);
         setError(err.message || 'Failed to load experts');
         toast.error('Failed to load experts. Please try again.');
       } finally {
@@ -139,16 +122,10 @@ const ExpertsPage = () => {
   // Handle expert selection for booking
   const handleBookExpert = (expert) => {
     if (!expert || (!expert._id && !expert.id)) {
-      console.error('Cannot book: Expert has no ID', expert);
       toast.error('Cannot book: Expert information is incomplete');
       return;
     }
-    
-    console.log('Booking expert:', {
-      id: expert._id || expert.id,
-      name: expert.name
-    });
-    
+
     setSelectedExpert(expert);
     setShowBookingModal(true);
   };
@@ -324,15 +301,14 @@ const ExpertsPage = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredExperts.map((expert, index) => {
+              {filteredExperts.map((expert) => {
                 // Get expert ID - try both _id and id
                 const expertId = expert._id || expert.id;
-                
+
                 if (!expertId) {
-                  console.warn(`Expert at index ${index} has no ID:`, expert);
                   return null;
                 }
-                
+
                 return (
                   <ExpertCard
                     key={expertId}

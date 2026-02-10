@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext';
 import { forumAPI } from '../api';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search,
   Filter,
@@ -26,41 +27,150 @@ import {
   FileText,
   MessageCircle,
   BarChart3,
-  Loader2
+  Loader2,
+  Heart,
+  Bookmark,
+  Share2
 } from 'lucide-react';
 import AttachmentDisplay from '../components/AttachmentDisplay';
+import socketService from '../services/socketService';
 
 const ForumPages = () => {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
   
-  // State
-  const [activeTab, setActiveTab] = useState('all');
+  // State with localStorage persistence
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return localStorage.getItem('forumActiveTab') || 'all';
+    } catch {
+      return 'all';
+    }
+  });
   const [categories, setCategories] = useState([]);
   const [posts, setPosts] = useState([]);
   const [pendingReviews, setPendingReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
-  const [votedPosts, setVotedPosts] = useState({}); // Track user votes
+  const [votedPosts, setVotedPosts] = useState(() => {
+    // Initialize from localStorage if available
+    try {
+      const saved = localStorage.getItem('forumVotedPosts');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  }); // Track user votes
   const [votingPostId, setVotingPostId] = useState(null); // Track voting animation
-  
-  // Filters
-  const [filters, setFilters] = useState({
-    category: '',
-    sortBy: 'newest',
-    search: ''
+
+  // Filters with localStorage persistence
+  const [filters, setFilters] = useState(() => {
+    try {
+      const saved = localStorage.getItem('forumFilters');
+      return saved ? JSON.parse(saved) : {
+        category: '',
+        sortBy: 'newest',
+        search: ''
+      };
+    } catch {
+      return {
+        category: '',
+        sortBy: 'newest',
+        search: ''
+      };
+    }
   });
 
   // Check if user can moderate
   const canModerate = user?.role === 'admin' || user?.role === 'expert';
+
+  // Persist activeTab to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('forumActiveTab', activeTab);
+    } catch (error) {
+      console.warn('Failed to save activeTab to localStorage:', error);
+    }
+  }, [activeTab]);
+
+  // Persist filters to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('forumFilters', JSON.stringify(filters));
+    } catch (error) {
+      console.warn('Failed to save filters to localStorage:', error);
+    }
+  }, [filters]);
+
+  // Persist votedPosts to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('forumVotedPosts', JSON.stringify(votedPosts));
+    } catch (error) {
+      console.warn('Failed to save votedPosts to localStorage:', error);
+    }
+  }, [votedPosts]);
 
   // Fetch data
   useEffect(() => {
     if (isAuthLoading) return; // wait for auth to initialize to get correct userVote
     fetchForumData();
   }, [filters, activeTab, user?.id, isAuthLoading]);
+
+  // Initialize socket for real-time updates
+  useEffect(() => {
+    if (user?.id && !isAuthLoading) {
+      const token = localStorage.getItem('token');
+      socketService.initialize(token, user.id);
+
+      // Join forum room for real-time updates
+      socketService.joinForum();
+
+      // Listen for real-time vote updates
+      const handleVoteUpdate = (data) => {
+        const { postId, stats, userVote } = data;
+        setPosts(currentPosts =>
+          currentPosts.map(post =>
+            post.id === postId
+              ? { ...post, stats, userVote: userVote || null }
+              : post
+          )
+        );
+      };
+
+      const handleReactionUpdate = (data) => {
+        const { postId, reactionType, userId: reactingUserId } = data;
+        // Handle reaction updates (could show notification or update UI)
+        if (reactingUserId !== user.id) {
+          toast.info(`Someone ${reactionType}d your post!`, {
+            position: 'top-center',
+            autoClose: 2000,
+            hideProgressBar: true
+          });
+        }
+      };
+
+      socketService.on('forum:vote-update', handleVoteUpdate);
+      socketService.on('forum:reaction-update', handleReactionUpdate);
+
+      // Send real-time vote updates
+      const originalHandleVote = handleVote;
+      const enhancedHandleVote = async (postId, voteType) => {
+        const result = await originalHandleVote(postId, voteType);
+        // Emit real-time update
+        socketService.votePost(postId, voteType);
+        return result;
+      };
+
+      return () => {
+        socketService.off('forum:vote-update', handleVoteUpdate);
+        socketService.off('forum:reaction-update', handleReactionUpdate);
+        socketService.leaveForum();
+      };
+    }
+  }, [user?.id, isAuthLoading]);
 
   const fetchForumData = async () => {
     try {
@@ -82,11 +192,13 @@ const ForumPages = () => {
       const fetchedPosts = postsResponse.data.posts || [];
       setPosts(fetchedPosts);
 
-      // Sync votedPosts state with server data - this is the single source of truth
-      const newVoteMap = {};
+      // Preserve localStorage state - only update from server for posts not in localStorage
+      const newVoteMap = { ...votedPosts };
       fetchedPosts.forEach(p => {
-        // Use post.userVote from server as the definitive state
-        newVoteMap[p.id] = p.userVote || null;
+        // Only update from server if we don't have localStorage state for this post
+        if (newVoteMap[p.id] === undefined) {
+          newVoteMap[p.id] = p.userVote || null;
+        }
       });
       setVotedPosts(newVoteMap);
 
@@ -120,7 +232,7 @@ const ForumPages = () => {
     return date.toLocaleDateString();
   };
 
-  // Handle vote - improved with toggle functionality and animations
+  // Handle vote - server-side toggle for consistency
   const handleVote = async (postId, voteType) => {
     if (!isAuthenticated()) {
       toast.info('Please login to vote on posts', { position: 'top-center' });
@@ -130,65 +242,11 @@ const ForumPages = () => {
 
     try {
       setVotingPostId(postId);
-      
-      // Get the post and use its current userVote as source of truth
-      const postIndex = posts.findIndex(p => p.id === postId);
-      if (postIndex === -1) return;
-     
-      const post = posts[postIndex];
-      const currentUserVote = post.userVote || null;
-      
-      // Determine new vote type - toggle if clicking same button
-      let newVoteType = voteType;
-      if (currentUserVote === voteType) {
-        // Clicking same vote button removes vote
-        newVoteType = null;
-      }
-      
-      // Create updated posts array with optimistic update
-      const updatedPosts = posts.map(p => {
-        if (p.id === postId) {
-          const oldUpvotes = p.stats?.upvotes || 0;
-          const oldDownvotes = p.stats?.downvotes || 0;
-          
-          let newUpvotes = oldUpvotes;
-          let newDownvotes = oldDownvotes;
-          
-          // Remove old vote if exists
-          if (currentUserVote === 'upvote') {
-            newUpvotes = Math.max(0, newUpvotes - 1);
-          } else if (currentUserVote === 'downvote') {
-            newDownvotes = Math.max(0, newDownvotes - 1);
-          }
-          
-          // Add new vote if applicable
-          if (newVoteType === 'upvote') {
-            newUpvotes++;
-          } else if (newVoteType === 'downvote') {
-            newDownvotes++;
-          }
-          
-          return {
-            ...p,
-            stats: {
-              ...p.stats,
-              upvotes: newUpvotes,
-              downvotes: newDownvotes
-            },
-            userVote: newVoteType,
-            voteDifference: newUpvotes - newDownvotes
-          };
-        }
-         return p;
-       });
-     
-       // Apply optimistic update
-       setPosts(updatedPosts);
-      
-      // Make API call
-      const response = await forumAPI.votePost(postId, newVoteType);
-      
-      // Update from server response for exact sync
+
+      // Make API call - server handles toggle logic
+      const response = await forumAPI.votePost(postId, voteType);
+
+      // Update from server response
       setPosts(currentPosts => currentPosts.map(p => {
         if (p.id === postId) {
           return {
@@ -201,42 +259,62 @@ const ForumPages = () => {
         return p;
       }));
 
-      // Also sync votedPosts
+      // Sync votedPosts
       setVotedPosts(prev => ({
         ...prev,
         [postId]: response.data.userVote || null
       }));
 
-      // Show success toast
-      if (newVoteType === null) {
-        toast.info('Vote removed', { 
+      // Show appropriate toast based on server response
+      const newUserVote = response.data.userVote;
+      if (newUserVote === voteType) {
+        // Vote was added
+        if (voteType === 'upvote') {
+          toast.success('👍 Upvoted!', {
+            position: 'top-center',
+            autoClose: 1500,
+            hideProgressBar: true
+          });
+        } else if (voteType === 'downvote') {
+          toast.info('� Downvoted', {
+            position: 'top-center',
+            autoClose: 1500,
+            hideProgressBar: true
+          });
+        }
+      } else if (newUserVote === null) {
+        // Vote was removed (server toggled it off)
+        toast.info('Vote removed', {
           position: 'top-center',
           autoClose: 1500,
           hideProgressBar: true
         });
-      } else if (newVoteType === 'upvote') {
-        toast.success('👍 Upvoted!', { 
-          position: 'top-center',
-          autoClose: 1500,
-          hideProgressBar: true
-        });
-      } else if (newVoteType === 'downvote') {
-        toast.info('👎 Downvoted', { 
-          position: 'top-center',
-          autoClose: 1500,
-          hideProgressBar: true
-        });
+      } else if (newUserVote !== voteType) {
+        // Vote was changed (e.g., upvote changed to downvote)
+        if (newUserVote === 'upvote') {
+          toast.success('� Changed to upvote!', {
+            position: 'top-center',
+            autoClose: 1500,
+            hideProgressBar: true
+          });
+        } else if (newUserVote === 'downvote') {
+          toast.info('👎 Changed to downvote', {
+            position: 'top-center',
+            autoClose: 1500,
+            hideProgressBar: true
+          });
+        }
       }
     } catch (err) {
       console.error('Error voting:', err);
-      
+
       // Refresh data to sync with server on error
       await fetchForumData();
-      
+
       const errorMsg = err.response?.data?.message || 'Failed to vote. Please try again.';
-      toast.error(errorMsg, { 
+      toast.error(errorMsg, {
         position: 'top-center',
-        autoClose: 3000 
+        autoClose: 3000
       });
     } finally {
       setVotingPostId(null);
@@ -878,7 +956,7 @@ const PostsTab = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1 xl:grid-cols-1">
       {posts.map((post) => (
         <PostCard
           key={post.id}
@@ -904,16 +982,16 @@ const PostsTab = ({
 const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme, votingPostId, setVotingPostId, votedPosts, setVotedPosts }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const canEdit = post.author?._id === user?.id || canModerate;
-  
-  // Use post.userVote directly - always kept in sync with server
-  const localUserVote = post.userVote || null;
+
+  // Prioritize localStorage state over server state for immediate UI feedback
+  const localUserVote = votedPosts[post.id] !== undefined ? votedPosts[post.id] : (post.userVote || null);
 
   return (
-    <div className={`rounded-lg p-6 hover:shadow-md transition-all duration-300 ${
-      theme === 'dark' 
-        ? 'bg-gray-800 border-gray-700 hover:border-gray-600' 
-        : 'bg-white border-gray-200 hover:border-gray-300'
-    } border`}>
+    <div className={`rounded-xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 ${
+      theme === 'dark'
+        ? 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 hover:border-gray-600 shadow-lg hover:shadow-2xl'
+        : 'bg-gradient-to-br from-white to-gray-50 border-gray-200 hover:border-gray-300 shadow-md hover:shadow-xl'
+    } border backdrop-blur-sm`}>
       {/* Post Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center">
@@ -1014,16 +1092,16 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
           <div className="flex items-center space-x-1 flex-shrink-0">
             <button
               onClick={() => onVote(post.id, 'upvote')}
-              disabled={!user}
+              disabled={!user || votingPostId === post.id}
               className={`p-2 rounded-lg transition-all duration-200 transform origin-center ${
                 votingPostId === post.id ? 'scale-95' : 'hover:scale-110'
               } ${
-                user 
+                user
                   ? `${
                       localUserVote === 'upvote'
                         ? 'text-green-600 dark:text-green-500 bg-green-100 dark:bg-green-900/30'
                         : theme === 'dark' ? 'text-gray-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'
-                    }` 
+                    }`
                   : 'opacity-50 cursor-not-allowed'
               }`}
               title={user ? `${localUserVote === 'upvote' ? 'Remove upvote' : 'Upvote'}` : 'Login to vote'}

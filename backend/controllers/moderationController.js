@@ -2,6 +2,7 @@ const ForumPost = require('../models/ForumPost');
 const ForumComment = require('../models/ForumComment');
 const ForumCategory = require('../models/ForumCategory');
 const { logger } = require('../middleware/logger');
+const NotificationService = require('../services/notificationService');
 
 // Get posts/comments pending review
 exports.getPendingReviews = async (req, res, next) => {
@@ -197,10 +198,10 @@ exports.rejectContent = async (req, res, next) => {
     };
     
     await content.save();
-    
+
     // Populate for response
     await content.populate('author', 'name email');
-    
+
     logger.info('Content rejected', {
       moderatorId: user.id,
       moderatorRole: user.role,
@@ -209,7 +210,7 @@ exports.rejectContent = async (req, res, next) => {
       authorId: content.author._id,
       rejectionReason
     });
-    
+
     res.status(200).json({
       success: true,
       message: `${type} rejected successfully`,

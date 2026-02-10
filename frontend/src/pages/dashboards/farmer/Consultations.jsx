@@ -1,14 +1,15 @@
 // pages/dashboards/farmer/Consultations.jsx 
 import { useState, useEffect } from 'react';
-import { 
-  Users, Calendar, Play, Plus, MessageCircle, Clock, Star, 
+import {
+  Users, Calendar, Play, Plus, MessageCircle, Clock, Star,
   Video, CheckCircle, XCircle, Search, Filter, ExternalLink,
-  Phone, Video as VideoIcon
+  Phone, Video as VideoIcon, Edit
 } from 'lucide-react';
 import { bookingAPI, apiUtils, videoCallAPI } from '../../../api';
 import toast from 'react-hot-toast';
 import VideoCallModal from '../../../components/VideoCall/VideoCallModal';
 import MpesaPaymentModal from '../../../components/MpesaPaymentModal';
+import ReviewModal from '../../../components/ReviewModal';
 import socketService from '../../../services/socketService';
 import { useAuth } from '../../../context/AuthContext';
 
@@ -23,6 +24,8 @@ const Consultations = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showVideoCallModal, setShowVideoCallModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [isEditReview, setIsEditReview] = useState(false);
 
   // Use auth user, with localStorage fallback for compatibility
   const user = authUser || JSON.parse(localStorage.getItem('user') || 'null');
@@ -31,6 +34,23 @@ const Consultations = () => {
   useEffect(() => {
     fetchConsultations();
   }, [activeTab]);
+
+  // Fetch pending count for header display
+  useEffect(() => {
+    const fetchPendingCount = async () => {
+      try {
+        const response = await bookingAPI.getFarmerPendingConsultationCount();
+        if (response.data.success) {
+          // Update the header or state with pending count if needed
+          // For now, this ensures the API call is made to improve loading time
+        }
+      } catch (error) {
+        console.error('Error fetching pending consultation count:', error);
+      }
+    };
+
+    fetchPendingCount();
+  }, []);
 
   const fetchConsultations = async () => {
     try {
@@ -98,9 +118,35 @@ const Consultations = () => {
     }
   };
 
+  const handleEditReview = async (consultationId, rating, review) => {
+    try {
+      const response = await bookingAPI.editReview(consultationId, { rating, review });
+      if (response.data.success) {
+        toast.success('Review edited successfully');
+        fetchConsultations();
+      }
+    } catch (error) {
+      const errorMsg = apiUtils.handleError(error).message;
+      toast.error(errorMsg);
+    }
+  };
+
   const handleBookConsultation = () => {
     // Redirect to experts page to book a consultation
     window.location.href = '/experts';
+  };
+
+  const handleCancelConsultation = async (consultationId) => {
+    try {
+      const response = await bookingAPI.cancelConsultation(consultationId);
+      if (response.data.success) {
+        toast.success('Consultation cancelled successfully');
+        fetchConsultations();
+      }
+    } catch (error) {
+      const errorMsg = apiUtils.handleError(error).message;
+      toast.error(errorMsg);
+    }
   };
 
   // Filter consultations based on search term (backend handles status filtering)
@@ -291,21 +337,19 @@ const Consultations = () => {
                 {selectedConsultation.status === 'completed' && !selectedConsultation.rating && (
                   <button
                     onClick={() => {
-                      const rating = prompt('Rate this consultation (1-5 stars):', '5');
-                      const review = prompt('Add a review (optional):');
-                      if (rating && rating >= 1 && rating <= 5) {
-                        handleAddReview(selectedConsultation._id, parseInt(rating), review);
-                      }
+                      setShowDetailsModal(false);
+                      setIsEditReview(false);
+                      setShowReviewModal(true);
                     }}
-                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200 flex items-center"
                   >
-                    <Star size={16} className="inline mr-2" />
+                    <Star size={16} className="mr-2" />
                     Add Review
                   </button>
                 )}
 
                 {selectedConsultation.status === 'completed' && selectedConsultation.rating && (
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
                         <Star
@@ -318,6 +362,17 @@ const Consultations = () => {
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       Rated {selectedConsultation.rating}/5
                     </span>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        setIsEditReview(true);
+                        setShowReviewModal(true);
+                      }}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors duration-200 flex items-center"
+                    >
+                      <Edit size={12} className="mr-1" />
+                      Edit
+                    </button>
                   </div>
                 )}
 
@@ -554,17 +609,43 @@ const Consultations = () => {
                         </div>
                         <div className="text-sm text-green-600 dark:text-green-400">Completed</div>
                       </div>
-                      {!consultation.rating && consultation.status === 'completed' && (
-                        <button 
+                      <div className="flex space-x-2">
+                        {consultation.status === 'completed' && !consultation.rating && (
+                          <button
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setIsEditReview(false);
+                              setShowReviewModal(true);
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-purple-500/25"
+                          >
+                            <Star size={16} className="text-yellow-300" />
+                            <span>Add Review</span>
+                          </button>
+                        )}
+                        {consultation.status === 'completed' && consultation.rating && (
+                          <button
+                            onClick={() => {
+                              setSelectedConsultation(consultation);
+                              setIsEditReview(true);
+                              setShowReviewModal(true);
+                            }}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 flex items-center space-x-2 shadow-lg shadow-blue-500/25"
+                          >
+                            <Edit size={16} />
+                            <span>Edit Review</span>
+                          </button>
+                        )}
+                        <button
                           onClick={() => {
                             setSelectedConsultation(consultation);
                             setShowDetailsModal(true);
                           }}
-                          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200"
+                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
                         >
-                          Add Review
+                          View Details
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -972,6 +1053,20 @@ const Consultations = () => {
           onEndCall={() => {
             toast.success('Video call ended');
             fetchConsultations(); // Refresh consultations after call ends
+          }}
+        />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && selectedConsultation && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          consultation={selectedConsultation}
+          isEdit={isEditReview}
+          onReviewSuccess={() => {
+            fetchConsultations();
+            setShowReviewModal(false);
           }}
         />
       )}

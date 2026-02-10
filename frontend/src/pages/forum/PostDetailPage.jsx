@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { forumAPI } from '../../api';
+import { toast } from 'react-toastify';
+import { motion, AnimatePresence } from 'framer-motion';
 import AttachmentDisplay from '../../components/AttachmentDisplay';
 import {
   ArrowLeft,
@@ -18,7 +20,10 @@ import {
   Send,
   User,
   Loader2,
-  File
+  File,
+  Heart,
+  Bookmark,
+  Share2
 } from 'lucide-react';
 
 const PostDetailPage = () => {
@@ -37,6 +42,8 @@ const PostDetailPage = () => {
   const [error, setError] = useState('');
   const [replyTo, setReplyTo] = useState(null);
   const [votedComments, setVotedComments] = useState({}); // Track comment votes
+  const [postUserVote, setPostUserVote] = useState(null); // Track post vote
+  const [votingPost, setVotingPost] = useState(false); // Track voting animation for post
 
   useEffect(() => {
     fetchPostDetails();
@@ -71,23 +78,101 @@ const PostDetailPage = () => {
 
   const handleVote = async (voteType) => {
     if (!isAuthenticated()) {
+      toast.info('Please login to vote on posts', { position: 'top-center' });
       navigate('/login');
       return;
     }
 
     try {
-      await forumAPI.votePost(postId, voteType);
+      setVotingPost(true);
+
+      // Get the post and use its current userVote as source of truth
+      const currentUserVote = postUserVote || post.userVote || null;
+
+      // Determine new vote type - toggle if clicking same button
+      let newVoteType = voteType;
+      if (currentUserVote === voteType) {
+        // Clicking same vote button removes vote
+        newVoteType = null;
+      }
+
+      // Create updated post with optimistic update
+      const oldUpvotes = post.stats?.upvotes || 0;
+      const oldDownvotes = post.stats?.downvotes || 0;
+
+      let newUpvotes = oldUpvotes;
+      let newDownvotes = oldDownvotes;
+
+      // Remove old vote if exists
+      if (currentUserVote === 'upvote') {
+        newUpvotes = Math.max(0, newUpvotes - 1);
+      } else if (currentUserVote === 'downvote') {
+        newDownvotes = Math.max(0, newDownvotes - 1);
+      }
+
+      // Add new vote if applicable
+      if (newVoteType === 'upvote') {
+        newUpvotes++;
+      } else if (newVoteType === 'downvote') {
+        newDownvotes++;
+      }
+
+      // Apply optimistic update
       setPost(prev => ({
         ...prev,
         stats: {
           ...prev.stats,
-          [voteType === 'upvote' ? 'upvotes' : 'downvotes']: 
-            (prev.stats[voteType === 'upvote' ? 'upvotes' : 'downvotes'] || 0) + 1
-        }
+          upvotes: newUpvotes,
+          downvotes: newDownvotes
+        },
+        userVote: newVoteType
       }));
+      setPostUserVote(newVoteType);
+
+      // Make API call
+      const response = await forumAPI.votePost(postId, newVoteType);
+
+      // Update from server response for exact sync
+      setPost(prev => ({
+        ...prev,
+        stats: response.data.stats,
+        userVote: response.data.userVote || null
+      }));
+      setPostUserVote(response.data.userVote || null);
+
+      // Show success toast
+      if (newVoteType === null) {
+        toast.info('Vote removed', {
+          position: 'top-center',
+          autoClose: 1500,
+          hideProgressBar: true
+        });
+      } else if (newVoteType === 'upvote') {
+        toast.success('👍 Upvoted!', {
+          position: 'top-center',
+          autoClose: 1500,
+          hideProgressBar: true
+        });
+      } else if (newVoteType === 'downvote') {
+        toast.info('👎 Downvoted', {
+          position: 'top-center',
+          autoClose: 1500,
+          hideProgressBar: true
+        });
+      }
     } catch (err) {
       console.error('Error voting:', err);
-      setError('Failed to vote');
+
+      // Refresh data to sync with server on error
+      await fetchPostDetails();
+
+      const errorMsg = err.response?.data?.message || 'Failed to vote. Please try again.';
+      toast.error(errorMsg, {
+        position: 'top-center',
+        autoClose: 3000
+      });
+    } finally {
+      setVotingPost(false);
     }
   };
 

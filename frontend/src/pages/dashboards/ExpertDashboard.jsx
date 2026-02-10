@@ -6,13 +6,14 @@ import Overview from './expert/Overview';
 import Consultations from './expert/Consultations';
 import Weather from './admin/Weather';
 import ForumPages from '../ForumPages';
+import Transactions from './admin/Transactions';
 
-import { 
-  BarChart3, 
-  MessageCircle, 
-  Users, 
-  Star, 
-  Shield, 
+import {
+  BarChart3,
+  MessageCircle,
+  Users,
+  Star,
+  Shield,
   CheckCircle,
   Settings,
   Clock,
@@ -21,7 +22,8 @@ import {
   DollarSign,
   Globe,
   Cloud,
-  MessageSquare 
+  MessageSquare,
+  CreditCard
 } from 'lucide-react';
 
 const ExpertDashboard = () => {
@@ -59,8 +61,9 @@ const ExpertDashboard = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'consultations', label: 'Consultations', icon: MessageCircle },
-    { id: 'forum', label: 'Forum', icon: MessageSquare }, 
-    { id: 'weather', label: 'Weather', icon: Cloud } 
+    { id: 'transactions', label: 'Transactions', icon: CreditCard },
+    { id: 'forum', label: 'Forum', icon: MessageSquare },
+    { id: 'weather', label: 'Weather', icon: Cloud }
   ];
 
   // Function to get verification display text
@@ -251,9 +254,10 @@ const ExpertDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'consultations' && <Consultations />}
+          {activeTab === 'transactions' && <Transactions />}
           {activeTab === 'forum' && <ForumPages />}
           {activeTab === 'weather' && <Weather />}
-       
+
         </div>
 
         {/* Expert Stats Summary */}

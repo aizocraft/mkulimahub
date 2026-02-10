@@ -242,6 +242,27 @@ class SocketService {
     this.socket.emit('chat:mark-read', { consultationId, messageIds });
   }
 
+  // ========== FORUM FUNCTIONS ==========
+  joinForum() {
+    if (!this.socket?.connected) return;
+    this.socket.emit('forum:join');
+  }
+
+  votePost(postId, voteType) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('forum:vote', { postId, voteType });
+  }
+
+  reactToPost(postId, reactionType) {
+    if (!this.socket?.connected) return;
+    this.socket.emit('forum:react', { postId, reactionType });
+  }
+
+  leaveForum() {
+    if (!this.socket?.connected) return;
+    this.socket.emit('forum:leave');
+  }
+
   // ========== UTILITY FUNCTIONS ==========
   on(event, callback) {
     if (!this.socket) return;

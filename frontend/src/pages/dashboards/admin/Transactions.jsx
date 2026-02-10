@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { CreditCard, TrendingUp, TrendingDown, Calendar, Filter, ChevronLeft, ChevronRight, Search, Download, DollarSign, Users, Activity, Receipt, Clock, CheckCircle, XCircle, Eye, User, Mail, Phone, Briefcase } from 'lucide-react';
 import { transactionAPI, bookingAPI } from '../../../api';
+import { useAuth } from '../../../context/AuthContext';
 
 const Transactions = () => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -17,8 +19,16 @@ const Transactions = () => {
     const loadTransactions = async () => {
       setLoading(true);
       try {
-        // Fetch all transactions from the unified endpoint
-        const transactionResponse = await transactionAPI.getAllTransactions({ page: 1, limit: 100 });
+        let transactionResponse;
+
+        // Role-based transaction fetching
+        if (user?.role === 'admin') {
+          // Admin sees all transactions
+          transactionResponse = await transactionAPI.getAllTransactions({ page: 1, limit: 100 });
+        } else {
+          // Farmers and experts see only their own transactions
+          transactionResponse = await transactionAPI.getUserTransactions({ page: 1, limit: 100 });
+        }
 
         // Map transactions to component format
         const mappedTransactions = transactionResponse.data.data.transactions?.map(transaction => ({
@@ -50,37 +60,40 @@ const Transactions = () => {
           } : null
         })) || [];
 
-        // Fetch pending consultations with payments
-        const consultationResponse = await bookingAPI.getFarmerConsultations({ status: 'pending', page: 1, limit: 100 });
+        // For non-admin users, also fetch their pending consultations
+        let mappedPendingConsultations = [];
+        if (user?.role !== 'admin') {
+          const consultationResponse = await bookingAPI.getFarmerConsultations({ status: 'pending', page: 1, limit: 100 });
 
-        // Map pending consultations to transaction format
-        const mappedPendingConsultations = consultationResponse.data?.data?.consultations?.filter(consultation => consultation.payment && consultation.payment.amount > 0).map(consultation => ({
-          id: `pending-${consultation._id}`,
-          type: 'payment',
-          amount: consultation.payment.amount,
-          description: consultation.topic || 'Pending Consultation Payment',
-          user: consultation.farmer?.name || consultation.farmer?.email || 'Unknown User',
-          date: consultation.createdAt,
-          status: 'pending',
-          expert: consultation.expert ? {
-            name: consultation.expert.name || 'N/A',
-            email: consultation.expert.email || 'N/A',
-            phone: consultation.expert.phone || 'N/A',
-            specialization: consultation.expert.specialization || 'N/A',
-            id: consultation.expert._id || 'N/A'
-          } : null,
-          farmer: consultation.farmer ? {
-            name: consultation.farmer.name || 'N/A',
-            email: consultation.farmer.email || 'N/A',
-            phone: consultation.farmer.phone || 'N/A',
-            id: consultation.farmer._id || 'N/A'
-          } : null,
-          consultation: {
-            topic: consultation.topic || 'N/A',
-            status: consultation.status || 'N/A',
-            scheduledDate: consultation.scheduledDate || 'N/A'
-          }
-        })) || [];
+          // Map pending consultations to transaction format
+          mappedPendingConsultations = consultationResponse.data?.data?.consultations?.filter(consultation => consultation.payment && consultation.payment.amount > 0).map(consultation => ({
+            id: `pending-${consultation._id}`,
+            type: 'payment',
+            amount: consultation.payment.amount,
+            description: consultation.topic || 'Pending Consultation Payment',
+            user: consultation.farmer?.name || consultation.farmer?.email || 'Unknown User',
+            date: consultation.createdAt,
+            status: 'pending',
+            expert: consultation.expert ? {
+              name: consultation.expert.name || 'N/A',
+              email: consultation.expert.email || 'N/A',
+              phone: consultation.expert.phone || 'N/A',
+              specialization: consultation.expert.specialization || 'N/A',
+              id: consultation.expert._id || 'N/A'
+            } : null,
+            farmer: consultation.farmer ? {
+              name: consultation.farmer.name || 'N/A',
+              email: consultation.farmer.email || 'N/A',
+              phone: consultation.farmer.phone || 'N/A',
+              id: consultation.farmer._id || 'N/A'
+            } : null,
+            consultation: {
+              topic: consultation.topic || 'N/A',
+              status: consultation.status || 'N/A',
+              scheduledDate: consultation.scheduledDate || 'N/A'
+            }
+          })) || [];
+        }
 
         // Combine transactions and pending consultations
         const allTransactions = [...mappedTransactions, ...mappedPendingConsultations];
@@ -99,7 +112,7 @@ const Transactions = () => {
     };
 
     loadTransactions();
-  }, []);
+  }, [user]);
 
   const filteredTransactions = transactions.filter(transaction => {
     // Status filter
@@ -217,12 +230,12 @@ const Transactions = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-green-100 text-sm font-medium">Total Revenue</p>
-              <p className="text-2xl font-bold">KSh {transactions.reduce((sum, t) => sum + (t.amount > 0 ? t.amount : 0), 0).toLocaleString()}</p>
+              <p className="text-green-100 text-sm font-medium">{user?.role === 'admin' || user?.role === 'expert' ? 'Total Revenue' : 'Total Sent'}</p>
+              <p className="text-2xl font-bold">KSh {transactions.filter(t => t.status === 'completed').reduce((sum, t) => sum + (t.amount > 0 ? t.amount : 0), 0).toLocaleString()}</p>
             </div>
             <DollarSign size={32} className="text-green-200" />
           </div>
@@ -245,6 +258,16 @@ const Transactions = () => {
               <p className="text-2xl font-bold">{transactions.filter(t => t.status === 'completed').length}</p>
             </div>
             <CheckCircle size={32} className="text-emerald-200" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-yellow-100 text-sm font-medium">Pending</p>
+              <p className="text-2xl font-bold">{transactions.filter(t => t.status === 'pending').length}</p>
+            </div>
+            <Clock size={32} className="text-yellow-200" />
           </div>
         </div>
       </div>

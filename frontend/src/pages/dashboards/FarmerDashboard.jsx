@@ -3,30 +3,31 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import Overview from './farmer/Overview';
 import MyCrops from './farmer/MyCrops';
 import Consultations from './farmer/Consultations';
 import Weather from './admin/Weather';
-import ExpertsPage from './farmer/ExpertsPage'; 
+import ExpertsPage from './farmer/ExpertsPage';
 import ForumPages from '../ForumPages';
-import { 
-  Activity, 
-  Sprout, 
-  Users, 
-  Cloud, 
-  MapPin, 
-  Star, 
+import Transactions from './admin/Transactions';
+import {
+  Activity,
+  Sprout,
+  Users,
+  Cloud,
+  MapPin,
+  Star,
   CheckCircle,
   TrendingUp,
   Settings,
   GraduationCap,
-  MessageSquare
+  MessageSquare,
+  CreditCard
 } from 'lucide-react';
 
 const FarmerDashboard = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('farmerDashboardActiveTab') || 'overview');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('farmerDashboardActiveTab') || 'crops');
   const [farmerData, setFarmerData] = useState({
     county: '',
     experienceLevel: '',
@@ -50,11 +51,11 @@ const FarmerDashboard = () => {
   }, [activeTab]);
 
   const navigationTabs = [
-    { id: 'overview', label: 'Overview', icon: Activity },
     { id: 'crops', label: 'My Crops', icon: Sprout },
     { id: 'consultations', label: 'Consultations', icon: Users },
-    { id: 'experts', label: 'Experts', icon: GraduationCap }, 
-    { id: 'forum', label: 'Forum', icon: MessageSquare }, 
+    { id: 'transactions', label: 'Transactions', icon: CreditCard },
+    { id: 'experts', label: 'Experts', icon: GraduationCap },
+    { id: 'forum', label: 'Forum', icon: MessageSquare },
     { id: 'weather', label: 'Weather', icon: Cloud }
   ];
 
@@ -95,30 +96,28 @@ const FarmerDashboard = () => {
     return county && county !== 'Not specified' ? county : 'County not set';
   };
 
-  // Debug function to log tab clicks
+  // Function to handle tab clicks
   const handleTabClick = (tabId) => {
-    console.log('Tab clicked:', tabId);
     setActiveTab(tabId);
   };
 
   // Function to render active tab content
   const renderActiveTab = () => {
-    console.log('Rendering tab:', activeTab);
     switch (activeTab) {
-      case 'overview':
-        return <Overview />;
       case 'crops':
         return <MyCrops />;
       case 'consultations':
         return <Consultations />;
       case 'experts':
         return <ExpertsPage />;
-        case 'forum':
-      return <ForumPages />;  
+      case 'transactions':
+        return <Transactions />;
+      case 'forum':
+        return <ForumPages />;
       case 'weather':
         return <Weather />;
       default:
-        return <Overview />;
+        return <MyCrops />;
     }
   };
 
@@ -299,10 +298,7 @@ const FarmerDashboard = () => {
         </div>
       </div>
 
-      {/* Debug Info (remove in production) */}
-      <div className="fixed bottom-4 right-4 bg-black/80 text-white p-2 rounded text-xs opacity-70">
-        Active Tab: {activeTab}
-      </div>
+
     </div>
   );
 };

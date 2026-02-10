@@ -74,8 +74,8 @@ const forumPostSchema = new mongoose.Schema(
     },
     votedUsers: [{
       userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        type: String,
+        required: true
       },
       voteType: {
         type: String,

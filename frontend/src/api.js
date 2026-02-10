@@ -86,11 +86,13 @@ export const bookingAPI = {
   // Consultation management
   getExpertConsultations: (params = {}) => api.get('/booking/expert/my', { params }),
   getFarmerConsultations: (params = {}) => api.get('/booking/farmer/my', { params }),
+  getFarmerPendingConsultationCount: () => api.get('/booking/farmer/pending-count'),
   acceptConsultation: (consultationId) => api.patch(`/booking/${consultationId}/accept`),
   rejectConsultation: (consultationId, reason) => api.patch(`/booking/${consultationId}/reject`, { reason }),
   cancelConsultation: (consultationId, reason) => api.patch(`/booking/${consultationId}/cancel`, { reason }),
   completeConsultation: (consultationId) => api.patch(`/booking/${consultationId}/complete`),
   addReview: (consultationId, reviewData) => api.post(`/booking/${consultationId}/review`, reviewData),
+  editReview: (consultationId, reviewData) => api.put(`/booking/${consultationId}/review`, reviewData),
 
   // Quick booking functions
   getExpertDetailsForBooking: (expertId) => api.get(`/users/${expertId}`),

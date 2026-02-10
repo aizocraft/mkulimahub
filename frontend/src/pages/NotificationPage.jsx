@@ -1,98 +1,101 @@
-import { useState } from 'react';
-import { Bell, Trash2, CheckCircle, AlertCircle, Info, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
+import { useState, useEffect, useContext } from 'react';
+import { Bell, Trash2, CheckCircle, AlertCircle, Info, MessageSquare, Calendar, TrendingUp, Loader2 } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
+import { notificationAPI } from '../api';
 
 const NotificationPage = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'system',
-      title: 'New Forum Post',
-      message: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. A new discussion has been started in the Crop Management forum.',
-      timestamp: new Date(Date.now() - 5 * 60000),
-      read: false,
-      icon: MessageSquare,
-      color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-    },
-    {
-      id: 2,
-      type: 'expert',
-      title: 'Expert Reply to Your Question',
-      message: 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. An expert has provided an answer to your farming question.',
-      timestamp: new Date(Date.now() - 15 * 60000),
-      read: false,
-      icon: AlertCircle,
-      color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
-    },
-    {
-      id: 3,
-      type: 'consultation',
-      title: 'Consultation Booking Confirmed',
-      message: 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris. Your consultation with Dr. Agricultural Expert is scheduled for tomorrow at 2:00 PM.',
-      timestamp: new Date(Date.now() - 2 * 3600000),
-      read: true,
-      icon: Calendar,
-      color: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-    },
-    {
-      id: 4,
-      type: 'weather',
-      title: 'Weather Alert: Heavy Rain Expected',
-      message: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore. Heavy rainfall is expected in your region tomorrow. Prepare your crops accordingly.',
-      timestamp: new Date(Date.now() - 4 * 3600000),
-      read: true,
-      icon: AlertCircle,
-      color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'Crop Health Update',
-      message: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Your crop analysis has been updated with new insights.',
-      timestamp: new Date(Date.now() - 1 * 86400000),
-      read: true,
-      icon: TrendingUp,
-      color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
-    },
-    {
-      id: 6,
-      type: 'forum',
-      title: 'Forum: Pest Management Discussion',
-      message: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium. Check out the latest discussion on organic pest management techniques.',
-      timestamp: new Date(Date.now() - 2 * 86400000),
-      read: true,
-      icon: MessageSquare,
-      color: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-    },
-    {
-      id: 7,
-      type: 'system',
-      title: 'Monthly Report Available',
-      message: 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit. Your monthly farm report is now available for download.',
-      timestamp: new Date(Date.now() - 3 * 86400000),
-      read: true,
-      icon: Info,
-      color: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400'
-    }
-  ]);
+  const { user } = useContext(AuthContext);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
 
-  const markAsRead = (id) => {
-    setNotifications(notifications.map(notif =>
-      notif.id === id ? { ...notif, read: true } : notif
-    ));
+  // Fetch notifications on component mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await notificationAPI.getAll();
+      if (response.data.success) {
+        const notificationsWithIcons = response.data.data.map(notif => ({
+          ...notif,
+          id: notif._id,
+          timestamp: new Date(notif.createdAt),
+          icon: getIconForType(notif.type),
+          color: getColorForType(notif.type)
+        }));
+        setNotifications(notificationsWithIcons);
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setError('Failed to load notifications');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+  const getIconForType = (type) => {
+    const iconMap = {
+      system: Info,
+      expert: AlertCircle,
+      consultation: Calendar,
+      weather: AlertCircle,
+      forum: MessageSquare,
+      admin: Info
+    };
+    return iconMap[type] || Info;
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(notif => notif.id !== id));
+  const getColorForType = (type) => {
+    const colorMap = {
+      system: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400',
+      expert: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400',
+      consultation: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400',
+      weather: 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400',
+      forum: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400',
+      admin: 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400'
+    };
+    return colorMap[type] || 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400';
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await notificationAPI.markAsRead(id);
+      setNotifications(notifications.map(notif =>
+        notif.id === id ? { ...notif, read: true } : notif
+      ));
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await notificationAPI.markAllAsRead();
+      setNotifications(notifications.map(notif => ({ ...notif, read: true })));
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await notificationAPI.delete(id);
+      setNotifications(notifications.filter(notif => notif.id !== id));
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+    }
   };
 
   const clearAll = () => {
+    // Note: This would require a bulk delete API endpoint
+    // For now, we'll just clear the local state
     setNotifications([]);
   };
 
@@ -201,9 +204,32 @@ const NotificationPage = () => {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex justify-center items-center py-16">
+            <Loader2 className="animate-spin text-emerald-600 dark:text-emerald-400" size={48} />
+            <span className="ml-4 text-gray-600 dark:text-gray-400">Loading notifications...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-16">
+            <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Error Loading Notifications</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
+            <button
+              onClick={fetchNotifications}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
         {/* Notifications List */}
         <div className="space-y-3">
-          {sortedNotifications.length > 0 ? (
+          {!loading && !error && sortedNotifications.length > 0 ? (
             sortedNotifications.map((notif) => {
               const Icon = notif.icon;
               return (

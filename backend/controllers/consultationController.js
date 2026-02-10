@@ -2,6 +2,7 @@
 const Consultation = require('../models/Consultation');
 const User = require('../models/User');
 const { logger } = require('../middleware/logger');
+const NotificationService = require('../services/notificationService');
 
 exports.bookConsultation = async (req, res, next) => {
   try {
@@ -218,7 +219,7 @@ exports.acceptConsultation = async (req, res, next) => {
     }
 
     consultation.status = 'accepted';
-    
+
    // In the acceptConsultation method, add this after consultation.status = 'accepted';
 if (consultation.payment.isFree || consultation.payment.status === 'paid') {
   // Notify farmer that they can now initiate video call
@@ -234,8 +235,28 @@ if (consultation.payment.isFree || consultation.payment.status === 'paid') {
     timestamp: new Date()
   });
 }
-    
+
     await consultation.save();
+
+    // Send notification to farmer
+    await NotificationService.createConsultationNotification(
+      consultation._id,
+      consultation.farmer._id,
+      'consultation_accepted',
+      'Consultation Accepted',
+      `Your consultation request with ${consultation.expert.name} has been accepted. Topic: "${consultation.topic}". Scheduled for ${new Date(consultation.bookingDate).toLocaleDateString()} at ${consultation.startTime}. You can now start the video call.`,
+      {
+        expertId: consultation.expert._id,
+        expertName: consultation.expert.name,
+        topic: consultation.topic,
+        bookingDate: consultation.bookingDate,
+        startTime: consultation.startTime,
+        endTime: consultation.endTime,
+        duration: consultation.duration,
+        paymentAmount: consultation.payment.amount,
+        isFree: consultation.payment.isFree
+      }
+    );
 
     logger.info('Consultation accepted', {
       consultationId,
@@ -243,7 +264,6 @@ if (consultation.payment.isFree || consultation.payment.status === 'paid') {
       isFree: consultation.payment.isFree
     });
 
-    // TODO: Send notification to farmer
     // TODO: Generate meeting link
 
     res.status(200).json({
@@ -371,7 +391,7 @@ exports.getExpertConsultations = async (req, res, next) => {
     }
 
     const consultations = await Consultation.find(query)
-      .populate('farmer', 'name email profilePicture phone')
+      .populate('farmer', 'name')
       .sort({ bookingDate: 1, startTime: 1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -441,7 +461,7 @@ exports.getFarmerConsultations = async (req, res, next) => {
     }
 
     const consultations = await Consultation.find(query)
-      .populate('expert', 'name email profilePicture expertise rating hourlyRate')
+      .populate('expert', 'name rating hourlyRate')
       .sort({ bookingDate: 1, startTime: 1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -672,7 +692,8 @@ exports.addReview = async (req, res, next) => {
     consultation.reviewedAt = new Date();
     await consultation.save();
 
-    // TODO: Update expert's average rating
+    // Update expert's average rating
+    await updateExpertRating(consultation.expert._id);
 
     logger.info('Review added successfully', {
       consultationId,
@@ -696,14 +717,189 @@ exports.addReview = async (req, res, next) => {
   }
 };
 
+// Edit review and rating
+exports.editReview = async (req, res, next) => {
+  try {
+    const { consultationId } = req.params;
+    const { rating, review } = req.body;
+    const userId = req.user.id;
+
+    logger.info('User editing review', {
+      userId,
+      consultationId,
+      rating
+    });
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Rating must be between 1 and 5'
+      });
+    }
+
+    const consultation = await Consultation.findById(consultationId)
+      .populate('farmer', '_id')
+      .populate('expert', '_id');
+
+    if (!consultation) {
+      return res.status(404).json({
+        success: false,
+        message: 'Consultation not found'
+      });
+    }
+
+    // Check if user is the farmer who booked this consultation
+    if (consultation.farmer._id.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only the farmer can edit this review'
+      });
+    }
+
+    // Check if consultation is completed
+    if (consultation.status !== 'completed') {
+      return res.status(400).json({
+        success: false,
+        message: 'Can only edit reviews for completed consultations'
+      });
+    }
+
+    // Check if review exists
+    if (!consultation.rating) {
+      return res.status(400).json({
+        success: false,
+        message: 'No review found to edit'
+      });
+    }
+
+    consultation.rating = rating;
+    consultation.review = review;
+    consultation.reviewedAt = new Date();
+    await consultation.save();
+
+    // Update expert's average rating
+    await updateExpertRating(consultation.expert._id);
+
+    logger.info('Review edited successfully', {
+      consultationId,
+      userId,
+      rating
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Review edited successfully',
+      consultation
+    });
+  } catch (error) {
+    logger.error('Error editing review', {
+      error: error.message,
+      userId: req.user.id,
+      consultationId: req.params.consultationId,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
+// Helper function to update expert's average rating
+const updateExpertRating = async (expertId) => {
+  try {
+    // Get all completed consultations for this expert that have ratings
+    const consultations = await Consultation.find({
+      expert: expertId,
+      status: 'completed',
+      rating: { $exists: true, $ne: null }
+    });
+
+    if (consultations.length === 0) {
+      // No ratings, reset to default
+      await User.findByIdAndUpdate(expertId, {
+        'rating.average': 0,
+        'rating.count': 0
+      });
+      return;
+    }
+
+    // Calculate average rating
+    const totalRating = consultations.reduce((sum, cons) => sum + cons.rating, 0);
+    const averageRating = totalRating / consultations.length;
+
+    // Update expert's rating
+    await User.findByIdAndUpdate(expertId, {
+      'rating.average': Math.round(averageRating * 10) / 10, // Round to 1 decimal
+      'rating.count': consultations.length
+    });
+
+    logger.info('Expert rating updated', {
+      expertId,
+      averageRating: Math.round(averageRating * 10) / 10,
+      count: consultations.length
+    });
+  } catch (error) {
+    logger.error('Error updating expert rating', {
+      expertId,
+      error: error.message
+    });
+  }
+};
+
+// Get farmer pending consultation count
+exports.getFarmerPendingConsultationCount = async (req, res, next) => {
+  try {
+    const farmerId = req.user.id;
+
+    const count = await Consultation.countDocuments({
+      farmer: farmerId,
+      status: 'pending'
+    });
+
+    res.status(200).json({
+      success: true,
+      count
+    });
+  } catch (error) {
+    logger.error('Error fetching farmer pending consultation count', {
+      error: error.message,
+      farmerId: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
+// Get expert pending consultation count
+exports.getExpertPendingConsultationCount = async (req, res, next) => {
+  try {
+    const expertId = req.user.id;
+
+    const count = await Consultation.countDocuments({
+      expert: expertId,
+      status: 'pending'
+    });
+
+    res.status(200).json({
+      success: true,
+      count
+    });
+  } catch (error) {
+    logger.error('Error fetching expert pending consultation count', {
+      error: error.message,
+      expertId: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
 // Helper method to calculate end time
 exports.calculateEndTime = function(startTime, duration) {
   const [hours, minutes] = startTime.split(':').map(Number);
   const startInMinutes = hours * 60 + minutes;
   const endInMinutes = startInMinutes + duration;
-  
+
   const endHours = Math.floor(endInMinutes / 60) % 24;
   const endMinutes = endInMinutes % 60;
-  
+
   return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
 };

@@ -33,6 +33,7 @@ const ExpertCard = ({ expert, onBook, onViewProfile }) => {
   const hourlyRate = expert.hourlyRate || 0;
   const rating = expert.rating?.average || 0;
   const ratingCount = expert.rating?.count || 0;
+  const displayRating = rating > 0 ? rating.toFixed(1) : 'New';
   const expertise = expert.expertise || [];
   const county = expert.address?.county || 'Not specified';
   const yearsOfExperience = expert.yearsOfExperience || 0;
@@ -162,7 +163,7 @@ const ExpertCard = ({ expert, onBook, onViewProfile }) => {
                   {rating.toFixed(1)}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-500">
-                  ({ratingCount} reviews)
+                  ({ratingCount} {ratingCount === 1 ? 'review' : 'reviews'})
                 </span>
               </div>
             </div>
