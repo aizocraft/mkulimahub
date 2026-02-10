@@ -181,6 +181,13 @@ export const transactionAPI = {
   exportTransactions: (params = {}) => api.get('/transactions/admin/export', { params }),
 };
 
+// ========== DASHBOARD API ==========
+export const dashboardAPI = {
+  getStats: () => api.get('/dashboard/stats'),
+  getActivities: () => api.get('/dashboard/activities'),
+  getUserDistribution: () => api.get('/dashboard/user-distribution'),
+};
+
 // ========== CROP API ==========
 export const cropAPI = {
   // Get all crops for farmer

@@ -13,7 +13,8 @@ const aiChatRoutes = require('./aiChatRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const cropRoutes = require('./cropRoutes');
 const mpesaRoutes = require('./mpesaRoutes');
-const transactionRoutes = require('./transactionRoutes'); 
+const transactionRoutes = require('./transactionRoutes');
+const dashboardRoutes = require('./dashboardRoutes');
 
 const { requestLogger, errorLogger } = require('../middleware/logger');
 
@@ -33,10 +34,10 @@ router.use('/ai', aiChatRoutes);
 router.use('/uploads', uploadRoutes);
 router.use('/crops', cropRoutes);
 router.use('/mpesa', mpesaRoutes); 
-router.use('/transactions', transactionRoutes); 
+router.use('/transactions', transactionRoutes);
+router.use('/dashboard', dashboardRoutes);
 
-
-// Apply error logger 
+// Apply error logger
 router.use(errorLogger);
 
 module.exports = router;

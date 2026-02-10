@@ -1,23 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PieChart, Users } from 'lucide-react';
+import { dashboardAPI } from '../../../api';
 
-const UserDistribution = ({ users = [] }) => {
+const UserDistribution = () => {
+  const [userDistribution, setUserDistribution] = useState({
+    farmers: 0,
+    experts: 0,
+    admins: 0,
+    totalUsers: 0,
+    farmerPercentage: 0,
+    expertPercentage: 0,
+    adminPercentage: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUserDistribution = async () => {
+      try {
+        setLoading(true);
+        const response = await dashboardAPI.getUserDistribution();
+        if (response.data.success) {
+          setUserDistribution(response.data.distribution);
+        }
+      } catch (err) {
+        console.error('Error fetching user distribution:', err);
+        setError('Failed to load user distribution data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserDistribution();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700 h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading user distribution...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-6 shadow-xl border border-gray-200 dark:border-gray-700 h-full flex items-center justify-center">
+        <div className="text-center">
+          <Users className="w-20 h-20 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-500 dark:text-gray-400 text-lg font-medium">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   // Calculate user distribution
   const calculateDistribution = () => {
-    const farmers = users.filter(user => user.role === 'farmer').length;
-    const experts = users.filter(user => user.role === 'expert').length;
-    const admins = users.filter(user => user.role === 'admin').length;
-    const totalUsers = farmers + experts + admins;
-
-    return {
-      farmers,
-      experts,
-      admins,
-      totalUsers,
-      farmerPercentage: totalUsers > 0 ? (farmers / totalUsers * 100).toFixed(1) : 0,
-      expertPercentage: totalUsers > 0 ? (experts / totalUsers * 100).toFixed(1) : 0,
-      adminPercentage: totalUsers > 0 ? (admins / totalUsers * 100).toFixed(1) : 0
-    };
+    return userDistribution;
   };
 
   const distribution = calculateDistribution();
@@ -90,36 +131,18 @@ const UserDistribution = ({ users = [] }) => {
         `;
 
         segments.push(
-          <g key={index}>
-            {/* Main donut segment */}
-            <path
-              d={pathData}
-              fill="none"
-              stroke={colors.medium}
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              className="transition-all duration-500 hover:stroke-width-16 cursor-pointer"
-              style={{
-                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
-              }}
-            />
-            
-            {/* Percentage label in the center of each segment */}
-            <text
-              x={centerX + (radius + 8) * Math.cos((currentAngle + segmentAngle/2) * Math.PI / 180)}
-              y={centerY + (radius + 8) * Math.sin((currentAngle + segmentAngle/2) * Math.PI / 180)}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-white text-xs font-bold pointer-events-none"
-              fontSize="7"
-              style={{
-                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-                opacity: percentage > 10 ? 1 : 0 // Hide label if segment too small
-              }}
-            >
-              {percentage}%
-            </text>
-          </g>
+          <path
+            key={index}
+            d={pathData}
+            fill="none"
+            stroke={colors.medium}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            className="transition-all duration-500 hover:stroke-width-16 cursor-pointer"
+            style={{
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+            }}
+          />
         );
 
         currentAngle = endAngle + gap;
@@ -222,7 +245,7 @@ const UserDistribution = ({ users = [] }) => {
                 />
                 
                 {/* Donut segments */}
-                <g filter="url(#segmentGlow)">
+                <g>
                   {generateDonutChart()}
                 </g>
                 

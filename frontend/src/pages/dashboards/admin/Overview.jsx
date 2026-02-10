@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { userAPI } from '../../../api';
+import { userAPI, dashboardAPI } from '../../../api';
 import UserDistribution from './UserDistribution';
 import { 
   Users, 
@@ -23,18 +23,12 @@ const Overview = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
-    activeConsultations: 34,
-    monthlyRevenue: 450,
-    forumActivity: 89
+    totalConsultations: 0,
+    totalRevenue: 0,
+    forumActivity: 0
   });
 
-  const [activities, setActivities] = useState([
-    { id: 1, action: 'New farmer registered', user: 'John Karman', time: '2 hours ago', type: 'user' },
-    { id: 2, action: 'Expert consultation completed', user: 'Dr. Jane Expert', time: '4 hours ago', type: 'consultation' },
-    { id: 3, action: 'Content flagged for review', user: 'Anonymous', time: '5 hours ago', type: 'alert' },
-    { id: 4, action: 'Payment processed', user: 'Mary Wanjiku', time: '6 hours ago', type: 'payment' },
-    { id: 5, action: 'New expert verified', user: 'Dr. James Mwangi', time: '8 hours ago', type: 'user' }
-  ]);
+  const [activities, setActivities] = useState([]);
 
   const [systemHealth, setSystemHealth] = useState([
     { component: 'Database', status: 'Healthy', indicator: 'healthy', icon: Database },
@@ -50,27 +44,35 @@ const Overview = () => {
   ]);
 
   useEffect(() => {
-    fetchUsers();
+    fetchDashboardData();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await userAPI.getAllUsers();
-      
-      if (response.data?.success && Array.isArray(response.data.users)) {
-        const usersData = response.data.users;
-        setUsers(usersData);
-        
-        // Calculate total users
-        const totalUsers = usersData.length;
+
+      // Fetch dashboard stats
+      const statsResponse = await dashboardAPI.getStats();
+      if (statsResponse.data?.success) {
         setStats(prevStats => ({
           ...prevStats,
-          totalUsers
+          ...statsResponse.data.stats
         }));
       }
+
+      // Fetch recent activities
+      const activitiesResponse = await dashboardAPI.getActivities();
+      if (activitiesResponse.data?.success) {
+        setActivities(activitiesResponse.data.activities);
+      }
+
+      // Fetch users for distribution chart
+      const usersResponse = await userAPI.getAllUsers();
+      if (usersResponse.data?.success && Array.isArray(usersResponse.data.users)) {
+        setUsers(usersResponse.data.users);
+      }
     } catch (err) {
-      console.error('Failed to fetch users:', err);
+      console.error('Failed to fetch dashboard data:', err);
     } finally {
       setLoading(false);
     }
@@ -113,7 +115,7 @@ const Overview = () => {
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalUsers}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+12% this month</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{stats.totalUsersChange || 0}% this month</span>
               </div>
             </div>
           </div>
@@ -126,10 +128,10 @@ const Overview = () => {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Consultations</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.activeConsultations}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalConsultations}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+8% this week</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{stats.totalConsultationsChange || 0}% this month</span>
               </div>
             </div>
           </div>
@@ -142,10 +144,10 @@ const Overview = () => {
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Revenue</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">KSh {stats.monthlyRevenue}K</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">KSh {stats.totalRevenue}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+15% this month</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{stats.totalRevenueChange || 0}% this month</span>
               </div>
             </div>
           </div>
@@ -161,7 +163,7 @@ const Overview = () => {
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.forumActivity}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+5% today</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{stats.forumActivityChange || 0}% this month</span>
               </div>
             </div>
           </div>
