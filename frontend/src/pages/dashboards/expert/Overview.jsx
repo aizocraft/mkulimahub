@@ -15,17 +15,22 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { Link } from 'react-router-dom';
-import api, { bookingAPI, forumAPI } from '../../../api';
+import api, { bookingAPI, forumAPI, dashboardAPI } from '../../../api';
 
 const Overview = () => {
   const { user } = useAuth();
 
   const [expertStats, setExpertStats] = useState({
-    totalConsultations: 47,
-    questionsAnswered: 23,
-    monthlyEarnings: 94000,
-    rating: 4.8,
-    pendingConsultations: 0
+    totalConsultations: 0,
+    totalConsultationsChange: 0,
+    totalForumPosts: 0,
+    totalForumPostsChange: 0,
+    totalEarnings: 0,
+    monthlyEarningsChange: 0,
+    averageRating: 0,
+    ratingCount: 0,
+    pendingConsultations: 0,
+    last3MonthsEarnings: 0
   });
 
   const calculateProfileCompletion = () => {
@@ -91,6 +96,22 @@ const Overview = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch expert stats
+        const statsResponse = await dashboardAPI.getExpertStats();
+        const stats = statsResponse.data.stats;
+        setExpertStats({
+          totalConsultations: stats.totalConsultations,
+          totalConsultationsChange: stats.totalConsultationsChange,
+          totalForumPosts: stats.totalForumPosts,
+          totalForumPostsChange: stats.totalForumPostsChange,
+          totalEarnings: stats.totalEarnings,
+          monthlyEarningsChange: stats.monthlyEarningsChange,
+          averageRating: stats.averageRating,
+          ratingCount: stats.ratingCount,
+          last3MonthsEarnings: stats.last3MonthsEarnings,
+          pendingConsultations: 0
+        });
+
         // Fetch pending consultations
         const pendingResponse = await bookingAPI.getExpertConsultations({ status: 'pending' });
         const pendingConsultations = pendingResponse.data.consultations || [];
@@ -134,7 +155,7 @@ const Overview = () => {
               <p className="text-2xl font-bold text-gray-900 dark:text-white">{expertStats.totalConsultations}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+12% this month</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{expertStats.totalConsultationsChange}% this month</span>
               </div>
             </div>
           </div>
@@ -146,11 +167,11 @@ const Overview = () => {
               <MessageCircle size={24} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Questions Answered</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{expertStats.questionsAnswered}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Forum Posts</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{expertStats.totalForumPosts}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+8% this week</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{expertStats.totalForumPostsChange}% this week</span>
               </div>
             </div>
           </div>
@@ -162,11 +183,11 @@ const Overview = () => {
               <DollarSign size={24} className="text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Earnings</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">KSh {expertStats.monthlyEarnings.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Earnings</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">KSh {expertStats.totalEarnings.toLocaleString()}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
-                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+15% growth</span>
+                <span className="text-xs text-green-600 dark:text-green-400 font-medium">+{expertStats.monthlyEarningsChange}% growth</span>
               </div>
             </div>
           </div>
@@ -179,10 +200,26 @@ const Overview = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Average Rating</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{expertStats.rating}</p>
+              <div className="flex items-center space-x-2">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{expertStats.averageRating}</p>
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={16}
+                      className={`${
+                        star <= Math.floor(expertStats.averageRating)
+                          ? 'text-yellow-500 fill-current'
+                          : star - 0.5 <= expertStats.averageRating
+                          ? 'text-yellow-500 fill-current opacity-50'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
               <div className="flex items-center space-x-1 mt-1">
-                <Star size={14} className="text-yellow-500 fill-current" />
-                <span className="text-xs text-gray-600 dark:text-gray-400">from 38 reviews</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">from {expertStats.ratingCount} reviews</span>
               </div>
             </div>
           </div>
@@ -247,15 +284,15 @@ const Overview = () => {
 
             <div className="text-center mb-6">
               <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                KSh {expertStats.monthlyEarnings.toLocaleString()}
+                KSh {expertStats.totalEarnings.toLocaleString()}
               </div>
-              <div className="text-gray-600 dark:text-gray-400">This Month</div>
+  <div className="text-gray-600 dark:text-gray-400">Total</div>
             </div>
 
             <div className="space-y-4">
               <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Last 3 Months</span>
-                <span className="font-semibold text-gray-900 dark:text-white">KSh 267,000</span>
+                <span className="font-semibold text-gray-900 dark:text-white">KSh {expertStats.last3MonthsEarnings.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Total Consultations</span>
@@ -263,7 +300,24 @@ const Overview = () => {
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Average Rating</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{expertStats.rating}</span>
+                <div className="flex items-center space-x-1">
+                  <span className="font-semibold text-gray-900 dark:text-white">{expertStats.averageRating}</span>
+                  <div className="flex items-center">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={12}
+                        className={`${
+                          star <= Math.floor(expertStats.averageRating)
+                            ? 'text-yellow-500 fill-current'
+                            : star - 0.5 <= expertStats.averageRating
+                            ? 'text-yellow-500 fill-current opacity-50'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -283,9 +337,9 @@ const Overview = () => {
                 <div className="p-3 bg-blue-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
                   <MessageCircle size={20} className="text-white" />
                 </div>
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900 dark:text-white text-sm">Answer Questions</div>
-                </div>
+    <div className="text-center">
+      <div className="font-semibold text-gray-900 dark:text-white text-sm">Forum Posts</div>
+    </div>
               </button>
 
               <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group">

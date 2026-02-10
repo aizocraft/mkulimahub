@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Consultation = require('../models/Consultation');
 const Transaction = require('../models/Transaction');
 const ForumPost = require('../models/ForumPost');
+const ForumComment = require('../models/ForumComment');
 const { logger } = require('../middleware/logger');
 
 // Get dashboard statistics
@@ -227,6 +228,132 @@ exports.getUserDistribution = async (req, res, next) => {
     logger.error('Error fetching user distribution', {
       error: error.message,
       requestedById: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
+// Get expert dashboard statistics
+exports.getExpertStats = async (req, res, next) => {
+  try {
+    const expertId = req.user.id;
+    logger.info('Fetching expert dashboard statistics', {
+      expertId
+    });
+
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    const currentWeekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+    currentWeekStart.setHours(0, 0, 0, 0);
+    const previousWeekStart = new Date(currentWeekStart);
+    previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+    const previousWeekEnd = new Date(currentWeekStart);
+    previousWeekEnd.setMilliseconds(-1);
+
+    // Total Consultations (completed)
+    const totalConsultations = await Consultation.countDocuments({
+      expert: expertId,
+      status: 'completed'
+    });
+
+    // Total Forum Posts
+    const totalForumPosts = await ForumPost.countDocuments({
+      author: expertId
+    });
+
+    // Total Comments
+    const totalComments = await ForumComment.countDocuments({
+      author: expertId
+    });
+
+    // Earnings
+    const totalEarningsAgg = await Transaction.aggregate([
+      { $match: { expert: expertId, status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalEarnings = totalEarningsAgg.length > 0 ? totalEarningsAgg[0].total : 0;
+
+    const monthlyEarningsAgg = await Transaction.aggregate([
+      { $match: { expert: expertId, status: 'completed', createdAt: { $gte: currentMonthStart } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const monthlyEarnings = monthlyEarningsAgg.length > 0 ? monthlyEarningsAgg[0].total : 0;
+
+    const last3MonthsEarningsAgg = await Transaction.aggregate([
+      { $match: { expert: expertId, status: 'completed', createdAt: { $gte: threeMonthsAgo } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const last3MonthsEarnings = last3MonthsEarningsAgg.length > 0 ? last3MonthsEarningsAgg[0].total : 0;
+
+    // Average Rating (fetch from user model)
+    const expert = await User.findById(expertId).select('rating');
+    const avgRating = expert?.rating?.average || 0;
+    const ratingCount = expert?.rating?.count || 0;
+
+    // Percentage Changes
+    // Consultations: current month vs previous month
+    const currentMonthConsultations = await Consultation.countDocuments({
+      expert: expertId,
+      status: 'completed',
+      createdAt: { $gte: currentMonthStart }
+    });
+    const previousMonthConsultations = await Consultation.countDocuments({
+      expert: expertId,
+      status: 'completed',
+      createdAt: { $gte: previousMonthStart, $lt: currentMonthStart }
+    });
+    const consultationsChange = previousMonthConsultations > 0 ? ((currentMonthConsultations - previousMonthConsultations) / previousMonthConsultations * 100).toFixed(0) : (currentMonthConsultations > 0 ? 100 : 0);
+
+    // Forum posts: current week vs previous week
+    const currentWeekPosts = await ForumPost.countDocuments({
+      author: expertId,
+      createdAt: { $gte: currentWeekStart }
+    });
+    const previousWeekPosts = await ForumPost.countDocuments({
+      author: expertId,
+      createdAt: { $gte: previousWeekStart, $lt: currentWeekStart }
+    });
+    const postsChange = previousWeekPosts > 0 ? ((currentWeekPosts - previousWeekPosts) / previousWeekPosts * 100).toFixed(0) : (currentWeekPosts > 0 ? 100 : 0);
+
+    // Monthly Earnings: current month vs previous month
+    const previousMonthEarningsAgg = await Transaction.aggregate([
+      { $match: { expert: expertId, status: 'completed', createdAt: { $gte: previousMonthStart, $lt: currentMonthStart } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const previousMonthEarnings = previousMonthEarningsAgg.length > 0 ? previousMonthEarningsAgg[0].total : 0;
+    const earningsChange = previousMonthEarnings > 0 ? ((monthlyEarnings - previousMonthEarnings) / previousMonthEarnings * 100).toFixed(0) : (monthlyEarnings > 0 ? 100 : 0);
+
+    const stats = {
+      totalConsultations,
+      totalConsultationsChange: parseInt(consultationsChange),
+      totalForumPosts,
+      totalForumPostsChange: parseInt(postsChange),
+      totalComments,
+      monthlyEarnings,
+      monthlyEarningsChange: parseInt(earningsChange),
+      last3MonthsEarnings,
+      totalEarnings,
+      averageRating: parseFloat(avgRating),
+      ratingCount
+    };
+
+    logger.info('Expert dashboard statistics fetched successfully', {
+      expertId,
+      stats
+    });
+
+    res.status(200).json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    logger.error('Error fetching expert dashboard statistics', {
+      error: error.message,
+      expertId: req.user.id,
       stack: error.stack
     });
     next(error);

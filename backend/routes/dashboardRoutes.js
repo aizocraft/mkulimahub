@@ -4,8 +4,13 @@ const dashboardController = require('../controllers/dashboardController');
 const auth = require('../middleware/auth');
 const admin = require('../middleware/admin');
 
-// All dashboard routes require authentication and admin role
+// All dashboard routes require authentication
 router.use(auth);
+
+// Expert stats (requires auth only)
+router.get('/expert-stats', dashboardController.getExpertStats);
+
+// All other routes require admin role
 router.use(admin);
 
 // Get dashboard statistics
