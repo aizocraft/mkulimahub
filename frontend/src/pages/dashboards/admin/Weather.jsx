@@ -272,8 +272,8 @@ const Weather = () => {
       {/* Header with Search and Controls */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Kenya Weather Intelligence</h2>
-          <p className="text-gray-600 dark:text-gray-400">Real-time weather monitoring & agricultural insights</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Kenya Weather</h2>
+          <p className="text-gray-600 dark:text-gray-400">Real-time weather monitoring</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
