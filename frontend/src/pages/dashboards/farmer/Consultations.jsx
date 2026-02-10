@@ -942,6 +942,23 @@ const Consultations = () => {
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           consultation={selectedConsultation}
+          onPaymentSuccess={(consultationId) => {
+            // Update the consultation payment status to 'paid'
+            setConsultations(prevConsultations =>
+              prevConsultations.map(consult =>
+                consult._id === consultationId
+                  ? {
+                      ...consult,
+                      payment: {
+                        ...consult.payment,
+                        status: 'paid'
+                      }
+                    }
+                  : consult
+              )
+            );
+            toast.success('Payment completed successfully!');
+          }}
         />
       )}
 

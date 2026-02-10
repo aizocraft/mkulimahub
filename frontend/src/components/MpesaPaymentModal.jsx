@@ -3,7 +3,7 @@ import { X, Phone, CheckCircle, Loader2, Smartphone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { mpesaAPI } from '../api';
 
-const MpesaPaymentModal = ({ isOpen, onClose, consultation }) => {
+const MpesaPaymentModal = ({ isOpen, onClose, consultation, onPaymentSuccess }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneDigits, setPhoneDigits] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -93,6 +93,11 @@ const MpesaPaymentModal = ({ isOpen, onClose, consultation }) => {
       setIsProcessing(false);
       setIsSuccess(true);
       toast.success('STK Push sent successfully! Check your phone.');
+
+      // Call onPaymentSuccess callback if provided
+      if (onPaymentSuccess) {
+        onPaymentSuccess(consultationId);
+      }
 
       // Auto close after success
       setTimeout(() => {
