@@ -174,7 +174,8 @@ const AuthLogs = () => {
             name: log.meta.name || 'Test User',
             ip: log.meta.ip || '127.0.0.1',
             userAgent: log.meta.userAgent || 'Browser',
-            role: 'user'
+            role: 'user',
+            profilePicture: log.meta.profilePicture || ''
           }
         }));
         setLogs(processedMockLogs);

@@ -212,6 +212,7 @@ const UserLogs = () => {
             oldRole: log.meta.oldRole || '',
             newRole: log.meta.newRole || '',
             profilePicture: log.meta.profilePicture || '',
+            changedBy: log.meta.changedBy || 'system',
             ...log.meta
           }
         }));

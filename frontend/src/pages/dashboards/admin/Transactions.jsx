@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, TrendingUp, TrendingDown, Calendar, Filter, ChevronLeft, ChevronRight, Search, Download, DollarSign, Users, Activity, Receipt, Clock, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { CreditCard, TrendingUp, TrendingDown, Calendar, Filter, ChevronLeft, ChevronRight, Search, Download, DollarSign, Users, Activity, Receipt, Clock, CheckCircle, XCircle, Eye, User, Mail, Phone, Briefcase } from 'lucide-react';
 import { transactionAPI, bookingAPI } from '../../../api';
 
 const Transactions = () => {
@@ -28,7 +28,26 @@ const Transactions = () => {
           description: transaction.consultation?.topic || `Transaction - ${transaction.type}`,
           user: transaction.farmer?.name || transaction.expert?.name || transaction.farmer?.email || transaction.expert?.email || 'Unknown User',
           date: transaction.createdAt,
-          status: transaction.status
+          status: transaction.status,
+          // Add expert details for modal
+          expert: transaction.expert ? {
+            name: transaction.expert.name || 'N/A',
+            email: transaction.expert.email || 'N/A',
+            phone: transaction.expert.phone || 'N/A',
+            specialization: transaction.expert.specialization || 'N/A',
+            id: transaction.expert._id || 'N/A'
+          } : null,
+          farmer: transaction.farmer ? {
+            name: transaction.farmer.name || 'N/A',
+            email: transaction.farmer.email || 'N/A',
+            phone: transaction.farmer.phone || 'N/A',
+            id: transaction.farmer._id || 'N/A'
+          } : null,
+          consultation: transaction.consultation ? {
+            topic: transaction.consultation.topic || 'N/A',
+            status: transaction.consultation.status || 'N/A',
+            scheduledDate: transaction.consultation.scheduledDate || 'N/A'
+          } : null
         })) || [];
 
         // Fetch pending consultations with payments
@@ -42,7 +61,25 @@ const Transactions = () => {
           description: consultation.topic || 'Pending Consultation Payment',
           user: consultation.farmer?.name || consultation.farmer?.email || 'Unknown User',
           date: consultation.createdAt,
-          status: 'pending'
+          status: 'pending',
+          expert: consultation.expert ? {
+            name: consultation.expert.name || 'N/A',
+            email: consultation.expert.email || 'N/A',
+            phone: consultation.expert.phone || 'N/A',
+            specialization: consultation.expert.specialization || 'N/A',
+            id: consultation.expert._id || 'N/A'
+          } : null,
+          farmer: consultation.farmer ? {
+            name: consultation.farmer.name || 'N/A',
+            email: consultation.farmer.email || 'N/A',
+            phone: consultation.farmer.phone || 'N/A',
+            id: consultation.farmer._id || 'N/A'
+          } : null,
+          consultation: {
+            topic: consultation.topic || 'N/A',
+            status: consultation.status || 'N/A',
+            scheduledDate: consultation.scheduledDate || 'N/A'
+          }
         })) || [];
 
         // Combine transactions and pending consultations
@@ -74,7 +111,9 @@ const Transactions = () => {
       const matchesSearch =
         transaction.description?.toLowerCase().includes(searchLower) ||
         transaction.user?.toLowerCase().includes(searchLower) ||
-        transaction.id?.toLowerCase().includes(searchLower);
+        transaction.id?.toLowerCase().includes(searchLower) ||
+        (transaction.expert?.name && transaction.expert.name.toLowerCase().includes(searchLower)) ||
+        (transaction.farmer?.name && transaction.farmer.name.toLowerCase().includes(searchLower));
 
       if (!matchesSearch) return false;
     }
@@ -148,7 +187,7 @@ const Transactions = () => {
   };
 
   const generateCSVFromData = (data) => {
-    const headers = ['ID', 'Type', 'Description', 'User', 'Amount', 'Date', 'Status'];
+    const headers = ['ID', 'Type', 'Description', 'User', 'Expert Name', 'Expert Email', 'Expert Phone', 'Amount', 'Date', 'Status'];
     const csvRows = [
       headers.join(','),
       ...data.map(transaction => [
@@ -156,6 +195,9 @@ const Transactions = () => {
         transaction.type,
         `"${transaction.description.replace(/"/g, '""')}"`,
         `"${transaction.user.replace(/"/g, '""')}"`,
+        `"${(transaction.expert?.name || 'N/A').replace(/"/g, '""')}"`,
+        `"${(transaction.expert?.email || 'N/A').replace(/"/g, '""')}"`,
+        `"${(transaction.expert?.phone || 'N/A').replace(/"/g, '""')}"`,
         transaction.amount,
         new Date(transaction.date).toLocaleDateString(),
         transaction.status
@@ -437,7 +479,7 @@ const Transactions = () => {
       {showDetailsModal && selectedTransaction && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div 
-            className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -503,17 +545,96 @@ const Transactions = () => {
               </div>
 
               {/* Detailed Information */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* User Information */}
                 <div className="space-y-4">
-                  <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block flex items-center">
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-xl border border-blue-200 dark:border-blue-700">
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 block flex items-center">
                       <Users className="mr-2" size={16} />
                       User Information
                     </label>
-                    <p className="text-sm text-gray-900 dark:text-white font-medium">{selectedTransaction.user}</p>
+                    <div className="space-y-2">
+                      {selectedTransaction.farmer ? (
+                        <>
+                          <div className="flex items-center">
+                            <User size={14} className="mr-2 text-gray-500" />
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {selectedTransaction.farmer.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <Mail size={14} className="mr-2 text-gray-500" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {selectedTransaction.farmer.email}
+                            </span>
+                          </div>
+                          {selectedTransaction.farmer.phone && selectedTransaction.farmer.phone !== 'N/A' && (
+                            <div className="flex items-center">
+                              <Phone size={14} className="mr-2 text-gray-500" />
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {selectedTransaction.farmer.phone}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">No user information available</p>
+                      )}
+                    </div>
                   </div>
+                </div>
 
-                  <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
+                {/* Expert Information */}
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 p-4 rounded-xl border border-purple-200 dark:border-purple-700">
+                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 block flex items-center">
+                      <Briefcase className="mr-2" size={16} />
+                      Expert Information
+                    </label>
+                    <div className="space-y-2">
+                      {selectedTransaction.expert ? (
+                        <>
+                          <div className="flex items-center">
+                            <User size={14} className="mr-2 text-purple-500" />
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">
+                              {selectedTransaction.expert.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center">
+                            <Mail size={14} className="mr-2 text-purple-500" />
+                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                              {selectedTransaction.expert.email}
+                            </span>
+                          </div>
+                          {selectedTransaction.expert.phone && selectedTransaction.expert.phone !== 'N/A' && (
+                            <div className="flex items-center">
+                              <Phone size={14} className="mr-2 text-purple-500" />
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {selectedTransaction.expert.phone}
+                              </span>
+                            </div>
+                          )}
+                          {selectedTransaction.expert.specialization && selectedTransaction.expert.specialization !== 'N/A' && (
+                            <div className="flex items-center">
+                              <Briefcase size={14} className="mr-2 text-purple-500" />
+                              <span className="text-sm text-gray-700 dark:text-gray-300">
+                                {selectedTransaction.expert.specialization}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">No expert assigned</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Transaction Details */}
+                <div className="space-y-4">
+                
+
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
                     <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block flex items-center">
                       <Calendar className="mr-2" size={16} />
                       Transaction Date & Time
@@ -531,23 +652,47 @@ const Transactions = () => {
                     </p>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Description</label>
-                    <p className="text-sm text-gray-900 dark:text-white leading-relaxed">{selectedTransaction.description}</p>
-                  </div>
-
-                  <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2 block">Additional Details</label>
-                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                      <p>• Transaction processed via M-Pesa</p>
-                      <p>• Status last updated: {new Date(selectedTransaction.date).toLocaleDateString()}</p>
-                      <p>• All amounts in Kenyan Shillings (KSh)</p>
+              {/* Consultation Details */}
+              {selectedTransaction.consultation && selectedTransaction.consultation.topic !== 'N/A' && (
+                <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-4 rounded-xl border border-indigo-200 dark:border-indigo-700">
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 block">
+                    Consultation Details
+                  </label>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Topic</p>
+                      <p className="text-sm text-gray-900 dark:text-white font-medium">{selectedTransaction.consultation.topic}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        selectedTransaction.consultation.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
+                        selectedTransaction.consultation.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                        'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                      }`}>
+                        {selectedTransaction.consultation.status}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Scheduled Date</p>
+                      <p className="text-sm text-gray-900 dark:text-white">
+                        {selectedTransaction.consultation.scheduledDate !== 'N/A' 
+                          ? new Date(selectedTransaction.consultation.scheduledDate).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })
+                          : 'Not scheduled'}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+
             </div>
 
             <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">

@@ -25,7 +25,7 @@ const Overview = () => {
     totalUsers: 0,
     activeConsultations: 34,
     monthlyRevenue: 450,
-    qnaActivity: 89
+    forumActivity: 89
   });
 
   const [activities, setActivities] = useState([
@@ -157,8 +157,8 @@ const Overview = () => {
               <Activity size={24} className="text-orange-600 dark:text-orange-400" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Q&A Activity</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.qnaActivity}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Forum Activity</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.forumActivity}</p>
               <div className="flex items-center space-x-1 mt-1">
                 <TrendingUp size={14} className="text-green-500" />
                 <span className="text-xs text-green-600 dark:text-green-400 font-medium">+5% today</span>

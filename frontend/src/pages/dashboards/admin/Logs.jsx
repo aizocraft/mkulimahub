@@ -3,13 +3,15 @@ import AuthLogs from './logger/AuthLogs.jsx';
 import UserLogs from './logger/UserLogs.jsx';
 import ConsultationLogs from './logger/ConsultationLogs.jsx';
 import SystemLogs from './logger/SystemLogs.jsx';
-import { 
-  Shield, 
-  Users, 
-  MessageSquare, 
+import TransactionsLog from './logger/TransactionsLog.jsx';
+import {
+  Shield,
+  Users,
+  MessageSquare,
   Server,
   Database,
-  Activity
+  Activity,
+  CreditCard
 } from 'lucide-react';
 
 const Logs = () => {
@@ -19,6 +21,7 @@ const Logs = () => {
     { id: 'auth', label: 'Authentication', icon: Shield, color: 'from-green-500 to-green-600', description: 'User login, registration, and auth events' },
     { id: 'users', label: 'User Management', icon: Users, color: 'from-blue-500 to-blue-600', description: 'Profile updates, role changes, and user actions' },
     { id: 'consultations', label: 'Consultations', icon: MessageSquare, color: 'from-purple-500 to-purple-600', description: 'Expert-farmer interactions and sessions' },
+    { id: 'transactions', label: 'Transactions', icon: CreditCard, color: 'from-emerald-500 to-emerald-600', description: 'Payment transactions and financial logs' },
     { id: 'system', label: 'System Logs', icon: Server, color: 'from-orange-500 to-orange-600', description: 'API requests, errors, and system events' }
   ];
 
@@ -30,6 +33,8 @@ const Logs = () => {
         return <UserLogs />;
       case 'consultations':
         return <ConsultationLogs />;
+      case 'transactions':
+        return <TransactionsLog />;
       case 'system':
         return <SystemLogs />;
       default:
@@ -65,8 +70,8 @@ const Logs = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl border border-gray-700 shadow-2xl">
-        <div className="flex space-x-1 p-2">
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-2xl backdrop-blur-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 p-3">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -74,22 +79,43 @@ const Logs = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-3 px-6 py-4 rounded-xl transition-all duration-200 flex-1 text-left ${
+                className={`group relative overflow-hidden rounded-2xl p-4 transition-all duration-300 hover:scale-105 ${
                   isActive
-                    ? `bg-gradient-to-r ${tab.color} text-white shadow-lg transform scale-105`
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    ? `bg-gradient-to-r ${tab.color} text-white shadow-xl transform scale-105 ring-2 ring-white/20`
+                    : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-white dark:hover:bg-gray-700/80 hover:shadow-lg border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                <div className={`p-2 rounded-lg ${
-                  isActive ? 'bg-white/20' : 'bg-gray-700'
-                }`}>
-                  <Icon size={20} />
+                {/* Background gradient animation */}
+                <div className={`absolute inset-0 bg-gradient-to-r ${tab.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 ${isActive ? 'opacity-20' : ''}`}></div>
+
+                <div className="relative flex flex-col items-center space-y-3">
+                  <div className={`p-3 rounded-xl transition-all duration-300 ${
+                    isActive
+                      ? 'bg-white/20 shadow-lg'
+                      : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-gray-200 dark:group-hover:bg-gray-600'
+                  }`}>
+                    <Icon size={24} className={isActive ? 'text-white' : 'text-gray-600 dark:text-gray-400'} />
+                  </div>
+                  <div className="text-center">
+                    <div className={`font-semibold text-sm ${isActive ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                      {tab.label}
+                    </div>
+                    <div className={`text-xs mt-1 ${isActive ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {tab.description}
+                    </div>
+                  </div>
+                  {isActive && (
+                    <div className="flex space-x-1">
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <div className="font-semibold">{tab.label}</div>
-                </div>
-                {isActive && (
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+
+                {/* Hover effect */}
+                {!isActive && (
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 )}
               </button>
             );
@@ -97,7 +123,7 @@ const Logs = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="border-t border-gray-700">
+        <div className="bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm rounded-b-3xl border-t border-gray-200 dark:border-gray-700">
           {renderContent()}
         </div>
       </div>
