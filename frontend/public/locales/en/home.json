@@ -1,0 +1,52 @@
+{
+  "welcome": "Welcome to Mkulima Hub",
+  "subtitle": "Empowering farmers with technology-driven solutions and expert knowledge for sustainable agricultural success.",
+  "welcomeBack": "Welcome back, {{name}}! Ready to continue your agricultural journey?",
+  "administrator": "Administrator",
+  "agriculturalExpert": "Agricultural Expert",
+  "farmer": "Farmer",
+  "goToDashboard": "Go to Dashboard",
+  "myProfile": "My Profile",
+  "getStartedFree": "Get Started Free",
+  "learnMore": "Learn More",
+  "activeFarmers": "10,000+ Active Farmers",
+  "certifiedExperts": "500+ Certified Experts",
+  "cropVarieties": "50+ Crop Varieties",
+  "supportAvailable": "24/7 Support Available",
+  "smartCropManagement": "Smart Crop Management",
+  "smartCropDesc": "Track your crops, get growth insights, and optimize your farming practices with AI-powered recommendations.",
+  "expertConsultations": "Expert Consultations",
+  "expertConsultationsDesc": "Connect with certified agricultural experts for personalized advice and real-time problem-solving.",
+  "knowledgeLibrary": "Knowledge Library",
+  "knowledgeLibraryDesc": "Access comprehensive farming guides, research papers, and best practices from industry leaders.",
+  "communitySupport": "Community Support",
+  "communitySupportDesc": "Join a vibrant community of farmers to share experiences, ask questions, and collaborate.",
+  "whyChooseUs": "Why Choose Us",
+  "transformExperience": "Transform Your Farming Experience",
+  "combineWisdom": "We combine traditional farming wisdom with cutting-edge technology to help you succeed.",
+  "communityVoices": "Community Voices",
+  "whatCommunitySays": "What Our Community Says",
+  "joinThousands": "Join thousands of farmers and experts who are transforming agriculture.",
+  "testimonial1": {
+    "name": "John Kamau",
+    "role": "Maize Farmer",
+    "content": "Mkulima Hub transformed my farming business. My yields increased by 40% in just one season!",
+    "achievement": "Yield Master"
+  },
+  "testimonial2": {
+    "name": "Dr. Jane Mwangi",
+    "role": "Agricultural Expert",
+    "content": "A fantastic platform to share knowledge and help farmers succeed. The community is amazing.",
+    "achievement": "Top Consultant"
+  },
+  "testimonial3": {
+    "name": "Sarah Wanjiku",
+    "role": "Vegetable Farmer",
+    "content": "The expert consultations saved my tomato farm from pests. Highly recommended!",
+    "achievement": "Pest Control Pro"
+  },
+  "readyTransform": "Ready to Transform Your Farming Journey?",
+  "joinSuccessful": "Join thousands of successful farmers and experts who are already using Mkulima Hub to achieve better results.",
+  "startFreeAccount": "Start Your Free Account",
+  "learnHowItWorks": "Learn How It Works"
+}

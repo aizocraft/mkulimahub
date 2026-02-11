@@ -1,0 +1,52 @@
+{
+  "welcome": "Karibu Mkulima Hub",
+  "subtitle": "Kuwezesha wakulima kwa suluhisho zinazoendeshwa na teknolojia na maarifa ya wataalamu kwa mafanikio endelevu ya kilimo.",
+  "welcomeBack": "Karibu tena, {{name}}! Tayari kuendelea na safari yako ya kilimo?",
+  "administrator": "Msimamizi",
+  "agriculturalExpert": "Mtaalamu wa Kilimo",
+  "farmer": "Mkulima",
+  "goToDashboard": "Nenda kwenye Dashibodi",
+  "myProfile": "Wasifu Wangu",
+  "getStartedFree": "Anza Bure",
+  "learnMore": "Jifunze Zaidi",
+  "activeFarmers": "Wakulima Hai 10,000+",
+  "certifiedExperts": "Wataalamu Walioidhinishwa 500+",
+  "cropVarieties": "Aina za Mazao 50+",
+  "supportAvailable": "Msaada Unapatikana 24/7",
+  "smartCropManagement": "Usimamizi wa Mazao wa Akili",
+  "smartCropDesc": "Fuatilia mazao yako, pata maarifa ya ukuaji, na uboresha mazoezi yako ya ukulima kwa mapendekezo yanayotegemea AI.",
+  "expertConsultations": "Mashauriano ya Wataalamu",
+  "expertConsultationsDesc": "Unganisha na wataalamu wa kilimo walioidhinishwa kwa ushauri wa kibinafsi na utatuzi wa matatizo ya wakati halisi.",
+  "knowledgeLibrary": "Maktaba ya Maarifa",
+  "knowledgeLibraryDesc": "Pata miongozo kamili ya ukulima, karatasi za utafiti, na mazoezi bora kutoka kwa viongozi wa tasnia.",
+  "communitySupport": "Msaada wa Jamii",
+  "communitySupportDesc": "Jiunge na jamii hai ya wakulima ili kushiriki uzoefu, kuuliza maswali, na kushirikiana.",
+  "whyChooseUs": "Kwa Nini Utuchague",
+  "transformExperience": "Badilisha Uzoefu Wako wa Ukulima",
+  "combineWisdom": "Tunachanganya hekima ya jadi ya ukulima na teknolojia ya kisasa kukusaidia kufanikiwa.",
+  "communityVoices": "Sauti za Jamii",
+  "whatCommunitySays": "Jamii Yetu Inasema Nini",
+  "joinThousands": "Jiunge na maelfu ya wakulima na wataalamu ambao wanabadilisha kilimo.",
+  "testimonial1": {
+    "name": "John Kamau",
+    "role": "Mkulima wa Mahindi",
+    "content": "Mkulima Hub ilibadilisha biashara yangu ya ukulima. Mazao yangu yaliongezeka kwa 40% katika msimu mmoja tu!",
+    "achievement": "Mtawala wa Mazao"
+  },
+  "testimonial2": {
+    "name": "Dkt. Jane Mwangi",
+    "role": "Mtaalamu wa Kilimo",
+    "content": "Jukwaa la ajabu la kushiriki maarifa na kusaidia wakulima kufanikiwa. Jamii ni ya ajabu.",
+    "achievement": "Mshauri Bora"
+  },
+  "testimonial3": {
+    "name": "Sarah Wanjiku",
+    "role": "Mkulima wa Mboga",
+    "content": "Mashauriano ya wataalamu yaliokoa shamba langu la nyanya kutoka kwa wadudu. Inapendekezwa sana!",
+    "achievement": "Mtaalamu wa Kudhibiti Wadudu"
+  },
+  "readyTransform": "Tayari Kubadilisha Safari Yako ya Ukulima?",
+  "joinSuccessful": "Jiunge na maelfu ya wakulima na wataalamu waliofanikiwa ambao tayari wanatumia Mkulima Hub kufikia matokeo bora.",
+  "startFreeAccount": "Anza Akaunti Yako ya Bure",
+  "learnHowItWorks": "Jifunze Jinsi Inavyofanya Kazi"
+}

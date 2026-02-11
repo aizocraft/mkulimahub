@@ -313,7 +313,7 @@ const Consultations = () => {
                   </button>
                 )}
 
-                {selectedConsultation.payment?.status === 'pending' && !selectedConsultation.payment?.isFree && (
+                {(selectedConsultation.payment?.status === 'pending' || selectedConsultation.payment?.status === 'failed') && !selectedConsultation.payment?.isFree && (
                   <button
                     onClick={() => {
                       setShowDetailsModal(false);
@@ -524,7 +524,7 @@ const Consultations = () => {
                         >
                           Details
                         </button>
-                        {consultation.payment?.status === 'pending' && !consultation.payment?.isFree && (
+                        {(consultation.payment?.status === 'pending' || consultation.payment?.status === 'failed') && !consultation.payment?.isFree && (
                           <button
                             onClick={() => {
                               setSelectedConsultation(consultation);

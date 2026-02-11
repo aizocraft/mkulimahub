@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
+import LanguageToggle from './LanguageToggle';
 import { 
   Sun, 
   Moon, 
@@ -22,6 +24,7 @@ import NotificationIcon from './NotificationIcon';
 const Navbar = () => {
   const { user, logout, isLoading } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation('nav');
   const navigate = useNavigate();
   const location = useLocation();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -84,12 +87,12 @@ const Navbar = () => {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff&bold=true&size=128`;
   };
 
-  // Base navigation items for all users 
+  // Base navigation items for all users
   const baseNavigationItems = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/about', label: 'About', icon: Info },
-    { path: '/contact', label: 'Contact', icon: Contact },
-    
+    { path: '/', label: t('home'), icon: Home },
+    { path: '/about', label: t('about'), icon: Info },
+    { path: '/contact', label: t('contact'), icon: Contact },
+
   ];
 
   // Role-specific navigation items
@@ -174,6 +177,9 @@ const Navbar = () => {
 
               {/* Right Side Actions */}
               <div className="flex items-center space-x-2">
+                {/* Language Toggle */}
+                <LanguageToggle />
+
                 {/* Theme Toggle */}
                 <button
                   onClick={toggleTheme}
@@ -328,6 +334,9 @@ const Navbar = () => {
 
             {/* Right Side Actions - Desktop */}
             <div className="flex items-center space-x-3">
+              {/* Language Toggle */}
+              <LanguageToggle />
+
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
@@ -335,21 +344,21 @@ const Navbar = () => {
                 aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
               >
                 <div className="relative w-5 h-5">
-                  <Sun 
-                    size={20} 
+                  <Sun
+                    size={20}
                     className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                      theme === 'light' 
-                        ? 'rotate-0 scale-100 text-orange-500' 
+                      theme === 'light'
+                        ? 'rotate-0 scale-100 text-orange-500'
                         : 'rotate-90 scale-0 text-gray-400'
-                    }`} 
+                    }`}
                   />
-                  <Moon 
-                    size={20} 
+                  <Moon
+                    size={20}
                     className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                      theme === 'dark' 
-                        ? 'rotate-0 scale-100 text-blue-400' 
+                      theme === 'dark'
+                        ? 'rotate-0 scale-100 text-blue-400'
                         : '-rotate-90 scale-0 text-gray-400'
-                    }`} 
+                    }`}
                   />
                 </div>
               </button>

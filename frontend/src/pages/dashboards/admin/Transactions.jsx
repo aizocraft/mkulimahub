@@ -55,8 +55,8 @@ const Transactions = () => {
           } : null,
           consultation: transaction.consultation ? {
             topic: transaction.consultation.topic || 'N/A',
-            status: transaction.consultation.status || 'N/A',
-            scheduledDate: transaction.consultation.scheduledDate || 'N/A'
+            status: transaction.consultation.status || 'Unknown',
+            scheduledDate: transaction.consultation.scheduledDate
           } : null
         })) || [];
 
@@ -690,7 +690,7 @@ const Transactions = () => {
               </div>
 
               {/* Consultation Details */}
-              {selectedTransaction.consultation && selectedTransaction.consultation.topic !== 'N/A' && (
+              {selectedTransaction.consultation && (
                 <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 p-4 rounded-xl border border-indigo-200 dark:border-indigo-700">
                   <label className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-3 block">
                     Consultation Details
@@ -705,21 +705,34 @@ const Transactions = () => {
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         selectedTransaction.consultation.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
                         selectedTransaction.consultation.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
+                        selectedTransaction.consultation.status === 'N/A' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300' :
                         'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
                       }`}>
-                        {selectedTransaction.consultation.status}
+                        {(!selectedTransaction.consultation.status || selectedTransaction.consultation.status === 'N/A') ? 'N/A' : selectedTransaction.consultation.status}
                       </span>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Scheduled Date</p>
                       <p className="text-sm text-gray-900 dark:text-white">
-                        {selectedTransaction.consultation.scheduledDate !== 'N/A' 
-                          ? new Date(selectedTransaction.consultation.scheduledDate).toLocaleDateString('en-US', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })
+                        {selectedTransaction.consultation.scheduledDate && selectedTransaction.consultation.scheduledDate !== 'N/A'
+                          ? (() => {
+                              try {
+                                const date = new Date(selectedTransaction.consultation.scheduledDate);
+                                if (isNaN(date.getTime())) {
+                                  return 'Invalid date';
+                                }
+                                return date.toLocaleString('en-US', {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                });
+                              } catch {
+                                return 'Invalid date';
+                              }
+                            })()
                           : 'Not scheduled'}
                       </p>
                     </div>

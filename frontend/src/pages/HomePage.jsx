@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import './HomePage.css';
 import { 
   Sprout, 
@@ -29,6 +30,7 @@ import {
 
 const HomePage = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation('home');
   const user = JSON.parse(localStorage.getItem('user'));
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
@@ -84,27 +86,27 @@ const HomePage = () => {
   ];
 
   const stats = [
-    { 
-      number: "10,000+", 
-      label: "Active Farmers",
+    {
+      number: "10,000+",
+      label: t('activeFarmers'),
       icon: <Users className="w-6 h-6" />,
       color: "text-emerald-500"
     },
-    { 
-      number: "500+", 
-      label: "Certified Experts",
+    {
+      number: "500+",
+      label: t('certifiedExperts'),
       icon: <Award className="w-6 h-6" />,
       color: "text-blue-500"
     },
-    { 
-      number: "50+", 
-      label: "Crop Varieties",
+    {
+      number: "50+",
+      label: t('cropVarieties'),
       icon: <Leaf className="w-6 h-6" />,
       color: "text-green-500"
     },
-    { 
-      number: "24/7", 
-      label: "Support Available",
+    {
+      number: "24/7",
+      label: t('supportAvailable'),
       icon: <Clock className="w-6 h-6" />,
       color: "text-purple-500"
     }
@@ -226,15 +228,16 @@ const HomePage = () => {
               <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8 px-4">
                 {user ? (
                   <>
-                    Welcome back, <span className="font-semibold text-emerald-600 dark:text-emerald-400 relative">
+                    {t('welcomeBack', { name: user.name })}{' '}
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400 relative">
                       {user.name}
                       {user.role === 'expert' && user.isVerified && (
                         <BadgeCheck className="w-5 h-5 text-blue-500 inline-block ml-1" />
                       )}
-                    </span>! Ready to continue your agricultural journey?
+                    </span>!
                   </>
                 ) : (
-                  "Empowering farmers with technology-driven solutions and expert knowledge for sustainable agricultural success."
+                  t('subtitle')
                 )}
               </p>
             </div>
@@ -252,20 +255,20 @@ const HomePage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               {user ? (
                 <>
-                  <Link 
+                  <Link
                     to={getDashboardUrl(user)}
                     className="group relative overflow-hidden bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/40 flex items-center gap-2"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-400 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"></div>
-                    <span className="relative">Go to Dashboard</span>
+                    <span className="relative">{t('goToDashboard')}</span>
                     <ArrowRight className="w-5 h-5 relative group-hover:translate-x-1 transition-transform" />
                   </Link>
-                  <Link 
+                  <Link
                     to="/profile"
                     className="group relative overflow-hidden border-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 dark:border-emerald-400 hover:text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105"
                   >
                     <div className="absolute inset-0 bg-emerald-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                    <span className="relative">My Profile</span>
+                    <span className="relative">{t('myProfile')}</span>
                   </Link>
                 </>
               ) : (
@@ -393,14 +396,14 @@ const HomePage = () => {
           <div className="text-center mb-16 scroll-reveal">
             <div className="inline-block mb-4">
               <span className="px-4 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-sm font-semibold rounded-full">
-                Community Voices
+                {t('communityVoices')}
               </span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              What Our <span className="bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">Community Says</span>
+              {t('whatCommunitySays')}
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Join thousands of farmers and experts who are transforming agriculture.
+              {t('joinThousands')}
             </p>
           </div>
           
@@ -468,10 +471,10 @@ const HomePage = () => {
               
               <div className="relative z-10">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  Ready to Transform Your <span className="text-yellow-200">Farming Journey</span>?
+                  {t('readyTransform')}
                 </h2>
                 <p className="text-emerald-100 text-lg md:text-xl mb-8 max-w-2xl mx-auto">
-                  Join thousands of successful farmers and experts who are already using Mkulima Hub to achieve better results.
+                  {t('joinSuccessful')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link 
