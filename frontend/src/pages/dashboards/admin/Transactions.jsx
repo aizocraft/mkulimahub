@@ -230,7 +230,7 @@ const Transactions = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
@@ -268,6 +268,16 @@ const Transactions = () => {
               <p className="text-2xl font-bold">{transactions.filter(t => t.status === 'pending').length}</p>
             </div>
             <Clock size={32} className="text-yellow-200" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-red-100 text-sm font-medium">Failed</p>
+              <p className="text-2xl font-bold">{transactions.filter(t => t.status === 'failed').length}</p>
+            </div>
+            <XCircle size={32} className="text-red-200" />
           </div>
         </div>
       </div>
@@ -363,6 +373,8 @@ const Transactions = () => {
                     className={`transition-colors ${
                       transaction.status === 'pending'
                         ? 'bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-900/30'
+                        : transaction.status === 'failed'
+                        ? 'bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 hover:bg-red-100 dark:hover:bg-red-900/30'
                         : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
