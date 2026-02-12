@@ -35,22 +35,125 @@ const VideoGrid = ({
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       console.log('🎥 VideoGrid: Setting remote stream to video element');
-      remoteVideoRef.current.srcObject = remoteStream;
+      console.log('Remote stream tracks:', remoteStream.getTracks().map(t => `${t.kind}: ${t.label} (${t.readyState}, enabled: ${t.enabled})`));
+      console.log('Remote stream active:', remoteStream.active);
+      console.log('Remote stream id:', remoteStream.id);
 
-      // Wait for metadata to load before attempting to play
       const video = remoteVideoRef.current;
-      const onLoadedMetadata = () => {
-        video.play().catch(err => {
-          console.warn('Could not auto-play remote video in VideoGrid:', err);
-        });
-        video.removeEventListener('loadedmetadata', onLoadedMetadata);
-      };
-      video.addEventListener('loadedmetadata', onLoadedMetadata);
+      console.log('Video element before assignment:', {
+        srcObject: video.srcObject,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        paused: video.paused,
+        muted: video.muted
+      });
 
-      // Cleanup function to remove listener if component unmounts
+      video.srcObject = remoteStream;
+
+      console.log('Video element after assignment:', {
+        srcObject: video.srcObject,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        paused: video.paused,
+        muted: video.muted
+      });
+
+      // Force video to load and play
+      const attemptPlay = async () => {
+        try {
+          // Ensure video is not muted for autoplay
+          video.muted = true;
+          video.volume = 0;
+
+          // Wait a bit for the stream to be ready
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          console.log('Attempting to play remote video...');
+          await video.play();
+          console.log('✅ Remote video playing successfully');
+          console.log('Video element after play:', {
+            readyState: video.readyState,
+            networkState: video.networkState,
+            paused: video.paused,
+            currentTime: video.currentTime,
+            duration: video.duration
+          });
+        } catch (err) {
+          console.warn('Could not auto-play remote video in VideoGrid:', err);
+          console.warn('Play error details:', {
+            name: err.name,
+            message: err.message,
+            code: err.code
+          });
+          // Try again after a short delay
+          setTimeout(() => {
+            video.play().catch(e => {
+              console.warn('Retry play failed:', e);
+              console.warn('Retry error details:', {
+                name: e.name,
+                message: e.message,
+                code: e.code
+              });
+            });
+          }, 500);
+        }
+      };
+
+      // Try to play immediately and also on loadedmetadata
+      attemptPlay();
+
+      const onLoadedMetadata = () => {
+        console.log('Remote video metadata loaded');
+        console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+        attemptPlay();
+      };
+
+      const onCanPlay = () => {
+        console.log('Remote video can play');
+        console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+        attemptPlay();
+      };
+
+      const onError = (e) => {
+        console.error('Remote video error:', e);
+        console.error('Error details:', {
+          code: e.target?.error?.code,
+          message: e.target?.error?.message
+        });
+      };
+
+      const onLoadStart = () => console.log('Remote video load start');
+      const onLoadedData = () => console.log('Remote video data loaded');
+      const onPlaying = () => console.log('Remote video playing');
+      const onPause = () => console.log('Remote video paused');
+      const onWaiting = () => console.log('Remote video waiting');
+      const onStalled = () => console.log('Remote video stalled');
+
+      video.addEventListener('loadedmetadata', onLoadedMetadata);
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('error', onError);
+      video.addEventListener('loadstart', onLoadStart);
+      video.addEventListener('loadeddata', onLoadedData);
+      video.addEventListener('playing', onPlaying);
+      video.addEventListener('pause', onPause);
+      video.addEventListener('waiting', onWaiting);
+      video.addEventListener('stalled', onStalled);
+
+      // Cleanup function to remove listeners if component unmounts
       return () => {
         video.removeEventListener('loadedmetadata', onLoadedMetadata);
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('error', onError);
+        video.removeEventListener('loadstart', onLoadStart);
+        video.removeEventListener('loadeddata', onLoadedData);
+        video.removeEventListener('playing', onPlaying);
+        video.removeEventListener('pause', onPause);
+        video.removeEventListener('waiting', onWaiting);
+        video.removeEventListener('stalled', onStalled);
       };
+    } else if (!remoteStream && remoteVideoRef.current) {
+      console.log('Clearing remote video element');
+      remoteVideoRef.current.srcObject = null;
     }
   }, [remoteStream]);
 
@@ -69,6 +172,7 @@ const VideoGrid = ({
           <video
             ref={remoteVideoRef}
             autoPlay
+            muted
             playsInline
             className="w-full h-full object-cover bg-black"
             style={{ minHeight: '200px' }}

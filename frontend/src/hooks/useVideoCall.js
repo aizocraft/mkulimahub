@@ -30,6 +30,7 @@ const useVideoCall = (consultationId, user) => {
   const isInitiatorRef = useRef(false);
   const connectedUsersRef = useRef([]);
   const currentRoomIdRef = useRef(null);
+  const remoteTracksRef = useRef([]);
 
   // ========== WEBRTC FUNCTIONS ==========
   const initializeWebRTC = useCallback(() => {
@@ -92,28 +93,52 @@ const useVideoCall = (consultationId, user) => {
 
     peerConnection.ontrack = (event) => {
       console.log('🎯 Received remote track:', event.track.kind);
+      console.log('Track enabled:', event.track.enabled);
+      console.log('Track readyState:', event.track.readyState);
 
       // Ensure the track is enabled
       event.track.enabled = true;
 
+      // Listen for track state changes
+      event.track.onended = () => {
+        console.log('Remote track ended:', event.track.kind);
+      };
+
+      event.track.onmute = () => {
+        console.log('Remote track muted:', event.track.kind);
+      };
+
+      event.track.onunmute = () => {
+        console.log('Remote track unmuted:', event.track.kind);
+      };
+
       setRemoteStream(prev => {
+        let newStream;
+
         if (prev) {
           // Add track to existing stream and return new stream to trigger re-render
           prev.addTrack(event.track);
-          return new MediaStream(prev.getTracks());
+          newStream = new MediaStream(prev.getTracks());
+          console.log('📝 Added track to existing remote stream');
         } else {
           // Create new stream
           if (event.streams && event.streams[0]) {
             // Ensure all tracks in the stream are enabled
-            event.streams[0].getTracks().forEach(track => track.enabled = true);
-            return event.streams[0];
+            event.streams[0].getTracks().forEach(track => {
+              track.enabled = true;
+              console.log(`Enabled track: ${track.kind}`);
+            });
+            newStream = event.streams[0];
+            console.log('📝 Using provided stream from event');
           } else {
-            const newStream = new MediaStream();
+            newStream = new MediaStream();
             newStream.addTrack(event.track);
             console.log('📝 Created new MediaStream for remote track');
-            return newStream;
           }
         }
+
+        console.log('New remote stream tracks:', newStream.getTracks().map(t => `${t.kind}: ${t.label} (${t.readyState}, enabled: ${t.enabled})`));
+        return newStream;
       });
 
       setIsCallEstablished(true);
