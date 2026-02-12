@@ -51,21 +51,24 @@ const VideoGrid = ({
       // Clear any existing srcObject first
       video.srcObject = null;
 
-      // Small delay to ensure cleanup
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Small delay to ensure cleanup, then assign stream and attempt play
+      setTimeout(async () => {
+        video.srcObject = remoteStream;
 
-      video.srcObject = remoteStream;
+        console.log('Video element after assignment:', {
+          srcObject: video.srcObject,
+          readyState: video.readyState,
+          networkState: video.networkState,
+          paused: video.paused,
+          muted: video.muted
+        });
 
-      console.log('Video element after assignment:', {
-        srcObject: video.srcObject,
-        readyState: video.readyState,
-        networkState: video.networkState,
-        paused: video.paused,
-        muted: video.muted
-      });
+        // Force load the video
+        video.load();
 
-      // Force load the video
-      video.load();
+        // Now attempt to play
+        await attemptPlay();
+      }, 50);
 
       // Force video to load and play
       const attemptPlay = async (force = false) => {
@@ -86,7 +89,13 @@ const VideoGrid = ({
           const playPromise = video.play();
 
           // Handle the promise
-          await playPromise;
+          try {
+            await playPromise;
+            console.log('✅ Play promise resolved successfully');
+          } catch (playError) {
+            console.error('❌ Play promise rejected:', playError);
+            throw playError; // Re-throw to be caught by outer try-catch
+          }
 
           console.log('✅ Remote video playing successfully');
           console.log('Video element after play:', {
