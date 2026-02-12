@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { forumAPI } from '../../api';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,9 +29,10 @@ import {
 
 const PostDetailPage = () => {
   const { id } = useParams();
-  const postId = id; // Map the route param to postId
+  const postId = id;
   const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation('forumPost');
   const navigate = useNavigate();
   
   const [post, setPost] = useState(null);
@@ -41,9 +43,9 @@ const PostDetailPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [replyTo, setReplyTo] = useState(null);
-  const [votedComments, setVotedComments] = useState({}); // Track comment votes
-  const [postUserVote, setPostUserVote] = useState(null); // Track post vote
-  const [votingPost, setVotingPost] = useState(false); // Track voting animation for post
+  const [votedComments, setVotedComments] = useState({});
+  const [postUserVote, setPostUserVote] = useState(null);
+  const [votingPost, setVotingPost] = useState(false);
 
   useEffect(() => {
     fetchPostDetails();
@@ -55,7 +57,6 @@ const PostDetailPage = () => {
       const response = await forumAPI.getPost(postId);
       setPost(response.data.post);
       
-      // Flatten comments and replies for display
       const allComments = [];
       if (response.data.comments) {
         response.data.comments.forEach(comment => {
@@ -70,7 +71,7 @@ const PostDetailPage = () => {
       setComments(allComments);
     } catch (err) {
       console.error('Error fetching post:', err);
-      setError('Failed to load post');
+      setError(t('errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +79,7 @@ const PostDetailPage = () => {
 
   const handleVote = async (voteType) => {
     if (!isAuthenticated()) {
-      toast.info('Please login to vote on posts', { position: 'top-center' });
+      toast.info(t('vote.loginRequired'), { position: 'top-center' });
       navigate('/login');
       return;
     }
@@ -86,38 +87,31 @@ const PostDetailPage = () => {
     try {
       setVotingPost(true);
 
-      // Get the post and use its current userVote as source of truth
       const currentUserVote = postUserVote || post.userVote || null;
 
-      // Determine new vote type - toggle if clicking same button
       let newVoteType = voteType;
       if (currentUserVote === voteType) {
-        // Clicking same vote button removes vote
         newVoteType = null;
       }
 
-      // Create updated post with optimistic update
       const oldUpvotes = post.stats?.upvotes || 0;
       const oldDownvotes = post.stats?.downvotes || 0;
 
       let newUpvotes = oldUpvotes;
       let newDownvotes = oldDownvotes;
 
-      // Remove old vote if exists
       if (currentUserVote === 'upvote') {
         newUpvotes = Math.max(0, newUpvotes - 1);
       } else if (currentUserVote === 'downvote') {
         newDownvotes = Math.max(0, newDownvotes - 1);
       }
 
-      // Add new vote if applicable
       if (newVoteType === 'upvote') {
         newUpvotes++;
       } else if (newVoteType === 'downvote') {
         newDownvotes++;
       }
 
-      // Apply optimistic update
       setPost(prev => ({
         ...prev,
         stats: {
@@ -129,10 +123,8 @@ const PostDetailPage = () => {
       }));
       setPostUserVote(newVoteType);
 
-      // Make API call
       const response = await forumAPI.votePost(postId, newVoteType);
 
-      // Update from server response for exact sync
       setPost(prev => ({
         ...prev,
         stats: response.data.stats,
@@ -140,21 +132,20 @@ const PostDetailPage = () => {
       }));
       setPostUserVote(response.data.userVote || null);
 
-      // Show success toast
       if (newVoteType === null) {
-        toast.info('Vote removed', {
+        toast.info(t('vote.removed'), {
           position: 'top-center',
           autoClose: 1500,
           hideProgressBar: true
         });
       } else if (newVoteType === 'upvote') {
-        toast.success('👍 Upvoted!', {
+        toast.success(t('vote.upvoted'), {
           position: 'top-center',
           autoClose: 1500,
           hideProgressBar: true
         });
       } else if (newVoteType === 'downvote') {
-        toast.info('👎 Downvoted', {
+        toast.info(t('vote.downvoted'), {
           position: 'top-center',
           autoClose: 1500,
           hideProgressBar: true
@@ -162,11 +153,8 @@ const PostDetailPage = () => {
       }
     } catch (err) {
       console.error('Error voting:', err);
-
-      // Refresh data to sync with server on error
       await fetchPostDetails();
-
-      const errorMsg = err.response?.data?.message || 'Failed to vote. Please try again.';
+      const errorMsg = err.response?.data?.message || t('vote.error');
       toast.error(errorMsg, {
         position: 'top-center',
         autoClose: 3000
@@ -185,7 +173,6 @@ const PostDetailPage = () => {
     try {
       const currentVote = votedComments[commentId];
       
-      // Determine new vote type - toggle if clicking same button
       let newVoteType = voteType;
       if (currentVote === voteType) {
         newVoteType = null;
@@ -193,13 +180,11 @@ const PostDetailPage = () => {
       
       const response = await forumAPI.voteComment(commentId, newVoteType);
       
-      // Update voted comments state
       setVotedComments(prev => ({
         ...prev,
         [commentId]: newVoteType
       }));
       
-      // Update comments
       setComments(prev => prev.map(comment => {
         if (comment.id === commentId) {
           return {
@@ -212,7 +197,7 @@ const PostDetailPage = () => {
       }));
     } catch (err) {
       console.error('Error voting on comment:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to vote on comment';
+      const errorMsg = err.response?.data?.message || t('vote.commentError');
       setError(errorMsg);
       setTimeout(() => setError(''), 3000);
     }
@@ -233,7 +218,6 @@ const PostDetailPage = () => {
       setNewComment('');
       setReplyTo(null);
       
-      // Update post comment count
       setPost(prev => ({
         ...prev,
         stats: {
@@ -243,32 +227,31 @@ const PostDetailPage = () => {
       }));
     } catch (err) {
       console.error('Error adding comment:', err);
-      setError('Failed to add comment');
+      setError(t('errors.commentAddFailed'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeletePost = async () => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    if (!window.confirm(t('delete.confirmPost'))) return;
     
     try {
       await forumAPI.deletePost(postId);
       navigate('/forum');
     } catch (err) {
       console.error('Error deleting post:', err);
-      setError('Failed to delete post');
+      setError(t('errors.deleteFailed'));
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) return;
+    if (!window.confirm(t('delete.confirmComment'))) return;
     
     try {
       await forumAPI.deleteComment(commentId);
       setComments(prev => prev.filter(comment => comment.id !== commentId));
       
-      // Update post comment count
       setPost(prev => ({
         ...prev,
         stats: {
@@ -278,14 +261,13 @@ const PostDetailPage = () => {
       }));
     } catch (err) {
       console.error('Error deleting comment:', err);
-      setError('Failed to delete comment');
+      setError(t('errors.commentDeleteFailed'));
     }
   };
 
   const handleMarkAsAnswer = async (commentId) => {
     try {
       await forumAPI.markAsAnswer(commentId);
-      // Update comment in local state
       setComments(prev => prev.map(comment => {
         if (comment.id === commentId) {
           return { ...comment, isAnswer: true };
@@ -294,7 +276,7 @@ const PostDetailPage = () => {
       }));
     } catch (err) {
       console.error('Error marking as answer:', err);
-      setError('Failed to mark as answer');
+      setError(t('errors.markAnswerFailed'));
     }
   };
 
@@ -303,9 +285,9 @@ const PostDetailPage = () => {
                   user?.role === 'expert';
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown date';
+    if (!dateString) return t('date.unknown');
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -337,7 +319,7 @@ const PostDetailPage = () => {
           } border`}>
             <div className="flex items-center">
               <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-              <p className={theme === 'dark' ? 'text-red-300' : 'text-red-700'}>Post not found</p>
+              <p className={theme === 'dark' ? 'text-red-300' : 'text-red-700'}>{t('errors.notFound')}</p>
             </div>
           </div>
         </div>
@@ -350,7 +332,6 @@ const PostDetailPage = () => {
       theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Back Button */}
         <button
           onClick={() => navigate('/forum')}
           className={`inline-flex items-center mb-6 transition-colors duration-200 ${
@@ -360,10 +341,9 @@ const PostDetailPage = () => {
           }`}
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Forum
+          {t('backToForum')}
         </button>
 
-        {/* Error Alert */}
         {error && (
           <div className={`mb-6 p-4 rounded-lg transition-colors duration-300 ${
             theme === 'dark' 
@@ -377,13 +357,11 @@ const PostDetailPage = () => {
           </div>
         )}
 
-        {/* Post */}
         <div className={`rounded-lg shadow-sm border p-6 mb-6 transition-colors duration-300 ${
           theme === 'dark' 
             ? 'bg-gray-800 border-gray-700' 
             : 'bg-white border-gray-200'
         }`}>
-          {/* Post Header */}
           <div className="flex items-start justify-between mb-6">
             <div>
               <h1 className={`text-2xl font-bold mb-2 ${
@@ -414,7 +392,7 @@ const PostDetailPage = () => {
                         theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
                       }`}>{post.author?.name}</span>
                       {post.author?.role === 'expert' && (
-                        <CheckCircle className="w-4 h-4 text-green-600 ml-1" />
+                        <CheckCircle className="w-4 h-4 text-green-600 ml-1" title={t('badges.expert')} />
                       )}
                     </div>
                     <span className={`text-sm ${
@@ -438,7 +416,7 @@ const PostDetailPage = () => {
                       : 'bg-yellow-100 text-yellow-800'
                   }`}>
                     <Clock className="w-4 h-4 mr-1" />
-                    Pending Review
+                    {t('badges.pending')}
                   </span>
                 )}
               </div>
@@ -453,6 +431,7 @@ const PostDetailPage = () => {
                       ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700' 
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
+                  title={t('actions.edit')}
                 >
                   <Edit className="w-5 h-5" />
                 </button>
@@ -463,6 +442,7 @@ const PostDetailPage = () => {
                       ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
                       : 'text-red-600 hover:text-red-900 hover:bg-red-50'
                   }`}
+                  title={t('actions.delete')}
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -470,14 +450,12 @@ const PostDetailPage = () => {
             )}
           </div>
 
-          {/* Post Content */}
           <div className="prose max-w-none mb-6">
             <p className={`whitespace-pre-wrap ${
               theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
             }`}>{post.content}</p>
           </div>
 
-          {/* Attachments */}
           {post.attachments && post.attachments.length > 0 && (
             <AttachmentDisplay
               attachments={post.attachments}
@@ -486,7 +464,6 @@ const PostDetailPage = () => {
             />
           )}
 
-          {/* Tags */}
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-6">
               {post.tags.map((tag) => (
@@ -498,29 +475,30 @@ const PostDetailPage = () => {
                       : 'bg-green-100 text-green-800'
                   }`}
                 >
-                  {tag}
+                  #{tag}
                 </span>
               ))}
             </div>
           )}
 
-          {/* Post Stats and Actions */}
           <div className={`flex items-center justify-between border-t pt-4 ${
             theme === 'dark' ? 'border-gray-700' : 'border-gray-200'
           }`}>
             <div className="flex items-center space-x-6">
-              {/* Votes */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => handleVote('upvote')}
-                  disabled={!isAuthenticated()}
-                  className={`p-2 rounded-lg transition-colors duration-200 ${
+                  disabled={!isAuthenticated() || votingPost}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
                     isAuthenticated() 
                       ? `hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                          postUserVote === 'upvote' || post.userVote === 'upvote'
+                            ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20'
+                            : theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                         }` 
                       : 'opacity-50 cursor-not-allowed'
                   }`}
+                  title={isAuthenticated() ? t('vote.upvote') : t('vote.loginRequired')}
                 >
                   <ThumbsUp className="w-5 h-5" />
                 </button>
@@ -531,43 +509,43 @@ const PostDetailPage = () => {
                 </span>
                 <button
                   onClick={() => handleVote('downvote')}
-                  disabled={!isAuthenticated()}
-                  className={`p-2 rounded-lg transition-colors duration-200 ${
+                  disabled={!isAuthenticated() || votingPost}
+                  className={`p-2 rounded-lg transition-all duration-200 ${
                     isAuthenticated() 
                       ? `hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                          theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+                          postUserVote === 'downvote' || post.userVote === 'downvote'
+                            ? 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20'
+                            : theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                         }` 
                       : 'opacity-50 cursor-not-allowed'
                   }`}
+                  title={isAuthenticated() ? t('vote.downvote') : t('vote.loginRequired')}
                 >
                   <ThumbsDown className="w-5 h-5" />
                 </button>
               </div>
               
-              {/* Comments */}
               <div className="flex items-center space-x-2">
                 <MessageSquare className={`w-5 h-5 ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                 }`} />
                 <span className={`${
                   theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                }`}>{post.stats?.commentCount || 0} comments</span>
+                }`}>{t('comments.count', { count: post.stats?.commentCount || 0 })}</span>
               </div>
               
-              {/* Views */}
               <div className="flex items-center space-x-2">
                 <Eye className={`w-5 h-5 ${
                   theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
                 }`} />
                 <span className={`${
                   theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-                }`}>{post.stats?.views || 0} views</span>
+                }`}>{t('stats.views', { count: post.stats?.views || 0 })}</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Comments Section */}
         <div className={`rounded-lg shadow-sm border p-6 transition-colors duration-300 ${
           theme === 'dark' 
             ? 'bg-gray-800 border-gray-700' 
@@ -576,10 +554,9 @@ const PostDetailPage = () => {
           <h2 className={`text-xl font-semibold mb-6 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
           }`}>
-            Comments ({comments.length})
+            {t('comments.title', { count: comments.length })}
           </h2>
           
-          {/* Add Comment Form */}
           {isAuthenticated() && (
             <div className="mb-8">
               <div className="flex items-start space-x-3">
@@ -604,7 +581,7 @@ const PostDetailPage = () => {
                   <textarea
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder={replyTo ? `Replying to comment...` : "Add a comment..."}
+                    placeholder={replyTo ? t('comments.replyPlaceholder') : t('comments.placeholder')}
                     className={`w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition-colors duration-200 ${
                       theme === 'dark' 
                         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
@@ -617,12 +594,12 @@ const PostDetailPage = () => {
                       <div className={`text-sm ${
                         theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                       }`}>
-                        Replying to comment #{replyTo.substring(0, 8)}...
+                        {t('comments.replyingTo')}
                         <button
                           onClick={() => setReplyTo(null)}
                           className="ml-2 text-red-600 hover:text-red-700 transition-colors duration-200"
                         >
-                          Cancel reply
+                          {t('comments.cancelReply')}
                         </button>
                       </div>
                     )}
@@ -632,7 +609,7 @@ const PostDetailPage = () => {
                       className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
                       <Send className="w-4 h-4 mr-2" />
-                      {isSubmitting ? 'Posting...' : 'Post Comment'}
+                      {isSubmitting ? t('comments.posting') : t('comments.post')}
                     </button>
                   </div>
                 </div>
@@ -640,7 +617,6 @@ const PostDetailPage = () => {
             </div>
           )}
 
-          {/* Comments List */}
           <div className="space-y-6">
             {comments.length === 0 ? (
               <div className="text-center py-8">
@@ -648,7 +624,7 @@ const PostDetailPage = () => {
                   theme === 'dark' ? 'text-gray-600' : 'text-gray-300'
                 }`} />
                 <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                  No comments yet. Be the first to comment!
+                  {t('comments.none')}
                 </p>
               </div>
             ) : (
@@ -664,6 +640,7 @@ const PostDetailPage = () => {
                   formatDate={formatDate}
                   canModerate={user?.role === 'admin' || user?.role === 'expert'}
                   theme={theme}
+                  t={t}
                 />
               ))
             )}
@@ -674,8 +651,7 @@ const PostDetailPage = () => {
   );
 };
 
-// Comment Item Component
-const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply, formatDate, canModerate, theme }) => {
+const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply, formatDate, canModerate, theme, t }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const canEdit = user?.id === comment.author?._id || canModerate;
   const isAnswer = comment.isAnswer;
@@ -689,7 +665,6 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
           }` 
         : theme === 'dark' ? 'border-gray-600' : 'border-gray-300'
     }`}>
-      {/* Comment Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center">
           {comment.author?.profilePicture ? (
@@ -715,7 +690,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                 theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
               }`}>{comment.author?.name}</span>
               {comment.author?.role === 'expert' && (
-                <CheckCircle className="w-4 h-4 text-green-600 ml-1" />
+                <CheckCircle className="w-4 h-4 text-green-600 ml-1" title={t('badges.expert')} />
               )}
               {isAnswer && (
                 <span className={`ml-2 px-2 py-1 text-xs rounded ${
@@ -723,7 +698,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                     ? 'bg-green-900 text-green-300' 
                     : 'bg-green-100 text-green-800'
                 }`}>
-                  ✓ Answer
+                  ✓ {t('comments.answer')}
                 </span>
               )}
               {isExpertAnswer && (
@@ -732,7 +707,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                     ? 'bg-blue-900 text-blue-300' 
                     : 'bg-blue-100 text-blue-800'
                 }`}>
-                  Expert Answer
+                  {t('comments.expertAnswer')}
                 </span>
               )}
             </div>
@@ -742,7 +717,6 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
           </div>
         </div>
         
-        {/* Comment Actions */}
         <div className="flex items-center space-x-2">
           {canEdit && (
             <>
@@ -752,7 +726,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                     onClick={() => onDelete(comment.id)}
                     className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors duration-200"
                   >
-                    Confirm
+                    {t('common.confirm')}
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
@@ -762,7 +736,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     } border`}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </>
               ) : (
@@ -773,6 +747,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                       ? 'text-red-400 hover:text-red-300 hover:bg-red-900/20' 
                       : 'text-red-600 hover:text-red-900 hover:bg-red-50'
                   }`}
+                  title={t('actions.delete')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -789,7 +764,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Reply
+              {t('comments.reply')}
             </button>
           )}
           
@@ -802,18 +777,16 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                   : 'text-green-600 hover:text-green-700'
               }`}
             >
-              Mark as Answer
+              {t('comments.markAsAnswer')}
             </button>
           )}
         </div>
       </div>
 
-      {/* Comment Content */}
       <p className={`mb-4 whitespace-pre-wrap ${
         theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
       }`}>{comment.content}</p>
 
-      {/* Comment Attachments */}
       {comment.attachments && comment.attachments.length > 0 && (
         <AttachmentDisplay
           attachments={comment.attachments}
@@ -823,7 +796,6 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
         />
       )}
 
-      {/* Comment Stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
@@ -839,7 +811,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={user ? 'Click to upvote or remove vote' : 'Login to vote'}
+              title={user ? t('vote.upvote') : t('vote.loginRequired')}
             >
               <ThumbsUp className="w-4 h-4" />
             </button>
@@ -860,7 +832,7 @@ const CommentItem = ({ comment, user, onVote, onDelete, onMarkAsAnswer, onReply,
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={user ? 'Click to downvote or remove vote' : 'Login to vote'}
+              title={user ? t('vote.downvote') : t('vote.loginRequired')}
             >
               <ThumbsDown className="w-4 h-4" />
             </button>

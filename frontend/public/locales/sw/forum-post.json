@@ -1,0 +1,58 @@
+{
+  "backToForum": "Rudi kwenye Jukwaa",
+  "badges": {
+    "expert": "Mtaalamu",
+    "pending": "Inasubiri Uhakiki"
+  },
+  "actions": {
+    "edit": "Hariri",
+    "delete": "Futa"
+  },
+  "vote": {
+    "upvote": "Pendekeza",
+    "downvote": "Pinga",
+    "upvoted": "👍 Umependekeza!",
+    "downvoted": "👎 Umepinga",
+    "removed": "Kura imeondolewa",
+    "loginRequired": "Tafadhali ingia ili kupiga kura",
+    "error": "Imeshindwa kupiga kura. Tafadhali jaribu tena.",
+    "commentError": "Imeshindwa kupiga kura kwenye maoni"
+  },
+  "comments": {
+    "title": "Maoni ({{count}})",
+    "count": "maoni {{count}}",
+    "none": "Hakuna maoni bado. Kuwa wa kwanza kutoa maoni!",
+    "placeholder": "Ongeza maoni...",
+    "replyPlaceholder": "Unajibu maoni...",
+    "post": "Tuma Maoni",
+    "posting": "Inatuma...",
+    "reply": "Jibu",
+    "replyingTo": "Unajibu maoni...",
+    "cancelReply": "Ghairi jibu",
+    "answer": "Jibu",
+    "expertAnswer": "Jibu la Mtaalamu",
+    "markAsAnswer": "Weka kama Jibu"
+  },
+  "stats": {
+    "views": "{{count}} mionekano"
+  },
+  "delete": {
+    "confirmPost": "Una uhakika unataka kufuta chapisho hili?",
+    "confirmComment": "Una uhakika unataka kufuta maoni haya?"
+  },
+  "errors": {
+    "loadFailed": "Imeshindwa kupakia chapisho",
+    "notFound": "Chapisho halikupatikana",
+    "commentAddFailed": "Imeshindwa kuongeza maoni",
+    "deleteFailed": "Imeshindwa kufuta chapisho",
+    "commentDeleteFailed": "Imeshindwa kufuta maoni",
+    "markAnswerFailed": "Imeshindwa kuweka kama jibu"
+  },
+  "date": {
+    "unknown": "Tarehe haijulikani"
+  },
+  "common": {
+    "confirm": "Thibitisha",
+    "cancel": "Ghairi"
+  }
+}

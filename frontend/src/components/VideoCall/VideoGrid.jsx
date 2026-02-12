@@ -48,11 +48,18 @@ const VideoGrid = ({
         muted: video.muted
       });
 
+      // Clear any existing stream first
+      if (video.srcObject) {
+        video.srcObject = null;
+      }
+
       // Ensure video is properly configured for remote stream
       video.muted = true;
       video.volume = 0;
       video.autoplay = true;
       video.playsInline = true;
+      video.controls = false;
+      video.disablePictureInPicture = true;
 
       // Assign stream directly
       video.srcObject = remoteStream;
@@ -68,10 +75,40 @@ const VideoGrid = ({
       // Force load the video
       video.load();
 
-      // Attempt to play immediately if ready, otherwise wait for events
-      if (video.readyState >= 2) { // HAVE_CURRENT_DATA
-        attemptPlay();
-      }
+      // Set up immediate play attempt with multiple retries
+      const playVideo = async (attempt = 1) => {
+        try {
+          console.log(`Attempting to play remote video (attempt ${attempt})...`);
+
+          // Wait for the stream to be ready
+          if (video.readyState < 1 && attempt === 1) { // HAVE_METADATA
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+
+          // Ensure video is properly configured
+          video.muted = true;
+          video.volume = 0;
+          video.autoplay = true;
+          video.playsInline = true;
+
+          await video.play();
+          console.log('✅ Remote video started playing successfully');
+          return true;
+        } catch (error) {
+          console.log(`Video play failed (attempt ${attempt}):`, error.message);
+
+          if (attempt < 5) {
+            // Retry with increasing delay
+            setTimeout(() => playVideo(attempt + 1), attempt * 500);
+          } else {
+            console.log('Max play attempts reached, will rely on event listeners');
+          }
+          return false;
+        }
+      };
+
+      // Try to play immediately with retries
+      playVideo();
 
       // Force video to load and play
       const attemptPlay = async (force = false) => {

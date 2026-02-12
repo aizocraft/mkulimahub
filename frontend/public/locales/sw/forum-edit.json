@@ -1,0 +1,45 @@
+{
+  "title": "Hariri Chapisho",
+  "subtitle": "Sasisha maudhui na maelezo ya chapisho lako.",
+  "reviewNotice": "Mabadiliko yako yatahakikiwa na wataalamu kabla ya kuonekana hadharani.",
+  "backToPost": "Rudi kwenye Chapisho",
+  "form": {
+    "title": "Kichwa",
+    "category": "Aina",
+    "tags": "Lebo (si lazima)",
+    "content": "Maudhui",
+    "attachments": "Viambatisho (si lazima)"
+  },
+  "placeholders": {
+    "title": "Weka kichwa kinachoelezea chapisho lako",
+    "category": "Chagua aina",
+    "tags": "Ongeza lebo na ubonyeze Enter",
+    "content": "Shiriki maarifa yako, uliza maswali, au jadili mada za kilimo..."
+  },
+  "labels": {
+    "expertsOnly": " (Wataalamu Pekee)"
+  },
+  "buttons": {
+    "cancel": "Ghairi",
+    "update": "Sasisha Chapisho",
+    "updating": "Inasasisha..."
+  },
+  "attachments": {
+    "tooLarge": "{{name}} ni kubwa sana. Ukubwa wa juu ni 5MB.",
+    "invalidType": "{{name}} si aina inayoruhusiwa ya faili.",
+    "uploaded": "{{filename}} imepakiwa",
+    "failed": "Imeshindwa kupakia {{name}}",
+    "removed": "{{filename}} imeondolewa"
+  },
+  "errors": {
+    "loadFailed": "Imeshindwa kupakia chapisho",
+    "titleRequired": "Kichwa kinahitajika",
+    "contentRequired": "Maudhui yanahitajika",
+    "categoryRequired": "Tafadhali chagua aina",
+    "updateFailed": "Imeshindwa kusasisha chapisho"
+  },
+  "success": {
+    "updated": "Chapisho limesasishwa kwa mafanikio!",
+    "updatedWithReview": "Chapisho limesasishwa kwa mafanikio! Litahakikiwa na mtaalamu kabla ya mabadiliko kuonekana hadharani."
+  }
+}

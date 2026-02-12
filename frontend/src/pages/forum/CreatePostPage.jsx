@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { forumAPI } from '../../api';
 import {
   ArrowLeft,
@@ -17,6 +18,7 @@ import { toast } from 'react-toastify';
 const CreatePostPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation(['forumCreate', 'common']);
   const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
@@ -32,10 +34,10 @@ const CreatePostPage = () => {
 
   const [tagInput, setTagInput] = useState('');
   const [attachments, setAttachments] = useState([]);
-  const [uploading, setUploading] = useState({}); // fileName -> percent
+  const [uploading, setUploading] = useState({});
 
   useEffect(() => {
-    if (isLoading) return; // Wait for auth to load
+    if (isLoading) return;
 
     if (!user) {
       navigate('/login');
@@ -51,7 +53,7 @@ const CreatePostPage = () => {
       setCategories(response.data.categories || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
-      setError('Failed to load categories');
+      setError(t('form.errors.categoryLoadFailed'));
     }
   };
 
@@ -84,47 +86,44 @@ const CreatePostPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.title.trim()) {
-      setError('Title is required');
+      setError(t('form.errors.titleRequired'));
       return;
     }
     
     if (formData.title.trim().length < 5) {
-      setError('Title must be at least 5 characters');
+      setError(t('form.errors.titleMinLength'));
       return;
     }
     
     if (!formData.content.trim()) {
-      setError('Content is required');
+      setError(t('form.errors.contentRequired'));
       return;
     }
     
     if (formData.content.trim().length < 10) {
-      setError('Content must be at least 10 characters');
+      setError(t('form.errors.contentMinLength'));
       return;
     }
     
     if (!formData.category) {
-      setError('Please select a category');
+      setError(t('form.errors.categoryRequired'));
       return;
     }
     
-    // Validate category exists
     const selectedCategory = categories.find(c => c._id === formData.category);
     if (!selectedCategory) {
-      setError('Selected category not found. Please refresh the page and try again.');
+      setError(t('form.errors.categoryNotFound'));
       return;
     }
     
-    // Check category permissions
     if (selectedCategory.expertOnly && user?.role !== 'expert' && user?.role !== 'admin') {
-      setError('This category is for experts only. Please select a different category.');
+      setError(t('form.errors.categoryExpertOnly'));
       return;
     }
     
     if (!selectedCategory.isActive) {
-      setError('This category is not active. Please select a different category.');
+      setError(t('form.errors.categoryInactive'));
       return;
     }
 
@@ -148,18 +147,17 @@ const CreatePostPage = () => {
       const response = await forumAPI.createPost(postData);
 
       if (response.data.requiresReview) {
-        toast.success('Post created successfully! It will be reviewed by an expert before appearing publicly.', {
+        toast.success(t('form.success.createdWithReview'), {
           position: 'top-center',
           autoClose: 3000
         });
       } else {
-        toast.success('Post created successfully!', {
+        toast.success(t('form.success.created'), {
           position: 'top-center',
           autoClose: 2000
         });
       }
 
-      // Reset form
       setFormData({
         title: '',
         content: '',
@@ -172,7 +170,7 @@ const CreatePostPage = () => {
       }, 2000);
       
     } catch (err) {
-      let errorMessage = 'Failed to create post';
+      let errorMessage = t('form.errors.generic');
 
       if (err.response?.data) {
         const errorData = err.response.data;
@@ -181,14 +179,13 @@ const CreatePostPage = () => {
           errorMessage = errorData.errors.join(', ');
         } else if (errorData.message) {
           errorMessage = errorData.message;
-          // Provide more specific error messages
           if (errorData.message.includes('category') || errorData.message.includes('Category')) {
             if (errorData.message.includes('required')) {
-              errorMessage = 'Category is required. Please select a valid category.';
+              errorMessage = t('form.errors.categoryRequired');
             } else if (errorData.message.includes('not found')) {
-              errorMessage = 'Selected category not found. Please refresh the page.';
+              errorMessage = t('form.errors.categoryNotFoundRefresh');
             } else if (errorData.message.includes('invalid')) {
-              errorMessage = 'Invalid category selected. Please choose a different category.';
+              errorMessage = t('form.errors.categoryInvalid');
             }
           }
         } else if (errorData.validationErrors) {
@@ -197,13 +194,13 @@ const CreatePostPage = () => {
             .join(', ');
         }
       } else if (!err.response) {
-        errorMessage = 'Network error. Please check your connection.';
+        errorMessage = t('form.errors.networkError');
       } else if (err.response?.status === 400) {
-        errorMessage = 'Bad request. Please check your input.';
+        errorMessage = t('form.errors.badRequest');
       } else if (err.response?.status === 403) {
-        errorMessage = 'You do not have permission to create this post.';
+        errorMessage = t('form.errors.permissionDenied');
       } else if (err.response?.status === 404) {
-        errorMessage = 'Category not found. Please refresh the page and try again.';
+        errorMessage = t('form.errors.categoryNotFoundRefresh');
       }
 
       setError(errorMessage);
@@ -213,7 +210,7 @@ const CreatePostPage = () => {
     }
   };
 
-  const MAX_FILE_SIZE = 5242880; // 5MB
+  const MAX_FILE_SIZE = 5242880;
   const ALLOWED_TYPES = [
     'image/jpeg',
     'image/png',
@@ -231,11 +228,11 @@ const CreatePostPage = () => {
 
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name} is too large. Max file size is 5MB.`, { position: 'top-center' });
+        toast.error(t('form.attachments.tooLarge', { name: file.name }), { position: 'top-center' });
         continue;
       }
       if (ALLOWED_TYPES.length && !ALLOWED_TYPES.includes(file.type)) {
-        toast.error(`${file.name} is not an allowed file type.`, { position: 'top-center' });
+        toast.error(t('form.attachments.invalidType', { name: file.name }), { position: 'top-center' });
         continue;
       }
 
@@ -256,10 +253,10 @@ const CreatePostPage = () => {
         };
 
         setAttachments(prev => [...prev, attachment]);
-        toast.success(`${attachment.filename} uploaded`, { position: 'top-center', autoClose: 1500, hideProgressBar: true });
+        toast.success(t('form.attachments.uploaded', { filename: attachment.filename }), { position: 'top-center', autoClose: 1500, hideProgressBar: true });
       } catch (err) {
         console.error('Upload error:', err);
-        toast.error(`Failed to upload ${file.name}`, { position: 'top-center' });
+        toast.error(t('form.attachments.failed', { name: file.name }), { position: 'top-center' });
       } finally {
         setUploading(prev => {
           const next = { ...prev };
@@ -283,10 +280,8 @@ const CreatePostPage = () => {
       }
     }
     setAttachments(prev => prev.filter((_, i) => i !== index));
-    toast.info(`${att.filename} removed`, { position: 'top-center', autoClose: 1200, hideProgressBar: true });
+    toast.info(t('form.attachments.removed', { filename: att.filename }), { position: 'top-center', autoClose: 1200, hideProgressBar: true });
   };
-
-
 
   if (isLoading) {
     return (
@@ -299,7 +294,7 @@ const CreatePostPage = () => {
   }
 
   if (!isAuthenticated()) {
-    return null; // Let the useEffect handle navigation
+    return null;
   }
 
   return (
@@ -307,7 +302,6 @@ const CreatePostPage = () => {
       theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        {/* Back Button */}
         <button
           onClick={() => navigate('/forum')}
           className={`inline-flex items-center mb-6 transition-colors duration-200 ${
@@ -317,10 +311,9 @@ const CreatePostPage = () => {
           }`}
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Forum
+          {t('backToForum')}
         </button>
 
-        {/* Form */}
         <div className={`rounded-lg shadow-sm border p-6 transition-colors duration-300 ${
           theme === 'dark' 
             ? 'bg-gray-800 border-gray-700' 
@@ -328,15 +321,14 @@ const CreatePostPage = () => {
         }`}>
           <h1 className={`text-2xl font-bold mb-2 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}>Create New Post</h1>
+          }`}>{t('title')}</h1>
           <p className={`mb-6 ${
             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
           }`}>
-            Share your knowledge or ask questions to the community.
-            {user?.role === 'farmer' && ' Your post will be reviewed by experts before appearing publicly.'}
+            {t('subtitle')}
+            {user?.role === 'farmer' && ` ${t('reviewNotice')}`}
           </p>
 
-          {/* Error Alert */}
           {error && (
             <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
               theme === 'dark'
@@ -347,7 +339,7 @@ const CreatePostPage = () => {
                 <AlertCircle className="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <p className={`font-medium ${theme === 'dark' ? 'text-red-300' : 'text-red-700'}`}>
-                    Error creating post
+                    {t('form.errors.title')}
                   </p>
                   <p className={`text-sm mt-1 ${theme === 'dark' ? 'text-red-400' : 'text-red-600'}`}>
                     {error}
@@ -357,7 +349,7 @@ const CreatePostPage = () => {
                       onClick={() => fetchCategories()}
                       className="text-xs px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
                     >
-                      Refresh Categories
+                      {t('form.refreshCategories')}
                     </button>
                   </div>
                 </div>
@@ -371,7 +363,7 @@ const CreatePostPage = () => {
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Title *
+                {t('form.title.label')}
               </label>
               <input
                 type="text"
@@ -383,7 +375,7 @@ const CreatePostPage = () => {
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300'
                 } border`}
-                placeholder="Enter a descriptive title for your post"
+                placeholder={t('form.title.placeholder')}
                 required
                 minLength="5"
                 maxLength="200"
@@ -391,12 +383,12 @@ const CreatePostPage = () => {
               <div className="flex justify-between mt-1">
                 <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                   {formData.title.length < 5 
-                    ? `Need ${5 - formData.title.length} more characters`
-                    : '✓ Good'
+                    ? t('form.title.minChars', { count: 5 - formData.title.length })
+                    : t('form.title.valid')
                   }
                 </span>
                 <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                  {formData.title.length}/200
+                  {t('form.title.length', { count: formData.title.length })}
                 </span>
               </div>
             </div>
@@ -406,7 +398,7 @@ const CreatePostPage = () => {
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Category *
+                {t('form.category.label')}
               </label>
               <select
                 name="category"
@@ -419,7 +411,7 @@ const CreatePostPage = () => {
                 } border`}
                 required
               >
-                <option value="">-- Select a category --</option>
+                <option value="">{t('form.category.placeholder')}</option>
                 {categories.map((category) => {
                   const isDisabled = category.expertOnly && user?.role !== 'expert' && user?.role !== 'admin';
                   return (
@@ -430,8 +422,8 @@ const CreatePostPage = () => {
                       className={isDisabled ? 'text-gray-400' : ''}
                     >
                       {category.name}
-                      {category.expertOnly && ' (Experts Only)'}
-                      {!category.isActive && ' (Inactive)'}
+                      {category.expertOnly && t('form.category.expertsOnly')}
+                      {!category.isActive && t('form.category.inactive')}
                     </option>
                   );
                 })}
@@ -439,16 +431,18 @@ const CreatePostPage = () => {
               {formData.category && (
                 <div className="mt-2">
                   <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Selected: {categories.find(c => c._id === formData.category)?.name || 'Unknown category'}
+                    {t('form.category.selected', { 
+                      name: categories.find(c => c._id === formData.category)?.name || t('form.category.unknown')
+                    })}
                     {categories.find(c => c._id === formData.category)?.expertOnly && 
                       (user?.role !== 'expert' && user?.role !== 'admin') && (
                         <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                          ⚠️ Requires expert permissions
+                          ⚠️ {t('form.category.expertWarning')}
                         </span>
                       )}
                     {!categories.find(c => c._id === formData.category)?.isActive && (
                       <span className="ml-2 text-red-600 dark:text-red-400">
-                        ⚠️ Category is inactive
+                        ⚠️ {t('form.category.inactiveWarning')}
                       </span>
                     )}
                   </p>
@@ -461,7 +455,7 @@ const CreatePostPage = () => {
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Tags (optional)
+                {t('form.tags.label')}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
@@ -479,7 +473,7 @@ const CreatePostPage = () => {
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                       : 'bg-white border-gray-300'
                   } border`}
-                  placeholder="Add a tag and press Enter"
+                  placeholder={t('form.tags.placeholder')}
                   maxLength="50"
                 />
                 <button
@@ -491,6 +485,7 @@ const CreatePostPage = () => {
                       ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
                   }`}
+                  aria-label={t('common.add')}
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -506,7 +501,7 @@ const CreatePostPage = () => {
                           : 'bg-green-100 text-green-800'
                       }`}
                     >
-                      {tag}
+                      #{tag}
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
@@ -515,6 +510,7 @@ const CreatePostPage = () => {
                             ? 'text-green-400 hover:text-green-300' 
                             : 'text-green-800 hover:text-green-900'
                         }`}
+                        aria-label={t('common.remove')}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -524,10 +520,10 @@ const CreatePostPage = () => {
               )}
               <div className="flex justify-between">
                 <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                  Add relevant tags (optional)
+                  {t('form.tags.help')}
                 </span>
                 <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                  {formData.tags.length}/10 tags
+                  {t('form.tags.count', { count: formData.tags.length })}
                 </span>
               </div>
             </div>
@@ -537,7 +533,7 @@ const CreatePostPage = () => {
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Content *
+                {t('form.content.label')}
               </label>
               <textarea
                 name="content"
@@ -549,7 +545,7 @@ const CreatePostPage = () => {
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300'
                 } border`}
-                placeholder="Share your knowledge, ask questions, or discuss farming topics..."
+                placeholder={t('form.content.placeholder')}
                 required
                 minLength="10"
                 maxLength="10000"
@@ -557,46 +553,66 @@ const CreatePostPage = () => {
               <div className="flex justify-between mt-1">
                 <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                   {formData.content.length < 10 
-                    ? `Need ${10 - formData.content.length} more characters`
-                    : '✓ Good'
+                    ? t('form.content.minChars', { count: 10 - formData.content.length })
+                    : t('form.content.valid')
                   }
                 </span>
                 <span className={`text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-                  {formData.content.length}/10000
+                  {t('form.content.length', { count: formData.content.length })}
                 </span>
               </div>
             </div>
             
             {/* Attachments */}
-            <div className={`mb-4`}> 
-              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Attachments (optional)</label>
+            <div className="mb-4"> 
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                {t('form.attachments.label')}
+              </label>
               <div className="flex items-center gap-3 mb-2">
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFilesSelected}
-                  className="text-sm"
-                />
+                <div className="relative">
+                  <input
+                    type="file"
+                    multiple
+                    onChange={handleFilesSelected}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    aria-label={t('common.chooseFile')}
+                  />
+                  <div className={`px-4 py-2 rounded-lg border transition-colors duration-200 text-sm ${
+                    theme === 'dark'
+                      ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}>
+                    {t('common.chooseFile')}
+                  </div>
+                </div>
+                <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {t('common.noFileChosen')}
+                </span>
               </div>
 
-              {/* show uploading progress */}
               {Object.keys(uploading).length > 0 && (
                 <div className="space-y-2 mb-2">
                   {Object.entries(uploading).map(([name, percent]) => (
                     <div key={name} className="text-sm">
                       <div className="flex justify-between">
-                        <span className="truncate max-w-[60%]">{name}</span>
-                        <span className="ml-2">{percent}%</span>
+                        <span className={`truncate max-w-[60%] ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                          {name}
+                        </span>
+                        <span className={`ml-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {percent}%
+                        </span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded h-2 mt-1 overflow-hidden">
-                        <div className="h-2 bg-green-600" style={{ width: `${percent}%` }} />
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded h-2 mt-1 overflow-hidden">
+                        <div 
+                          className="h-2 bg-green-600 transition-all duration-300" 
+                          style={{ width: `${percent}%` }} 
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
               )}
 
-              {/* attachments list */}
               <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} theme={theme} />
             </div>
 
@@ -605,16 +621,16 @@ const CreatePostPage = () => {
               theme === 'dark' ? 'bg-gray-700/50' : 'bg-gray-50'
             }`}>
               <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                <span className="font-medium">Posting as:</span> {user?.name} ({user?.role})
+                <span className="font-medium">{t('form.postingAs')}</span> {user?.name} ({t(`common.roles.${user?.role}`, { defaultValue: user?.role })})
                 {user?.role === 'farmer' && (
                   <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                    ⓘ Your posts will be reviewed by experts before appearing publicly
+                    ⓘ {t('reviewNotice')}
                   </span>
                 )}
               </p>
             </div>
             
-            {/* Submit Buttons */}
+            {/* Action Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
@@ -626,7 +642,7 @@ const CreatePostPage = () => {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 } border`}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
 
               <button
@@ -637,16 +653,37 @@ const CreatePostPage = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
+                    {t('common.saving')}
                   </>
                 ) : (
-                  'Create Post'
+                  t('form.submit')
                 )}
               </button>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-12 border-t border-gray-200 dark:border-gray-800">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+              <img 
+                src="/logo.png" 
+                alt={t('common.logoAlt')}
+                className="w-8 h-8 object-contain"
+              />
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t('common.copyright', { year: new Date().getFullYear() })}
+              </span>
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-500">
+              {t('common.allRightsReserved')}
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

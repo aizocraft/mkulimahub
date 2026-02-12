@@ -1,0 +1,83 @@
+{
+  "hero": {
+    "title": "Revolutionizing",
+    "highlight": "African Agriculture",
+    "subtitle": "Bridging the gap between traditional farming wisdom and modern technology to create sustainable agricultural ecosystems across the continent."
+  },
+  "mission": {
+    "title": "Our Mission",
+    "description": "To democratize agricultural expertise by connecting farmers with certified experts through an intuitive digital platform, driving sustainable growth and food security across Africa.",
+    "points": [
+      "Digital advisory services",
+      "Real-time market insights",
+      "Climate-smart solutions",
+      "Community knowledge sharing"
+    ]
+  },
+  "vision": {
+    "title": "Vision 2030",
+    "description": "Empowering African farmers with digital agricultural expertise to create sustainable livelihoods."
+  },
+  "stats": {
+    "farmersEmpowered": {
+      "number": "50K+",
+      "label": "Farmers Empowered"
+    },
+    "expertsNetwork": {
+      "number": "2K+",
+      "label": "Experts Network"
+    },
+    "successRate": {
+      "number": "95%",
+      "label": "Success Rate"
+    },
+    "support": {
+      "number": "24/7",
+      "label": "Support"
+    }
+  },
+  "features": {
+    "badge": "Why Farmers Choose Us",
+    "title": "Smart Farming Solutions",
+    "subtitle": "Integrated technology and expertise for modern agricultural success",
+    "expertCommunity": {
+      "title": "Expert Community",
+      "description": "Connect with certified agricultural experts and experienced farmers for real-time guidance"
+    },
+    "precisionFarming": {
+      "title": "Precision Farming",
+      "description": "AI-powered insights tailored to your specific soil, climate, and crop conditions"
+    },
+    "qualityCertified": {
+      "title": "Quality Certified",
+      "description": "All experts verified by agricultural boards with proven track records"
+    },
+    "localizedSolutions": {
+      "title": "Localized Solutions",
+      "description": "Region-specific advice adapting global best practices to local conditions"
+    }
+  },
+  "values": {
+    "badge": "Our Core Values",
+    "title": "Principles That Guide Us",
+    "farmerFirst": {
+      "title": "Farmer First",
+      "description": "Every decision centers on farmer success and sustainable growth"
+    },
+    "trustSafety": {
+      "title": "Trust & Safety",
+      "description": "Verified experts, secure platform, and reliable agricultural data"
+    },
+    "sustainability": {
+      "title": "Sustainability",
+      "description": "Promoting eco-friendly practices that protect our environment"
+    }
+  },
+  "cta": {
+    "title": "Start Your Journey Today",
+    "subtitle": "Join thousands of successful farmers transforming their farms with expert guidance.",
+    "getStarted": "Get Started Free",
+    "learnMore": "Learn More",
+    "trial": "Free 30-day trial • No credit card required"
+  }
+}

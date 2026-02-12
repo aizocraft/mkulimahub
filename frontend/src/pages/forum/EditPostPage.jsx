@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { forumAPI } from '../../api';
 import {
   ArrowLeft,
@@ -16,9 +17,10 @@ import { toast } from 'react-toastify';
 
 const EditPostPage = () => {
   const { id } = useParams();
-  const postId = id; // Map the route param to postId
+  const postId = id;
   const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation('forumEdit');
   const navigate = useNavigate();
   
   const [categories, setCategories] = useState([]);
@@ -53,7 +55,6 @@ const EditPostPage = () => {
       const response = await forumAPI.getPost(postId);
       const post = response.data.post;
       
-      // Check if user can edit
       const canEdit = user?.id === post.author?._id || 
                      user?.role === 'admin' || 
                      user?.role === 'expert';
@@ -69,10 +70,10 @@ const EditPostPage = () => {
         category: post.category?._id || post.category || '',
         tags: post.tags || []
       });
-+      setAttachments(post.attachments || []);
+      setAttachments(post.attachments || []);
     } catch (err) {
       console.error('Error fetching post:', err);
-      setError('Failed to load post');
+      setError(t('errors.loadFailed'));
       navigate('/forum');
     } finally {
       setIsLoading(false);
@@ -114,7 +115,7 @@ const EditPostPage = () => {
     }));
   };
 
-  const MAX_FILE_SIZE = 5242880; // 5MB
+  const MAX_FILE_SIZE = 5242880;
   const ALLOWED_TYPES = ['image/jpeg','image/png','image/gif','application/pdf'];
 
   const handleFilesSelected = async (e) => {
@@ -123,11 +124,11 @@ const EditPostPage = () => {
 
     for (const file of files) {
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name} is too large. Max file size is 5MB.`, { position: 'top-center' });
+        toast.error(t('attachments.tooLarge', { name: file.name }), { position: 'top-center' });
         continue;
       }
       if (ALLOWED_TYPES.length && !ALLOWED_TYPES.includes(file.type)) {
-        toast.error(`${file.name} is not an allowed file type.`, { position: 'top-center' });
+        toast.error(t('attachments.invalidType', { name: file.name }), { position: 'top-center' });
         continue;
       }
 
@@ -149,10 +150,10 @@ const EditPostPage = () => {
         };
 
         setAttachments(prev => [...prev, attachment]);
-        toast.success(`${attachment.filename} uploaded`, { position: 'top-center', autoClose: 1500, hideProgressBar: true });
+        toast.success(t('attachments.uploaded', { filename: attachment.filename }), { position: 'top-center', autoClose: 1500, hideProgressBar: true });
       } catch (err) {
         console.error('Upload error:', err);
-        toast.error(`Failed to upload ${file.name}`, { position: 'top-center' });
+        toast.error(t('attachments.failed', { name: file.name }), { position: 'top-center' });
       } finally {
         setUploading(prev => {
           const next = { ...prev };
@@ -176,25 +177,24 @@ const EditPostPage = () => {
       }
     }
     setAttachments(prev => prev.filter((_, i) => i !== index));
-    toast.info(`${att.filename} removed`, { position: 'top-center', autoClose: 1200, hideProgressBar: true });
+    toast.info(t('attachments.removed', { filename: att.filename }), { position: 'top-center', autoClose: 1200, hideProgressBar: true });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.title.trim()) {
-      setError('Title is required');
+      setError(t('errors.titleRequired'));
       return;
     }
     
     if (!formData.content.trim()) {
-      setError('Content is required');
+      setError(t('errors.contentRequired'));
       return;
     }
     
     if (!formData.category) {
-      setError('Please select a category');
+      setError(t('errors.categoryRequired'));
       return;
     }
     
@@ -213,13 +213,13 @@ const EditPostPage = () => {
       const response = await forumAPI.updatePost(postId, payload);
 
       if (response.data.requiresReview) {
-        toast.success('Post updated successfully! It will be reviewed by an expert before changes appear publicly.', {
+        toast.success(t('success.updatedWithReview'), {
           position: 'top-center',
           autoClose: 3000,
           hideProgressBar: false
         });
       } else {
-        toast.success('Post updated successfully!', {
+        toast.success(t('success.updated'), {
           position: 'top-center',
           autoClose: 3000,
           hideProgressBar: false
@@ -232,7 +232,7 @@ const EditPostPage = () => {
       
     } catch (err) {
       console.error('Error updating post:', err);
-      setError(err.response?.data?.message || 'Failed to update post');
+      setError(err.response?.data?.message || t('errors.updateFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -253,7 +253,6 @@ const EditPostPage = () => {
       theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        {/* Back Button */}
         <button
           onClick={() => navigate(`/forum/posts/${postId}`)}
           className={`inline-flex items-center mb-6 transition-colors duration-200 ${
@@ -263,10 +262,9 @@ const EditPostPage = () => {
           }`}
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Post
+          {t('backToPost')}
         </button>
 
-        {/* Form */}
         <div className={`rounded-lg shadow-sm border p-6 transition-colors duration-300 ${
           theme === 'dark' 
             ? 'bg-gray-800 border-gray-700' 
@@ -274,15 +272,14 @@ const EditPostPage = () => {
         }`}>
           <h1 className={`text-2xl font-bold mb-2 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}>Edit Post</h1>
+          }`}>{t('title')}</h1>
           <p className={`mb-6 ${
             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
           }`}>
-            Update your post content and details.
-            {user?.role === 'farmer' && ' Your changes will be reviewed by experts before appearing publicly.'}
+            {t('subtitle')}
+            {user?.role === 'farmer' && ` ${t('reviewNotice')}`}
           </p>
           
-          {/* Error Alert */}
           {error && (
             <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
               theme === 'dark' 
@@ -296,15 +293,12 @@ const EditPostPage = () => {
             </div>
           )}
           
-
-          
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Title */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Title
+                {t('form.title')}
               </label>
               <input
                 type="text"
@@ -316,17 +310,16 @@ const EditPostPage = () => {
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300'
                 } border`}
-                placeholder="Enter a descriptive title for your post"
+                placeholder={t('placeholders.title')}
                 required
               />
             </div>
             
-            {/* Category */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Category
+                {t('form.category')}
               </label>
               <select
                 name="category"
@@ -339,7 +332,7 @@ const EditPostPage = () => {
                 } border`}
                 required
               >
-                <option value="">Select a category</option>
+                <option value="">{t('placeholders.category')}</option>
                 {categories.map((category) => (
                   <option 
                     key={category._id} 
@@ -347,18 +340,17 @@ const EditPostPage = () => {
                     disabled={category.expertOnly && user?.role !== 'expert' && user?.role !== 'admin'}
                   >
                     {category.name}
-                    {category.expertOnly && ' (Experts Only)'}
+                    {category.expertOnly && t('labels.expertsOnly')}
                   </option>
                 ))}
               </select>
             </div>
             
-            {/* Tags */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Tags (optional)
+                {t('form.tags')}
               </label>
               <div className="flex gap-2 mb-2">
                 <input
@@ -376,7 +368,7 @@ const EditPostPage = () => {
                       ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                       : 'bg-white border-gray-300'
                   } border`}
-                  placeholder="Add a tag and press Enter"
+                  placeholder={t('placeholders.tags')}
                 />
                 <button
                   type="button"
@@ -401,7 +393,7 @@ const EditPostPage = () => {
                           : 'bg-green-100 text-green-800'
                       }`}
                     >
-                      {tag}
+                      #{tag}
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
@@ -419,12 +411,11 @@ const EditPostPage = () => {
               )}
             </div>
             
-            {/* Content */}
             <div>
               <label className={`block text-sm font-medium mb-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
               }`}>
-                Content
+                {t('form.content')}
               </label>
               <textarea
                 name="content"
@@ -436,14 +427,15 @@ const EditPostPage = () => {
                     ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                     : 'bg-white border-gray-300'
                 } border`}
-                placeholder="Share your knowledge, ask questions, or discuss farming topics..."
+                placeholder={t('placeholders.content')}
                 required
               />
             </div>
 
-            {/* Attachments */}
             <div className="mb-4">
-              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>Attachments (optional)</label>
+              <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                {t('form.attachments')}
+              </label>
               <div className="flex items-center gap-3 mb-2">
                 <input type="file" multiple onChange={handleFilesSelected} className="text-sm" />
               </div>
@@ -467,7 +459,6 @@ const EditPostPage = () => {
               <AttachmentDisplay attachments={attachments} canDelete={true} onDelete={handleRemoveAttachment} theme={theme} />
             </div>
 
-            {/* Submit Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
@@ -479,7 +470,7 @@ const EditPostPage = () => {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 } border`}
               >
-                Cancel
+                {t('buttons.cancel')}
               </button>
               
               <div className="flex gap-3">
@@ -491,10 +482,10 @@ const EditPostPage = () => {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Updating...
+                      {t('buttons.updating')}
                     </>
                   ) : (
-                    'Update Post'
+                    t('buttons.update')
                   )}
                 </button>
               </div>

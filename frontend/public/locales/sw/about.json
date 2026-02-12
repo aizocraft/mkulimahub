@@ -1,0 +1,83 @@
+{
+  "hero": {
+    "title": "Kubadilisha",
+    "highlight": "Kilimo cha Afrika",
+    "subtitle": "Kuunganisha hekima ya jadi ya kilimo na teknolojia ya kisasa ili kuunda mifumo endelevu ya kilimo kote bara."
+  },
+  "mission": {
+    "title": "Dhamira Yetu",
+    "description": "Kurahisisha utaalamu wa kilimo kwa kuunganisha wakulima na wataalamu walioidhinishwa kupitia jukwaa rahisi la kidijitali, kuendeleza ukuaji endelevu na usalama wa chakula kote Afrika.",
+    "points": [
+      "Huduma za ushauri wa kidijitali",
+      "Uchambuzi wa soko kwa wakati halisi",
+      "Suluhisho mahiri za hali ya hewa",
+      "Kushiriki maarifa kwa jamii"
+    ]
+  },
+  "vision": {
+    "title": "Dira 2030",
+    "description": "Kuwezesha wakulima wa Afrika kwa utaalamu wa kilimo wa kidijitali ili kuunda maisha endelevu."
+  },
+  "stats": {
+    "farmersEmpowered": {
+      "number": "50K+",
+      "label": "Wakulima Waliowezeshwa"
+    },
+    "expertsNetwork": {
+      "number": "2K+",
+      "label": "Mtandao wa Wataalamu"
+    },
+    "successRate": {
+      "number": "95%",
+      "label": "Kiwango cha Mafanikio"
+    },
+    "support": {
+      "number": "24/7",
+      "label": "Msaada"
+    }
+  },
+  "features": {
+    "badge": "Kwa Nini Wakulima Wanatuchagua",
+    "title": "Suluhisho Mahiri za Kilimo",
+    "subtitle": "Teknolojia jumuishi na utaalamu kwa mafanikio ya kisasa ya kilimo",
+    "expertCommunity": {
+      "title": "Jamii ya Wataalamu",
+      "description": "Unganisha na wataalamu wa kilimo walioidhinishwa na wakulima wenye uzoefu kwa mwongozo wa wakati halisi"
+    },
+    "precisionFarming": {
+      "title": "Kilimo cha Usahihi",
+      "description": "Uchambuzi unaoendeshwa na AI ulioundwa kwa hali yako maalum ya udongo, hali ya hewa, na mazao"
+    },
+    "qualityCertified": {
+      "title": "Imethibitishwa Ubora",
+      "description": "Wataalamu wote wamethibitishwa na mabaraza ya kilimo na rekodi za mafanikio zilizothibitishwa"
+    },
+    "localizedSolutions": {
+      "title": "Suluhisho za Kienyeji",
+      "description": "Ushauri maalum wa kikanda unaobadilisha mazoea bora ya kimataifa kwa hali za kienyeji"
+    }
+  },
+  "values": {
+    "badge": "Maadili Yetu ya Msingi",
+    "title": "Kanuni Zinazotuongoza",
+    "farmerFirst": {
+      "title": "Mkulima Kwanza",
+      "description": "Kila uamuzi unazingatia mafanikio ya mkulima na ukuaji endelevu"
+    },
+    "trustSafety": {
+      "title": "Uaminifu na Usalama",
+      "description": "Wataalamu waliothibitishwa, jukwaa salama, na data ya kilimo inayotegemeka"
+    },
+    "sustainability": {
+      "title": "Uendelevu",
+      "description": "Kukuza mazoea rafiki kwa mazingira yanayolinda mazingira yetu"
+    }
+  },
+  "cta": {
+    "title": "Anza Safari Yako Leo",
+    "subtitle": "Jiunge na maelfu ya wakulima waliofanikiwa wanaobadilisha mashamba yao kwa mwongozo wa wataalamu.",
+    "getStarted": "Anza Bure",
+    "learnMore": "Jifunze Zaidi",
+    "trial": "Jaribio la siku 30 bila malipo • Hakuna kadi ya mkopo inayohitajika"
+  }
+}

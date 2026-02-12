@@ -18,7 +18,7 @@
   "expertConsultations": "Mashauriano ya Wataalamu",
   "expertConsultationsDesc": "Unganisha na wataalamu wa kilimo walioidhinishwa kwa ushauri wa kibinafsi na utatuzi wa matatizo ya wakati halisi.",
   "knowledgeLibrary": "Maktaba ya Maarifa",
-  "knowledgeLibraryDesc": "Pata miongozo kamili ya ukulima, karatasi za utafiti, na mazoezi bora kutoka kwa viongozi wa tasnia.",
+  "knowledgeLibraryDesc": "Pata miongozo kamili ya ukulima, karatasi za utafiti, na mazoea bora kutoka kwa viongozi wa tasnia.",
   "communitySupport": "Msaada wa Jamii",
   "communitySupportDesc": "Jiunge na jamii hai ya wakulima ili kushiriki uzoefu, kuuliza maswali, na kushirikiana.",
   "whyChooseUs": "Kwa Nini Utuchague",
@@ -48,5 +48,6 @@
   "readyTransform": "Tayari Kubadilisha Safari Yako ya Ukulima?",
   "joinSuccessful": "Jiunge na maelfu ya wakulima na wataalamu waliofanikiwa ambao tayari wanatumia Mkulima Hub kufikia matokeo bora.",
   "startFreeAccount": "Anza Akaunti Yako ya Bure",
-  "learnHowItWorks": "Jifunze Jinsi Inavyofanya Kazi"
+  "learnHowItWorks": "Jifunze Jinsi Inavyofanya Kazi",
+  "freeTrial": "Hakuna kadi ya mkopo inayohitajika • Jaribio la siku 30 bila malipo"
 }

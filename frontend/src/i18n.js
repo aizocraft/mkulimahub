@@ -13,7 +13,7 @@ i18n
     supportedLngs: ['en', 'sw'], // Explicitly allow English and Kiswahili
     
     // Namespaces: these match your JSON filenames
-    ns: ['home', 'nav', 'contact', 'forum', 'profile', 'settings', 'forum-create'],
+    ns: ['home', 'nav', 'contact', 'forum', 'profile', 'settings', 'forum-create', 'forum-edit', 'forum-post'],
     defaultNS: 'home',
 
     backend: {

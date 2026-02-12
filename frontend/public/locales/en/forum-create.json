@@ -3,48 +3,52 @@
   "subtitle": "Share your knowledge or ask questions to the community.",
   "reviewNotice": "Your post will be reviewed by experts before appearing publicly.",
   "backToForum": "Back to Forum",
-  
   "form": {
-    "title": "Title *",
-    "titlePlaceholder": "Enter a descriptive title for your post",
-    "titleMinChars": "Need {{count}} more characters",
-    "titleValid": "✓ Good",
-    "titleLength": "{{count}}/200",
-    
-    "category": "Category *",
-    "categoryPlaceholder": "-- Select a category --",
-    "categoryExpertsOnly": "(Experts Only)",
-    "categoryInactive": "(Inactive)",
-    "categorySelected": "Selected: {{name}}",
-    "categoryExpertWarning": "⚠️ Requires expert permissions",
-    "categoryInactiveWarning": "⚠️ Category is inactive",
-    "categoryUnknown": "Unknown category",
-    
-    "tags": "Tags (optional)",
-    "tagsPlaceholder": "Add a tag and press Enter",
-    "tagsHelp": "Add relevant tags (optional)",
-    "tagsCount": "{{count}}/10 tags",
-    
-    "content": "Content *",
-    "contentPlaceholder": "Share your knowledge, ask questions, or discuss farming topics...",
-    "contentMinChars": "Need {{count}} more characters",
-    "contentValid": "✓ Good",
-    "contentLength": "{{count}}/10000",
-    
-    "attachments": "Attachments (optional)",
-    "attachmentsUploading": "Uploading...",
-    "attachmentsTooLarge": "{{name}} is too large. Max file size is 5MB.",
-    "attachmentsInvalidType": "{{name}} is not an allowed file type.",
-    "attachmentsUploaded": "{{filename}} uploaded",
-    "attachmentsFailed": "Failed to upload {{name}}",
-    "attachmentsRemoved": "{{filename}} removed",
-    
+    "refreshCategories": "Refresh Categories",
     "postingAs": "Posting as:",
     "submit": "Create Post",
     "submitting": "Creating...",
     "cancel": "Cancel",
-    
+    "title": {
+      "label": "Title *",
+      "placeholder": "Enter a descriptive title for your post",
+      "minChars": "Need {{count}} more characters",
+      "valid": "✓ Good",
+      "length": "{{count}}/200"
+    },
+    "category": {
+      "label": "Category *",
+      "placeholder": "-- Select a category --",
+      "expertsOnly": " (Experts Only)",
+      "inactive": " (Inactive)",
+      "selected": "Selected: {{name}}",
+      "expertWarning": "⚠️ Requires expert permissions",
+      "inactiveWarning": "⚠️ Category is inactive",
+      "unknown": "Unknown category"
+    },
+    "tags": {
+      "label": "Tags (optional)",
+      "placeholder": "Add a tag and press Enter",
+      "help": "Add relevant tags (optional)",
+      "count": "{{count}}/10 tags"
+    },
+    "content": {
+      "label": "Content *",
+      "placeholder": "Share your knowledge, ask questions, or discuss farming topics...",
+      "minChars": "Need {{count}} more characters",
+      "valid": "✓ Good",
+      "length": "{{count}}/10000"
+    },
+    "attachments": {
+      "label": "Attachments (optional)",
+      "tooLarge": "{{name}} is too large. Max file size is 5MB.",
+      "invalidType": "{{name}} is not an allowed file type.",
+      "uploaded": "{{filename}} uploaded",
+      "failed": "Failed to upload {{name}}",
+      "removed": "{{filename}} removed"
+    },
     "errors": {
+      "title": "Error creating post",
       "titleRequired": "Title is required",
       "titleMinLength": "Title must be at least 5 characters",
       "contentRequired": "Content is required",
@@ -53,13 +57,14 @@
       "categoryNotFound": "Selected category not found. Please refresh the page and try again.",
       "categoryExpertOnly": "This category is for experts only. Please select a different category.",
       "categoryInactive": "This category is not active. Please select a different category.",
+      "categoryLoadFailed": "Failed to load categories",
+      "categoryNotFoundRefresh": "Category not found. Please refresh the page and try again.",
+      "categoryInvalid": "Invalid category selected. Please choose a different category.",
       "networkError": "Network error. Please check your connection.",
       "badRequest": "Bad request. Please check your input.",
       "permissionDenied": "You do not have permission to create this post.",
-      "categoryNotFoundRefresh": "Category not found. Please refresh the page and try again.",
       "generic": "Failed to create post"
     },
-    
     "success": {
       "created": "Post created successfully!",
       "createdWithReview": "Post created successfully! It will be reviewed by an expert before appearing publicly."

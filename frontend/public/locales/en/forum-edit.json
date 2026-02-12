@@ -1,0 +1,45 @@
+{
+  "title": "Edit Post",
+  "subtitle": "Update your post content and details.",
+  "reviewNotice": "Your changes will be reviewed by experts before appearing publicly.",
+  "backToPost": "Back to Post",
+  "form": {
+    "title": "Title",
+    "category": "Category",
+    "tags": "Tags (optional)",
+    "content": "Content",
+    "attachments": "Attachments (optional)"
+  },
+  "placeholders": {
+    "title": "Enter a descriptive title for your post",
+    "category": "Select a category",
+    "tags": "Add a tag and press Enter",
+    "content": "Share your knowledge, ask questions, or discuss farming topics..."
+  },
+  "labels": {
+    "expertsOnly": " (Experts Only)"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "update": "Update Post",
+    "updating": "Updating..."
+  },
+  "attachments": {
+    "tooLarge": "{{name}} is too large. Max file size is 5MB.",
+    "invalidType": "{{name}} is not an allowed file type.",
+    "uploaded": "{{filename}} uploaded",
+    "failed": "Failed to upload {{name}}",
+    "removed": "{{filename}} removed"
+  },
+  "errors": {
+    "loadFailed": "Failed to load post",
+    "titleRequired": "Title is required",
+    "contentRequired": "Content is required",
+    "categoryRequired": "Please select a category",
+    "updateFailed": "Failed to update post"
+  },
+  "success": {
+    "updated": "Post updated successfully!",
+    "updatedWithReview": "Post updated successfully! It will be reviewed by an expert before changes appear publicly."
+  }
+}
