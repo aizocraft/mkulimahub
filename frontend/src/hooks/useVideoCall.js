@@ -91,18 +91,36 @@ const useVideoCall = (consultationId, user) => {
 
     peerConnection.ontrack = (event) => {
       console.log('🎯 Received remote track:', event.track.kind);
+      let remoteStreamToSet;
+
       if (event.streams && event.streams[0]) {
-        setRemoteStream(event.streams[0]);
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
+        // Use existing stream
+        remoteStreamToSet = event.streams[0];
+      } else {
+        // Create new stream and add track
+        remoteStreamToSet = new MediaStream();
+        remoteStreamToSet.addTrack(event.track);
+        console.log('📝 Created new MediaStream for remote track');
+      }
+
+      setRemoteStream(remoteStreamToSet);
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = remoteStreamToSet;
+        // Explicitly try to play the video
+        try {
+          remoteVideoRef.current.play().catch(err => {
+            console.warn('Could not auto-play remote video:', err);
+          });
+        } catch (playError) {
+          console.warn('Could not play remote video:', playError);
         }
-        setIsCallEstablished(true);
-        console.log('✅ Remote stream established');
-        
-        // Notify that we're connected
-        if (roomInfo?.roomId) {
-          socketService.sendConnectionEstablished(roomInfo.roomId);
-        }
+      }
+      setIsCallEstablished(true);
+      console.log('✅ Remote stream established');
+
+      // Notify that we're connected
+      if (roomInfo?.roomId) {
+        socketService.sendConnectionEstablished(roomInfo.roomId);
       }
     };
 

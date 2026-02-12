@@ -147,7 +147,7 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           {connectedUsers.length > 0 && (
             <div className="hidden md:flex items-center gap-2 text-gray-300">
@@ -185,7 +185,7 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
       {/* Main content: video + optional chat */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Video area */}
-        <div className={`flex-1 overflow-hidden ${showChat ? (isMobile ? 'hidden' : 'min-w-0') : ''}`}>
+        <div className={`flex-1 overflow-hidden ${showChat && isMobile ? 'hidden' : ''}`}>
           <VideoGrid
             localStream={localStream}
             remoteStream={remoteStream}
@@ -199,11 +199,40 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
             user={user}
           />
         </div>
+
+        {/* Chat panel - on right for desktop */}
+        {showChat && !isMobile && (
+          <div className="w-80 lg:w-96 border-l border-gray-800 flex flex-col bg-gray-800">
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+              <ChatContainer
+                messages={chat.messages}
+                onSendMessage={(content) => chat.sendMessage(content)}
+                onTyping={chat.handleTyping}
+                typingUsers={chat.typingUsers}
+                messagesEndRef={chat.messagesEndRef}
+                user={user}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Chat panel - slides in from right */}
-      {showChat && (
-        <div className={`${isMobile ? 'fixed inset-0 z-20' : 'w-80 lg:w-96 border-l border-gray-800'} flex flex-col bg-gray-800`}>
+      {/* Chat panel - improved mobile design */}
+      {showChat && isMobile && (
+        <div className="fixed inset-0 z-20 flex flex-col bg-gray-800">
+          {/* Chat header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-850">
+            <h3 className="text-white font-semibold">Chat</h3>
+            <button
+              onClick={() => setShowChat(false)}
+              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors"
+              aria-label="Close chat"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Chat content */}
           <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
             <ChatContainer
               messages={chat.messages}
@@ -214,76 +243,67 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
               user={user}
             />
           </div>
-          {isMobile && (
-            <button
-              onClick={() => setShowChat(false)}
-              className="absolute top-2 right-2 p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white z-10"
-              aria-label="Close chat"
-            >
-              <X size={20} />
-            </button>
-          )}
         </div>
       )}
 
-      {/* Controls */}
-      <div className="border-t border-gray-800 bg-gray-850">
+      {/* Controls - Always visible overlay */}
+      <div className={`border-t border-gray-800 bg-gray-850/95 backdrop-blur-sm ${showChat && isMobile ? 'absolute bottom-0 left-0 right-0 z-30' : ''}`}>
         <div className="max-w-3xl mx-auto p-4">
           <div className="flex items-center justify-center gap-4">
             {/* Audio control */}
             <button
               onClick={toggleAudio}
-              className={`p-4 rounded-full transition-all ${
-                isMuted 
-                  ? 'bg-red-600 hover:bg-red-700' 
+              className={`p-3 md:p-4 rounded-full transition-all ${
+                isMuted
+                  ? 'bg-red-600 hover:bg-red-700'
                   : 'bg-gray-700 hover:bg-gray-600'
               }`}
               title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? (
-                <MicOff size={24} className="text-white" />
+                <MicOff size={20} className="text-white md:w-6 md:h-6" />
               ) : (
-                <Mic size={24} className="text-white" />
+                <Mic size={20} className="text-white md:w-6 md:h-6" />
               )}
             </button>
 
             {/* Video control */}
             <button
               onClick={toggleVideo}
-              className={`p-4 rounded-full transition-all ${
-                isVideoOff 
-                  ? 'bg-red-600 hover:bg-red-700' 
+              className={`p-3 md:p-4 rounded-full transition-all ${
+                isVideoOff
+                  ? 'bg-red-600 hover:bg-red-700'
                   : 'bg-gray-700 hover:bg-gray-600'
               }`}
               title={isVideoOff ? 'Turn video on' : 'Turn video off'}
             >
               {isVideoOff ? (
-                <VideoOff size={24} className="text-white" />
+                <VideoOff size={20} className="text-white md:w-6 md:h-6" />
               ) : (
-                <Video size={24} className="text-white" />
+                <Video size={20} className="text-white md:w-6 md:h-6" />
               )}
             </button>
 
             {/* End call button */}
             <button
               onClick={endCall}
-              className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-all"
+              className="p-3 md:p-4 rounded-full bg-red-600 hover:bg-red-700 transition-all"
               title="End call"
             >
-              <PhoneOff size={24} className="text-white" />
+              <PhoneOff size={20} className="text-white md:w-6 md:h-6" />
             </button>
 
             {/* Chat toggle */}
             <button
               onClick={() => setShowChat(!showChat)}
-              className={`p-4 rounded-full transition-all ${
-                showChat 
-                  ? 'bg-blue-600 hover:bg-blue-700' 
+              className={`p-3 md:p-4 rounded-full transition-all ${
+                showChat
+                  ? 'bg-blue-600 hover:bg-blue-700'
                   : 'bg-gray-700 hover:bg-gray-600'
               }`}
               title={showChat ? 'Hide chat' : 'Show chat'}
             >
-              <MessageSquare size={24} className="text-white" />
+              <MessageSquare size={20} className="text-white md:w-6 md:h-6" />
             </button>
           </div>
 
@@ -292,9 +312,9 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
             <div className="inline-flex items-center gap-2 text-sm text-gray-400">
               <div className={`w-2 h-2 rounded-full ${isCallEstablished ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
               <span>
-                {isCallActive 
-                  ? isCallEstablished 
-                    ? 'Connected' 
+                {isCallActive
+                  ? isCallEstablished
+                    ? 'Connected'
                     : waitingMessage || 'Connecting...'
                   : 'Ready to start call'
                 }

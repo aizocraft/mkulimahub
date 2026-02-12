@@ -36,6 +36,14 @@ const VideoGrid = ({
     if (remoteStream && remoteVideoRef.current) {
       console.log('🎥 VideoGrid: Setting remote stream to video element');
       remoteVideoRef.current.srcObject = remoteStream;
+      // Explicitly try to play the remote video
+      try {
+        remoteVideoRef.current.play().catch(err => {
+          console.warn('Could not auto-play remote video in VideoGrid:', err);
+        });
+      } catch (playError) {
+        console.warn('Could not play remote video in VideoGrid:', playError);
+      }
     }
   }, [remoteStream]);
 
