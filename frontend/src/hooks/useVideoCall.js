@@ -92,19 +92,30 @@ const useVideoCall = (consultationId, user) => {
 
     peerConnection.ontrack = (event) => {
       console.log('🎯 Received remote track:', event.track.kind);
-      let remoteStreamToSet;
 
-      if (event.streams && event.streams[0]) {
-        // Use existing stream
-        remoteStreamToSet = event.streams[0];
-      } else {
-        // Create new stream and add track
-        remoteStreamToSet = new MediaStream();
-        remoteStreamToSet.addTrack(event.track);
-        console.log('📝 Created new MediaStream for remote track');
-      }
+      // Ensure the track is enabled
+      event.track.enabled = true;
 
-      setRemoteStream(remoteStreamToSet);
+      setRemoteStream(prev => {
+        if (prev) {
+          // Add track to existing stream and return new stream to trigger re-render
+          prev.addTrack(event.track);
+          return new MediaStream(prev.getTracks());
+        } else {
+          // Create new stream
+          if (event.streams && event.streams[0]) {
+            // Ensure all tracks in the stream are enabled
+            event.streams[0].getTracks().forEach(track => track.enabled = true);
+            return event.streams[0];
+          } else {
+            const newStream = new MediaStream();
+            newStream.addTrack(event.track);
+            console.log('📝 Created new MediaStream for remote track');
+            return newStream;
+          }
+        }
+      });
+
       setIsCallEstablished(true);
       console.log('✅ Remote stream established');
 
