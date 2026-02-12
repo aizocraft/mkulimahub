@@ -5,6 +5,7 @@ import socketService from '../services/socketService';
 
 const useChat = (consultationId, user) => {
   const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);

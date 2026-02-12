@@ -29,6 +29,7 @@ const useVideoCall = (consultationId, user) => {
   const isNegotiatingRef = useRef(false);
   const isInitiatorRef = useRef(false);
   const connectedUsersRef = useRef([]);
+  const currentRoomIdRef = useRef(null);
 
   // ========== WEBRTC FUNCTIONS ==========
   const initializeWebRTC = useCallback(() => {
@@ -196,32 +197,39 @@ const useVideoCall = (consultationId, user) => {
     }
   };
 
-  const createAndSendOffer = async () => {
+  const createAndSendOffer = async (roomIdOverride) => {
     const users = connectedUsersRef.current;
-    if (!peerConnectionRef.current || !roomInfo?.roomId || users.length === 0) {
-      console.log('Cannot create offer yet - missing:', { pc: !!peerConnectionRef.current, room: !!roomInfo?.roomId, users: users.length });
+    const roomId = roomIdOverride || roomInfo?.roomId;
+
+    if (!peerConnectionRef.current || !roomId || users.length === 0) {
+      console.log('Cannot create offer yet - missing:', {
+        pc: !!peerConnectionRef.current,
+        room: !!roomId,
+        users: users.length,
+        roomId: roomId
+      });
       return;
     }
-    
+
     try {
       console.log('Creating WebRTC offer...');
-      
+
       const offer = await peerConnectionRef.current.createOffer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
         voiceActivityDetection: true
       });
-      
+
       await peerConnectionRef.current.setLocalDescription(offer);
       console.log('✅ Offer created and local description set');
-      
+
       // Send offer to other user
       const otherUser = users.find(u => u.userId !== user?.id);
       if (otherUser) {
-        socketService.sendOffer(roomInfo.roomId, offer, otherUser.userId);
+        socketService.sendOffer(roomId, offer, otherUser.userId);
         console.log(`📤 Offer sent to ${otherUser.userName}`);
       }
-      
+
     } catch (error) {
       console.error('Error creating offer:', error);
     }
@@ -300,6 +308,8 @@ const useVideoCall = (consultationId, user) => {
             consultationId: data.consultationId,
             otherUser: data.otherUser
           });
+          // Store roomId in ref for immediate use
+          currentRoomIdRef.current = data.roomId;
           const users = data.connectedUsers || [];
           connectedUsersRef.current = users;
           setConnectedUsers(users);
@@ -308,7 +318,7 @@ const useVideoCall = (consultationId, user) => {
           // Now that room is set up, we can create offer if we're initiator
           if (data.isInitiator && data.connectedUsers.length > 0) {
             console.log('Other user present, creating offer...');
-            setTimeout(() => createAndSendOffer(), 1000); // Increased delay
+            setTimeout(() => createAndSendOffer(data.roomId), 1000); // Increased delay
           }
 
           // If we're not the initiator and there's someone else, we should wait for their offer
@@ -340,7 +350,27 @@ const useVideoCall = (consultationId, user) => {
         handler: (data) => {
           console.log('🎯 Call is ready with', data.users.length, 'users');
           if (isInitiatorRef.current) {
-            setTimeout(() => createAndSendOffer(), 500);
+            // Use roomId from event data directly
+            const roomId = data.roomId || `consultation_${data.consultationId}`;
+            if (roomId) {
+              console.log('Creating offer for room:', roomId);
+
+              // Update roomInfo state if not set yet
+              if (!roomInfo?.roomId) {
+                setRoomInfo({
+                  roomId,
+                  consultationId: data.consultationId,
+                  otherUser: null
+                });
+              }
+
+              // Store roomId in ref for immediate use
+              currentRoomIdRef.current = roomId;
+
+              setTimeout(() => createAndSendOffer(roomId), 500);
+            } else {
+              console.error('No roomId available in ready event');
+            }
           }
         }
       },

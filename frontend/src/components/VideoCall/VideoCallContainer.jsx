@@ -232,16 +232,68 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
             </button>
           </div>
 
-          {/* Chat content */}
-          <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-            <ChatContainer
-              messages={chat.messages}
-              onSendMessage={(content) => chat.sendMessage(content)}
-              onTyping={chat.handleTyping}
-              typingUsers={chat.typingUsers}
-              messagesEndRef={chat.messagesEndRef}
-              user={user}
-            />
+          {/* Messages area */}
+          <div className="flex-1 overflow-hidden">
+            <div className="h-full flex flex-col">
+              {/* Messages container */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                <ChatMessages
+                  messages={chat.messages}
+                  currentUserId={user?.id}
+                  messagesEndRef={chat.messagesEndRef}
+                />
+                <ChatTypingIndicator typingUsers={chat.typingUsers} currentUserId={user?.id} />
+              </div>
+
+              {/* Chat input - fixed at bottom */}
+              <div className="border-t border-gray-700 bg-gray-850 p-4">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1 relative">
+                    <textarea
+                      value={chat.inputValue || ''}
+                      onChange={(e) => {
+                        chat.setInputValue?.(e.target.value);
+                        chat.handleTyping?.();
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          if (chat.inputValue?.trim()) {
+                            chat.sendMessage(chat.inputValue);
+                            chat.setInputValue?.('');
+                          }
+                        }
+                      }}
+                      placeholder="Type your message..."
+                      className="w-full px-4 py-3 pr-12 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows="1"
+                      style={{
+                        minHeight: '48px',
+                        maxHeight: '120px',
+                        paddingRight: '48px' // Make room for send button
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        if (chat.inputValue?.trim()) {
+                          chat.sendMessage(chat.inputValue);
+                          chat.setInputValue?.('');
+                        }
+                      }}
+                      disabled={!chat.inputValue?.trim()}
+                      className={`absolute right-2 bottom-2 p-2 rounded-md transition-colors ${
+                        chat.inputValue?.trim()
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                      }`}
+                      style={{ width: '36px', height: '36px' }}
+                    >
+                      <MessageSquare size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
