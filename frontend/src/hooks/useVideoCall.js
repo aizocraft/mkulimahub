@@ -105,17 +105,6 @@ const useVideoCall = (consultationId, user) => {
       }
 
       setRemoteStream(remoteStreamToSet);
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStreamToSet;
-        // Explicitly try to play the video
-        try {
-          remoteVideoRef.current.play().catch(err => {
-            console.warn('Could not auto-play remote video:', err);
-          });
-        } catch (playError) {
-          console.warn('Could not play remote video:', playError);
-        }
-      }
       setIsCallEstablished(true);
       console.log('✅ Remote stream established');
 

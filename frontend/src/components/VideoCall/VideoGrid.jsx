@@ -36,14 +36,21 @@ const VideoGrid = ({
     if (remoteStream && remoteVideoRef.current) {
       console.log('🎥 VideoGrid: Setting remote stream to video element');
       remoteVideoRef.current.srcObject = remoteStream;
-      // Explicitly try to play the remote video
-      try {
-        remoteVideoRef.current.play().catch(err => {
+
+      // Wait for metadata to load before attempting to play
+      const video = remoteVideoRef.current;
+      const onLoadedMetadata = () => {
+        video.play().catch(err => {
           console.warn('Could not auto-play remote video in VideoGrid:', err);
         });
-      } catch (playError) {
-        console.warn('Could not play remote video in VideoGrid:', playError);
-      }
+        video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      };
+      video.addEventListener('loadedmetadata', onLoadedMetadata);
+
+      // Cleanup function to remove listener if component unmounts
+      return () => {
+        video.removeEventListener('loadedmetadata', onLoadedMetadata);
+      };
     }
   }, [remoteStream]);
 
