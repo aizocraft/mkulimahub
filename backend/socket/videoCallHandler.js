@@ -223,20 +223,27 @@ module.exports = (io, socket) => {
   // WebRTC Signaling - Offer
   socket.on('video-call:offer', ({ roomId, offer, targetUserId }) => {
     console.log(`📤 Offer from ${socket.user._id} to ${targetUserId}`);
-    
+    console.log(`Offer details:`, {
+      roomId,
+      hasOffer: !!offer,
+      offerType: offer?.type,
+      targetUserId
+    });
+
     const fromUserId = socket.user._id.toString();
     const fromUserName = socket.user.name;
-    
+
     // Store offer for later use
     const room = activeRooms.get(roomId);
     if (room) {
       room.offers.set(`${fromUserId}_${targetUserId}`, offer);
     }
-    
+
     if (targetUserId) {
       // Send to specific user
       const targetSocket = userSocketMap.get(targetUserId);
       if (targetSocket) {
+        console.log(`Sending offer to target user ${targetUserId}`);
         targetSocket.emit('video-call:offer', {
           offer,
           fromUserId,
@@ -245,10 +252,12 @@ module.exports = (io, socket) => {
           timestamp: new Date()
         });
       } else {
-        console.warn(`Target user ${targetUserId} not found`);
+        console.warn(`Target user ${targetUserId} not found in socket map`);
+        console.log('Available users:', Array.from(userSocketMap.keys()));
       }
     } else {
       // Broadcast to all in room except sender
+      console.log(`Broadcasting offer to room ${roomId}`);
       socket.to(roomId).emit('video-call:offer', {
         offer,
         fromUserId,

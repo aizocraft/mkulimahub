@@ -48,6 +48,12 @@ const VideoGrid = ({
         muted: video.muted
       });
 
+      // Clear any existing srcObject first
+      video.srcObject = null;
+
+      // Small delay to ensure cleanup
+      await new Promise(resolve => setTimeout(resolve, 50));
+
       video.srcObject = remoteStream;
 
       console.log('Video element after assignment:', {
@@ -58,26 +64,54 @@ const VideoGrid = ({
         muted: video.muted
       });
 
+      // Force load the video
+      video.load();
+
       // Force video to load and play
-      const attemptPlay = async () => {
+      const attemptPlay = async (force = false) => {
         try {
-          // Ensure video is not muted for autoplay
+          // Ensure video is muted for autoplay
           video.muted = true;
           video.volume = 0;
 
-          // Wait a bit for the stream to be ready
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Check if video is ready to play
+          if (!force && video.readyState < 2) { // HAVE_CURRENT_DATA
+            console.log('Video not ready yet, waiting... (readyState:', video.readyState, ')');
+            return false;
+          }
 
-          console.log('Attempting to play remote video...');
-          await video.play();
+          console.log('Attempting to play remote video... (readyState:', video.readyState, ')');
+
+          // Try to play
+          const playPromise = video.play();
+
+          // Handle the promise
+          await playPromise;
+
           console.log('✅ Remote video playing successfully');
           console.log('Video element after play:', {
             readyState: video.readyState,
             networkState: video.networkState,
             paused: video.paused,
             currentTime: video.currentTime,
-            duration: video.duration
+            duration: video.duration,
+            videoWidth: video.videoWidth,
+            videoHeight: video.videoHeight
           });
+
+          // Double-check that video is actually playing
+          setTimeout(() => {
+            console.log('Video status check after 1s:', {
+              paused: video.paused,
+              currentTime: video.currentTime,
+              readyState: video.readyState,
+              networkState: video.networkState,
+              videoWidth: video.videoWidth,
+              videoHeight: video.videoHeight
+            });
+          }, 1000);
+
+          return true;
         } catch (err) {
           console.warn('Could not auto-play remote video in VideoGrid:', err);
           console.warn('Play error details:', {
@@ -85,17 +119,28 @@ const VideoGrid = ({
             message: err.message,
             code: err.code
           });
-          // Try again after a short delay
-          setTimeout(() => {
-            video.play().catch(e => {
-              console.warn('Retry play failed:', e);
-              console.warn('Retry error details:', {
-                name: e.name,
-                message: e.message,
-                code: e.code
-              });
-            });
-          }, 500);
+
+          // If it's a NotAllowedError, we need user interaction
+          if (err.name === 'NotAllowedError') {
+            console.log('Video play blocked by browser - requires user interaction');
+            // Set up a one-time click handler to start video
+            const startVideoOnClick = async () => {
+              try {
+                await video.play();
+                console.log('✅ Video started after user interaction');
+                document.removeEventListener('click', startVideoOnClick);
+              } catch (e) {
+                console.warn('Failed to start video after click:', e);
+              }
+            };
+            document.addEventListener('click', startVideoOnClick, { once: true });
+          } else {
+            // For other errors, try again after a delay
+            console.log('Retrying video play in 2 seconds...');
+            setTimeout(() => attemptPlay(true), 2000);
+          }
+
+          return false;
         }
       };
 
@@ -174,8 +219,13 @@ const VideoGrid = ({
             autoPlay
             muted
             playsInline
+            controls={false}
+            disablePictureInPicture
             className="w-full h-full object-cover bg-black"
-            style={{ minHeight: '200px' }}
+            style={{
+              minHeight: '200px',
+              pointerEvents: 'none'
+            }}
           />
           {!remoteStream && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-850 min-h-[200px]">

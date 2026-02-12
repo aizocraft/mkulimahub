@@ -112,6 +112,38 @@ const useVideoCall = (consultationId, user) => {
         console.log('Remote track unmuted:', event.track.kind);
       };
 
+      // Monitor track for data flow
+      let lastBytesReceived = 0;
+      const checkDataFlow = () => {
+        if (event.track.getSettings && event.track.getStats) {
+          event.track.getStats().then(stats => {
+            stats.forEach(report => {
+              if (report.type === 'inbound-rtp' && report.kind === event.track.kind) {
+                const bytesReceived = report.bytesReceived || 0;
+                if (bytesReceived > lastBytesReceived) {
+                  console.log(`📊 ${event.track.kind} track receiving data: ${bytesReceived} bytes`);
+                  lastBytesReceived = bytesReceived;
+                } else if (bytesReceived === lastBytesReceived && bytesReceived > 0) {
+                  console.log(`⚠️ ${event.track.kind} track data flow stopped`);
+                }
+              }
+            });
+          }).catch(err => console.warn('Could not get track stats:', err));
+        }
+      };
+
+      // Check data flow every 2 seconds
+      const dataFlowInterval = setInterval(checkDataFlow, 2000);
+
+      // Store interval for cleanup
+      if (!remoteTracksRef.current) {
+        remoteTracksRef.current = [];
+      }
+      remoteTracksRef.current.push({
+        track: event.track,
+        interval: dataFlowInterval
+      });
+
       setRemoteStream(prev => {
         let newStream;
 
