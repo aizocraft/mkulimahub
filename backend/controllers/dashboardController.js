@@ -271,20 +271,23 @@ exports.getExpertStats = async (req, res, next) => {
     });
 
     // Earnings
+    const mongoose = require('mongoose');
+    const expertObjectId = new mongoose.Types.ObjectId(expertId);
+
     const totalEarningsAgg = await Transaction.aggregate([
-      { $match: { expert: expertId, status: 'completed' } },
+      { $match: { expert: expertObjectId, status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const totalEarnings = totalEarningsAgg.length > 0 ? totalEarningsAgg[0].total : 0;
 
     const monthlyEarningsAgg = await Transaction.aggregate([
-      { $match: { expert: expertId, status: 'completed', createdAt: { $gte: currentMonthStart } } },
+      { $match: { expert: expertObjectId, status: 'completed', createdAt: { $gte: currentMonthStart } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const monthlyEarnings = monthlyEarningsAgg.length > 0 ? monthlyEarningsAgg[0].total : 0;
 
     const last3MonthsEarningsAgg = await Transaction.aggregate([
-      { $match: { expert: expertId, status: 'completed', createdAt: { $gte: threeMonthsAgo } } },
+      { $match: { expert: expertObjectId, status: 'completed', createdAt: { $gte: threeMonthsAgo } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const last3MonthsEarnings = last3MonthsEarningsAgg.length > 0 ? last3MonthsEarningsAgg[0].total : 0;
@@ -325,6 +328,8 @@ exports.getExpertStats = async (req, res, next) => {
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
     const previousMonthEarnings = previousMonthEarningsAgg.length > 0 ? previousMonthEarningsAgg[0].total : 0;
+    console.log('Previous Month Earnings Aggregation:', previousMonthEarningsAgg);
+    console.log('Previous Month Earnings:', previousMonthEarnings);
     const earningsChange = previousMonthEarnings > 0 ? ((monthlyEarnings - previousMonthEarnings) / previousMonthEarnings * 100).toFixed(0) : (monthlyEarnings > 0 ? 100 : 0);
 
     const stats = {

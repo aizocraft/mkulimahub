@@ -122,8 +122,6 @@ const Weather = () => {
 
         // Fetch forecast for this county
         fetchForecast(countyName);
-        
-        toast.success(`Weather data loaded for ${countyName}`);
       }
     } catch (error) {
       toast.error('Failed to fetch weather data');
@@ -174,6 +172,16 @@ const Weather = () => {
           alerts: data.safetyAlerts || [],
           localTime: data.localTime
         }));
+
+        // Update selected county with location data
+        if (data.county) {
+          setSelectedCounty({
+            name: data.county.name,
+            region: data.county.region,
+            id: data.county.id
+          });
+        }
+
         toast.success('Weather data loaded for your location');
       }
     } catch (error) {
@@ -188,6 +196,47 @@ const Weather = () => {
   const refreshData = async () => {
     if (selectedCounty) {
       await fetchWeatherByCounty(selectedCounty.name);
+    }
+  };
+
+  // Export weather data as CSV
+  const exportWeatherData = () => {
+    try {
+      const csvData = [
+        ['County', 'Region', 'Temperature (°C)', 'Condition', 'Humidity (%)', 'Wind Speed (m/s)', 'Pressure (hPa)', 'Visibility (km)', 'Feels Like (°C)', 'Sunrise', 'Sunset'],
+        [
+          selectedCounty?.name || 'N/A',
+          selectedCounty?.region || 'N/A',
+          Math.round(weatherData.current.temperature),
+          weatherData.current.condition,
+          weatherData.current.humidity,
+          weatherData.current.windSpeed,
+          weatherData.current.pressure,
+          weatherData.current.visibility,
+          Math.round(weatherData.current.feelsLike),
+          formatTime(weatherData.current.sunrise),
+          formatTime(weatherData.current.sunset)
+        ]
+      ];
+
+      const csvContent = csvData.map(row => row.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `weather-data-${selectedCounty?.name || 'current'}-${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      toast.success('Weather data exported successfully');
+    } catch (error) {
+      toast.error('Failed to export weather data');
+      console.error('Export error:', error);
     }
   };
 
@@ -298,7 +347,10 @@ const Weather = () => {
           </button>
 
           {/* Export Button */}
-          <button className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-all duration-200">
+          <button
+            onClick={exportWeatherData}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-lg transition-all duration-200"
+          >
             <Download size={18} />
             <span>Export</span>
           </button>

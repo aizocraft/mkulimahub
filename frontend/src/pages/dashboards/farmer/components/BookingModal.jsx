@@ -73,8 +73,6 @@ const BookingModal = ({ expert, isOpen, onClose, onSuccess }) => {
         description: description.trim()
       };
 
-      console.log('Sending booking request:', bookingData);
-      
       const response = await bookingAPI.bookConsultation(bookingData);
       
       if (response.data.success) {

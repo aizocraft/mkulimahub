@@ -34,16 +34,18 @@ const GoogleAuthButton = ({ onSuccess }) => {
 
         if (event.data.type === 'AUTH_SUCCESS') {
           const { token, user } = event.data;
-          
+
           window.removeEventListener('message', messageHandler);
           setLoading(false);
-          
+
           if (onSuccess) {
             onSuccess(user, token);
           }
-          
-          if (authWindow && !authWindow.closed) {
+
+          try {
             authWindow.close();
+          } catch (error) {
+            console.warn('Could not close auth window:', error);
           }
         }
         
@@ -51,9 +53,11 @@ const GoogleAuthButton = ({ onSuccess }) => {
           window.removeEventListener('message', messageHandler);
           setLoading(false);
           toast.error('Google authentication failed');
-          
-          if (authWindow && !authWindow.closed) {
+
+          try {
             authWindow.close();
+          } catch (error) {
+            console.warn('Could not close auth window:', error);
           }
         }
       };
@@ -63,8 +67,10 @@ const GoogleAuthButton = ({ onSuccess }) => {
       // Cleanup after 5 minutes
       setTimeout(() => {
         window.removeEventListener('message', messageHandler);
-        if (authWindow && !authWindow.closed) {
+        try {
           authWindow.close();
+        } catch (error) {
+          console.warn('Could not close auth window:', error);
         }
         setLoading(false);
       }, 5 * 60 * 1000);

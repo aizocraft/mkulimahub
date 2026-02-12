@@ -30,17 +30,6 @@ import {
 
 const ExpertDashboard = () => {
   const { user, isLoading } = useAuth();
-
-  // Show loading spinner while auth is initializing
-  if (isLoading) {
-    return <LoadingSpinner text="Loading dashboard..." />;
-  }
-
-  // Check if user is expert
-  if (!user || user.role !== 'expert') {
-    return <AccessDenied restrictedTo="expert" />;
-  }
-
   const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('expertDashboardActiveTab') || 'overview');
   const [expertData, setExpertData] = useState({
@@ -70,6 +59,16 @@ const ExpertDashboard = () => {
   useEffect(() => {
     localStorage.setItem('expertDashboardActiveTab', activeTab);
   }, [activeTab]);
+
+  // Show loading spinner while auth is initializing
+  if (isLoading) {
+    return <LoadingSpinner text="Loading dashboard..." />;
+  }
+
+  // Check if user is expert
+  if (!user || user.role !== 'expert') {
+    return <AccessDenied restrictedTo="expert" />;
+  }
 
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },

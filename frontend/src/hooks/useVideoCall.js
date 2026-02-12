@@ -135,36 +135,44 @@ const useVideoCall = (consultationId, user) => {
   const getLocalMediaStream = async () => {
     try {
       console.log('Requesting camera and microphone...');
-      
-      const constraints = {
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        },
-        video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          frameRate: { ideal: 24 }
-        }
-      };
-      
+
+      // Import videoCallUtils dynamically to avoid circular dependency
+      const { videoCallUtils } = await import('../utils/videoCallUtils');
+      const constraints = videoCallUtils.getMediaConstraints();
+
+      console.log('Using constraints:', constraints);
+
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
+
       console.log('✅ Media access granted');
+      console.log('Stream tracks:', stream.getTracks().map(t => `${t.kind}: ${t.label} (${t.readyState})`));
+
       setLocalStream(stream);
-      
+
+      // Ensure video element is properly set up
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
         localVideoRef.current.muted = true;
+        localVideoRef.current.volume = 0; // Ensure no audio feedback
+
+        // Force video to play (browsers may require user interaction)
+        try {
+          await localVideoRef.current.play();
+        } catch (playError) {
+          console.warn('Could not auto-play local video:', playError);
+        }
       }
-      
+
       return stream;
     } catch (error) {
       console.error('Media access error:', error);
       let errorMessage = 'Camera/microphone access required. ';
       if (error.name === 'NotAllowedError') {
-        errorMessage += 'Please allow permissions.';
+        errorMessage += 'Please allow permissions and refresh the page.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage += 'No camera or microphone found.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage += 'Camera or microphone is already in use.';
       }
       throw new Error(errorMessage);
     }
@@ -467,49 +475,69 @@ const useVideoCall = (consultationId, user) => {
   };
 
   const cleanup = useCallback(() => {
-    console.log('🧹 Cleaning up...');
-    
+    console.log('🧹 Cleaning up video call...');
+
     // Stop timer
     clearInterval(callIntervalRef.current);
     callIntervalRef.current = null;
-    
-    // Stop media streams
+
+    // Stop and clear local media streams
     if (localStream) {
+      console.log('Stopping local media tracks...');
       localStream.getTracks().forEach(track => {
+        console.log(`Stopping track: ${track.kind} (${track.label})`);
         track.stop();
         track.enabled = false;
       });
       setLocalStream(null);
     }
+
+    // Clear remote stream (don't stop remote tracks as they're controlled by the other peer)
     if (remoteStream) {
-      remoteStream.getTracks().forEach(track => {
-        track.stop();
-        track.enabled = false;
-      });
+      console.log('Clearing remote stream...');
       setRemoteStream(null);
     }
-    
+
+    // Clear video elements
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+      console.log('Cleared local video element');
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+      console.log('Cleared remote video element');
+    }
+
     // Close peer connection
     if (peerConnectionRef.current) {
+      console.log('Closing peer connection...');
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
-    
+
     // Remove socket listeners
     socketListenersRef.current.forEach(({ event }) => {
       socketService.off(event);
     });
     socketListenersRef.current = [];
-    
-    // Reset state
+
+    // Reset all state
     setIsCallActive(false);
     setIsCallEstablished(false);
     setRoomInfo(null);
     setConnectedUsers([]);
     setCallDuration(0);
     setIsInitiator(false);
-    
-    console.log('✅ Cleanup complete');
+    setIsMuted(false);
+    setIsVideoOff(false);
+
+    // Reset refs
+    hasSetRemoteDescriptionRef.current = false;
+    pendingIceCandidatesRef.current = [];
+    isNegotiatingRef.current = false;
+    connectedUsersRef.current = [];
+
+    console.log('✅ Video call cleanup complete - camera and microphone should be stopped');
   }, [localStream, remoteStream]);
 
   const endCall = () => {

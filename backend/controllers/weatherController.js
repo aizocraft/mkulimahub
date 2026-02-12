@@ -146,28 +146,63 @@ exports.getCounties = (req, res) => {
   }
 };
 
+// Helper function to find nearest county based on coordinates using Haversine formula
+const findNearestCounty = (lat, lon) => {
+  let nearestCounty = null;
+  let minDistance = Infinity;
+
+  const toRadians = (degrees) => degrees * (Math.PI / 180);
+
+  kenyaCounties.forEach(county => {
+    const dLat = toRadians(county.lat - lat);
+    const dLon = toRadians(county.lon - lon);
+
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRadians(lat)) * Math.cos(toRadians(county.lat)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = 6371 * c; // Earth's radius in kilometers
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestCounty = county;
+    }
+  });
+
+  return nearestCounty;
+};
+
 exports.getWeatherByCoordinates = async (req, res) => {
   try {
     const { lat, lon } = req.query;
-    
+
     if (!lat || !lon) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Latitude and longitude are required' 
+        error: 'Latitude and longitude are required'
       });
     }
 
     const response = await axios.get(
       `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${process.env.OPENWEATHER_API_KEY}&units=metric`
     );
-    
+
     const weatherData = response.data;
-    
+
+    // Find nearest county
+    const nearestCounty = findNearestCounty(parseFloat(lat), parseFloat(lon));
+
     // Enhance data with Kenya-specific info
     const enhancedData = {
       success: true,
       data: {
         ...weatherData,
+        county: nearestCounty ? {
+          name: nearestCounty.name,
+          region: nearestCounty.region,
+          id: nearestCounty.id
+        } : null,
         locationType: 'coordinates',
         localTime: new Date().toLocaleString('en-KE', { timeZone: 'Africa/Nairobi' }),
         agriculturalImpact: getAgriculturalImpact({
@@ -184,14 +219,14 @@ exports.getWeatherByCoordinates = async (req, res) => {
         timestamp: new Date().toISOString()
       }
     };
-    
+
     res.json(enhancedData);
   } catch (error) {
     console.error('Weather API error:', error.response?.data || error.message);
-    
+
     let statusCode = 500;
     let errorMessage = 'Failed to fetch weather data';
-    
+
     if (error.response?.status === 401) {
       statusCode = 401;
       errorMessage = 'Invalid OpenWeather API key';
@@ -202,8 +237,8 @@ exports.getWeatherByCoordinates = async (req, res) => {
       statusCode = 429;
       errorMessage = 'API rate limit exceeded. Try again later.';
     }
-    
-    res.status(statusCode).json({ 
+
+    res.status(statusCode).json({
       success: false,
       error: errorMessage,
       details: process.env.NODE_ENV === 'development' ? error.message : undefined

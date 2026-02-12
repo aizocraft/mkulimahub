@@ -3,12 +3,14 @@ import React, { useState, useEffect } from 'react';
 import useVideoCall from '../../hooks/useVideoCall';
 import useChat from '../../hooks/useChat';
 import ChatContainer from '../Chat/ChatContainer';
+import VideoGrid from './VideoGrid';
 import { Mic, MicOff, Video, VideoOff, Phone, PhoneOff, MessageSquare, X } from 'lucide-react';
 
 const VideoCallContainer = ({ consultation, user, onEndCall }) => {
   const [showChat, setShowChat] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  
+  const [remoteMuted, setRemoteMuted] = useState(true);
+
   const {
     localStream,
     remoteStream,
@@ -34,20 +36,7 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
 
   const chat = useChat(consultation?._id, user);
 
-  // Sync local stream to video element when it becomes available
-  useEffect(() => {
-    if (localStream && localVideoRef.current && !localVideoRef.current.srcObject) {
-      localVideoRef.current.srcObject = localStream;
-      localVideoRef.current.muted = true;
-    }
-  }, [localStream]);
 
-  // Sync remote stream to video element when it becomes available
-  useEffect(() => {
-    if (remoteStream && remoteVideoRef.current && !remoteVideoRef.current.srcObject) {
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  }, [remoteStream]);
 
   // Handle responsive design
   useEffect(() => {
@@ -196,69 +185,19 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
       {/* Main content: video + optional chat */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Video area */}
-        <div className={`flex-1 p-4 md:p-6 overflow-hidden ${showChat ? (isMobile ? 'hidden' : 'min-w-0') : ''}`}>
-          <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 md:gap-6 h-full`}>
-          {/* Remote video (main) */}
-          <div className={`relative bg-gray-850 rounded-2xl overflow-hidden ${isMobile ? 'h-64' : 'h-full'}`}>
-            {remoteStream ? (
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-850">
-                <div className="text-7xl mb-4 text-gray-600">👤</div>
-                <p className="text-gray-400 text-lg font-medium">No one connected yet</p>
-                <p className="text-gray-500 text-sm mt-1">Waiting for other participant</p>
-              </div>
-            )}
-            <div className="absolute bottom-4 left-4 bg-black/60 text-white px-4 py-2 rounded-lg backdrop-blur-sm">
-              <p className="font-medium">
-                {connectedUsers[0]?.userName || 'Remote'}
-              </p>
-              <p className="text-sm text-gray-300">
-                {isCallEstablished ? 'Connected' : 'Connecting...'}
-              </p>
-            </div>
-          </div>
-
-          {/* Local video (small) */}
-          <div className={`relative ${isMobile ? 'h-48' : 'h-64 lg:h-80'} bg-gray-850 rounded-2xl overflow-hidden`}>
-            {localStream && !isVideoOff ? (
-              <video
-                ref={localVideoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-850">
-                <div className="text-5xl mb-3 text-gray-600">📷</div>
-                <p className="text-gray-400">{isVideoOff ? 'Video off' : 'Camera off'}</p>
-              </div>
-            )}
-            
-            <div className="absolute top-4 left-4 bg-black/60 text-white px-3 py-1.5 rounded-lg backdrop-blur-sm">
-              <p className="font-medium text-sm">You ({user?.name || 'User'})</p>
-            </div>
-            
-            {/* Audio/video status indicators */}
-            <div className="absolute top-4 right-4 flex gap-2">
-              {isMuted && (
-                <div className="bg-red-600 text-white p-1.5 rounded-full">
-                  <MicOff size={16} />
-                </div>
-              )}
-              {isVideoOff && (
-                <div className="bg-red-600 text-white p-1.5 rounded-full">
-                  <VideoOff size={16} />
-                </div>
-              )}
-            </div>
-          </div>
+        <div className={`flex-1 overflow-hidden ${showChat ? (isMobile ? 'hidden' : 'min-w-0') : ''}`}>
+          <VideoGrid
+            localStream={localStream}
+            remoteStream={remoteStream}
+            screenStream={null}
+            localVideoRef={localVideoRef}
+            remoteVideoRef={remoteVideoRef}
+            screenVideoRef={null}
+            connectedUsers={connectedUsers}
+            isScreenSharing={false}
+            callDuration={callDuration}
+            user={user}
+          />
         </div>
       </div>
 
@@ -286,8 +225,6 @@ const VideoCallContainer = ({ consultation, user, onEndCall }) => {
           )}
         </div>
       )}
-
-      </div>
 
       {/* Controls */}
       <div className="border-t border-gray-800 bg-gray-850">
