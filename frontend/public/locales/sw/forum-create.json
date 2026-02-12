@@ -1,0 +1,68 @@
+{
+  "title": "Unda Chapisho Jipya",
+  "subtitle": "Shiriki maarifa yako au uliza maswali kwa jamii.",
+  "reviewNotice": "Chapisho lako litahakikiwa na wataalamu kabla ya kuonekana hadharani.",
+  "backToForum": "Rudi kwenye Jukwaa",
+  
+  "form": {
+    "title": "Kichwa *",
+    "titlePlaceholder": "Weka kichwa kinachoelezea chapisho lako",
+    "titleMinChars": "Haja herufi {{count}} zaidi",
+    "titleValid": "✓ Sawa",
+    "titleLength": "{{count}}/200",
+    
+    "category": "Aina *",
+    "categoryPlaceholder": "-- Chagua aina --",
+    "categoryExpertsOnly": "(Wataalamu Pekee)",
+    "categoryInactive": "(Haifanyi kazi)",
+    "categorySelected": "Umechagua: {{name}}",
+    "categoryExpertWarning": "⚠️ Inahitaji ruhusa za mtaalamu",
+    "categoryInactiveWarning": "⚠️ Aina haifanyi kazi",
+    "categoryUnknown": "Aina isiyojulikana",
+    
+    "tags": "Lebo (si lazima)",
+    "tagsPlaceholder": "Ongeza lebo na ubonyeze Enter",
+    "tagsHelp": "Ongeza lebo zinazofaa (si lazima)",
+    "tagsCount": "lebo {{count}}/10",
+    
+    "content": "Maudhui *",
+    "contentPlaceholder": "Shiriki maarifa yako, uliza maswali, au jadili mada za kilimo...",
+    "contentMinChars": "Haja herufi {{count}} zaidi",
+    "contentValid": "✓ Sawa",
+    "contentLength": "{{count}}/10000",
+    
+    "attachments": "Viambatisho (si lazima)",
+    "attachmentsUploading": "Inapakia...",
+    "attachmentsTooLarge": "{{name}} ni kubwa sana. Ukubwa wa juu ni 5MB.",
+    "attachmentsInvalidType": "{{name}} si aina inayoruhusiwa ya faili.",
+    "attachmentsUploaded": "{{filename}} imepakiwa",
+    "attachmentsFailed": "Imeshindwa kupakia {{name}}",
+    "attachmentsRemoved": "{{filename}} imeondolewa",
+    
+    "postingAs": "Unachapisha kama:",
+    "submit": "Unda Chapisho",
+    "submitting": "Inaunda...",
+    "cancel": "Ghairi",
+    
+    "errors": {
+      "titleRequired": "Kichwa kinahitajika",
+      "titleMinLength": "Kichwa lazima kiwe angalau herufi 5",
+      "contentRequired": "Maudhui yanahitajika",
+      "contentMinLength": "Maudhui lazima yawe angalau herufi 10",
+      "categoryRequired": "Tafadhali chagua aina",
+      "categoryNotFound": "Aina iliyochaguliwa haikupatikana. Tafadhali burudisha ukurasa na ujaribu tena.",
+      "categoryExpertOnly": "Aina hii ni ya wataalamu pekee. Tafadhali chagua aina tofauti.",
+      "categoryInactive": "Aina hii haifanyi kazi. Tafadhali chagua aina tofauti.",
+      "networkError": "Hitilafu ya mtandao. Tafadhali angalia muunganisho wako.",
+      "badRequest": "Ombi baya. Tafadhali angalia maelezo yako.",
+      "permissionDenied": "Huna ruhusa ya kuunda chapisho hili.",
+      "categoryNotFoundRefresh": "Aina haikupatikana. Tafadhali burudisha ukurasa na ujaribu tena.",
+      "generic": "Imeshindwa kuunda chapisho"
+    },
+    
+    "success": {
+      "created": "Chapisho limeundwa kwa mafanikio!",
+      "createdWithReview": "Chapisho limeundwa kwa mafanikio! Litahakikiwa na mtaalamu kabla ya kuonekana hadharani."
+    }
+  }
+}

@@ -1,3 +1,4 @@
+// frontend/src/i18n.js
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -12,7 +13,7 @@ i18n
     supportedLngs: ['en', 'sw'], // Explicitly allow English and Kiswahili
     
     // Namespaces: these match your JSON filenames
-    ns: ['home', 'nav', 'contact'],
+    ns: ['home', 'nav', 'contact', 'forum', 'profile', 'settings', 'forum-create'],
     defaultNS: 'home',
 
     backend: {

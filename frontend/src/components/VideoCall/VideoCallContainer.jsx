@@ -1,5 +1,5 @@
 
-// src/components/VideoCall/VideoCallContainer.jsx - FIXED VERSION
+// src/components/VideoCall/VideoCallContainer.jsx 
 import React, { useState, useEffect } from 'react';
 import useVideoCall from '../../hooks/useVideoCall';
 import useChat from '../../hooks/useChat';

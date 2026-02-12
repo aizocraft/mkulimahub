@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import { 
   Palette,
@@ -11,7 +12,6 @@ import {
   EyeIcon,
   Database as DataIcon,
   Languages,
-  ChevronRight,
   Save,
   RotateCcw,
   Sprout,
@@ -32,37 +32,38 @@ import LanguageTab from './settings/LanguageTab';
 const SettingsPage = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation('settings');
   
   const [activeSection, setActiveSection] = useState('appearance');
   const [saved, setSaved] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const navigationItems = [
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'account', label: 'Account', icon: User },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy & Security', icon: ShieldCheck },
-    { id: 'accessibility', label: 'Accessibility', icon: EyeIcon },
-    { id: 'storage', label: 'Storage & Data', icon: DataIcon },
-    { id: 'language', label: 'Language', icon: Languages }
+    { id: 'appearance', label: t('appearance'), icon: Palette },
+    { id: 'account', label: t('account'), icon: User },
+    { id: 'notifications', label: t('notifications'), icon: Bell },
+    { id: 'privacy', label: t('privacySecurity'), icon: ShieldCheck },
+    { id: 'accessibility', label: t('accessibility'), icon: EyeIcon },
+    { id: 'storage', label: t('storageData'), icon: DataIcon },
+    { id: 'language', label: t('language'), icon: Languages }
   ];
 
   const handleSaveSettings = () => {
     setSaved(true);
-    toast.success('Settings saved successfully!');
+    toast.success(t('savedSuccessfully'));
     setTimeout(() => setSaved(false), 3000);
   };
 
   const handleResetSettings = () => {
-    toast.info('Settings reset to defaults');
+    toast.info(t('resetSuccessfully'));
   };
 
   const RoleBadge = ({ role }) => {
     const getRoleConfig = (role) => {
       const configs = {
-        farmer: { icon: Sprout, color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30', label: 'Farmer' },
-        expert: { icon: Lightbulb, color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30', label: 'Expert' },
-        admin: { icon: Crown, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30', label: 'Administrator' }
+        farmer: { icon: Sprout, color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30', label: t('farmer') },
+        expert: { icon: Lightbulb, color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30', label: t('expert') },
+        admin: { icon: Crown, color: 'text-purple-500', bg: 'bg-purple-100 dark:bg-purple-900/30', label: t('admin') }
       };
       return configs[role] || configs.farmer;
     };
@@ -90,10 +91,10 @@ const SettingsPage = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent mb-3">
-            Settings
+            {t('settings')}
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            Customize your experience and preferences
+            {t('customizeExperience')}
           </p>
         </div>
 
@@ -101,7 +102,7 @@ const SettingsPage = () => {
           {/* Mobile Tab Navigation */}
           <div className="lg:hidden">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Settings</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('settings')}</h2>
               <button 
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 className="p-2 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur border border-white/20 dark:border-gray-700/20 hover:bg-white/70 dark:hover:bg-gray-700/70 transition-all"
@@ -183,10 +184,15 @@ const SettingsPage = () => {
                     <User size={20} className="text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{user?.name || 'User'}</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm truncate">{user?.name || t('user')}</h4>
                     <p className="text-gray-600 dark:text-gray-400 text-xs truncate">{user?.email || 'user@example.com'}</p>
                   </div>
                 </div>
+                {user?.role && (
+                  <div className="mt-3">
+                    <RoleBadge role={user.role} />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -220,7 +226,7 @@ const SettingsPage = () => {
               className="flex items-center justify-center space-x-2 px-6 py-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-xl border border-gray-300 dark:border-gray-600 hover:bg-white/70 dark:hover:bg-gray-700/70 text-gray-700 dark:text-gray-300 rounded-xl transition-all duration-200 font-medium hover:shadow-lg"
             >
               <RotateCcw size={18} />
-              <span>Reset to Defaults</span>
+              <span>{t('resetToDefaults')}</span>
             </button>
             
             <button
@@ -232,7 +238,7 @@ const SettingsPage = () => {
               }`}
             >
               <Save size={18} />
-              <span>{saved ? 'Saved!' : 'Save Changes'}</span>
+              <span>{saved ? t('saved') : t('saveChanges')}</span>
             </button>
           </div>
         </div>

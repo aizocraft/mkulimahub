@@ -1,0 +1,115 @@
+{
+  "title": "Community Forum",
+  "subtitle": "Share knowledge, ask questions, and connect with fellow farmers and experts.",
+  "createPost": "Create New Post",
+  "loginRequired": "Please login to view your posts.",
+  "createFirstPost": "Create Your First Post",
+  
+  "tabs": {
+    "all": "All Posts",
+    "myPosts": "My Posts",
+    "moderation": "Moderation",
+    "stats": "Statistics"
+  },
+
+  "filters": {
+    "search": "Search posts...",
+    "allCategories": "All Categories",
+    "newest": "Newest First",
+    "trending": "Trending",
+    "mostCommented": "Most Comments",
+    "mostVoted": "Most Votes",
+    "apply": "Apply Filters"
+  },
+
+  "vote": {
+    "upvote": "Upvote",
+    "downvote": "Downvote",
+    "removeUpvote": "Remove upvote",
+    "removeDownvote": "Remove downvote",
+    "upvoted": "👍 Upvoted!",
+    "downvoted": "👎 Downvoted",
+    "removed": "Vote removed",
+    "changedToUpvote": "👍 Changed to upvote!",
+    "changedToDownvote": "👎 Changed to downvote",
+    "loginRequired": "Please login to vote on posts",
+    "error": "Failed to vote. Please try again."
+  },
+
+  "delete": {
+    "confirm": "Are you sure you want to delete this post?",
+    "success": "Post deleted successfully",
+    "error": "Failed to delete post."
+  },
+
+  "moderation": {
+    "noPermission": "You need to be an expert or administrator to access this section.",
+    "noPending": "No pending reviews",
+    "allReviewed": "All content has been moderated.",
+    "pendingReviews": "Pending Reviews ({{count}})",
+    "post": "📝 Post",
+    "comment": "💬 Comment",
+    "byAuthor": "by {{author}}",
+    "submitted": "Submitted",
+    "rejectionReason": "Reason for rejection...",
+    "approve": "Approve",
+    "reject": "Reject",
+    "view": "View",
+    "confirmReject": "Confirm Reject",
+    "approved": "Content approved ✓",
+    "rejected": "Content rejected",
+    "error": "Failed to moderate content.",
+    "reasonRequired": "Please provide a rejection reason",
+    "approvedReason": "Approved by moderator"
+  },
+
+  "stats": {
+    "totalPosts": "Total Posts",
+    "totalComments": "Total Comments",
+    "postsToday": "Posts Today",
+    "activeUsers": "Active Users",
+    "topCategories": "Top Categories",
+    "recentActivity": "Recent Activity",
+    "postCount": "{{count}} posts",
+    "commentCount": "{{count}} comments",
+    "byAuthor": "By {{author}}"
+  },
+
+  "badges": {
+    "expert": "Expert",
+    "pinned": "Pinned Post",
+    "locked": "Locked",
+    "pending": "Pending Review",
+    "expertAnswer": "Expert Answer"
+  },
+
+  "post": {
+    "viewComments": "View post and comments",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+
+  "noPosts": {
+    "general": "No posts found",
+    "my": "You haven't created any posts yet",
+    "createFirst": "Share your knowledge or ask questions to get started.",
+    "beFirst": "Be the first to post in the community!"
+  },
+
+  "date": {
+    "justNow": "Just now",
+    "hoursAgo": "{{hours}}h ago",
+    "unknown": "Unknown date"
+  },
+
+  "error": {
+    "loadFailed": "Failed to load forum data. Please try again."
+  },
+
+  "common": {
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+
+  "reactionNotification": "Someone {{reaction}}d your post!"
+}

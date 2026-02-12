@@ -17,7 +17,8 @@ import {
   ChevronDown,
   Home,
   Info,
-  Contact
+  Contact,
+  MessageSquare
 } from 'lucide-react';
 import NotificationIcon from './NotificationIcon';
 
@@ -91,23 +92,17 @@ const Navbar = () => {
   const baseNavigationItems = [
     { path: '/', label: t('home'), icon: Home },
     { path: '/about', label: t('about'), icon: Info },
-    { path: '/contact', label: t('contact'), icon: Contact },
-
+    { path: '/contact', label: t('contactUs'), icon: Contact },
   ];
 
   // Role-specific navigation items
-  const farmerItems = [
+  const farmerItems = [];
 
-  ];
-
-  const expertItems = [
-   
-  
-  ];
+  const expertItems = [];
 
   const adminItems = [
-    { path: '/users', label: 'Users', icon: Users },
-    { path: '/analytics', label: 'Analytics', icon: LayoutDashboard },
+    { path: '/users', label: t('users'), icon: Users },
+    { path: '/analytics', label: t('analytics'), icon: LayoutDashboard },
   ];
 
   const getRoleSpecificItems = () => {
@@ -124,7 +119,7 @@ const Navbar = () => {
   const allNavigationItems = [
     ...baseNavigationItems,
     ...getRoleSpecificItems(),
-    ...(user ? [{ path: getDashboardLink(), label: 'Dashboard', icon: LayoutDashboard }] : [])
+    ...(user ? [{ path: getDashboardLink(), label: t('dashboard'), icon: LayoutDashboard }] : [])
   ];
 
   if (isLoading) {
@@ -221,7 +216,7 @@ const Navbar = () => {
                     <button
                       onClick={handleLogout}
                       className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl transition-all duration-200"
-                      title="Logout"
+                      title={t('signOut')}
                     >
                       <LogOut size={16} />
                     </button>
@@ -232,13 +227,13 @@ const Navbar = () => {
                       to="/login"
                       className="px-3 py-1.5 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium rounded-lg transition-colors duration-200 text-sm"
                     >
-                      Login
+                      {t('login')}
                     </Link>
                     <Link
                       to="/register"
                       className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg transition-all duration-200 text-sm"
                     >
-                      Register
+                      {t('register')}
                     </Link>
                   </div>
                 )}
@@ -293,6 +288,7 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="flex items-center space-x-1">
+              {/* Home, About, Contact Us - Always visible */}
               {baseNavigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -312,6 +308,7 @@ const Navbar = () => {
                 );
               })}
 
+              {/* Role-specific items */}
               {user && getRoleSpecificItems().map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
@@ -330,6 +327,21 @@ const Navbar = () => {
                   </Link>
                 );
               })}
+
+              {/* Dashboard */}
+              {user && (
+                <Link
+                  to={getDashboardLink()}
+                  className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    location.pathname === getDashboardLink()
+                      ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/25'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <LayoutDashboard size={16} />
+                  <span>{t('dashboard')}</span>
+                </Link>
+              )}
             </div>
 
             {/* Right Side Actions - Desktop */}
@@ -441,12 +453,12 @@ const Navbar = () => {
                         <div className="p-4 border-b border-gray-100 dark:border-gray-700">
                           <div className="grid grid-cols-2 gap-2">
                             <Link
-                              to={getDashboardLink()}
+                              to="/forum"
                               onClick={() => setIsDropdownOpen(false)}
                               className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
                             >
-                              <LayoutDashboard size={18} className="text-emerald-600 dark:text-emerald-400" />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Dashboard</span>
+                              <MessageSquare size={18} className="text-emerald-600 dark:text-emerald-400" />
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('forum')}</span>
                             </Link>
                             <Link
                               to="/profile"
@@ -454,21 +466,28 @@ const Navbar = () => {
                               className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200"
                             >
                               <User size={18} className="text-blue-600 dark:text-blue-400" />
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Profile</span>
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile')}</span>
                             </Link>
                           </div>
                         </div>
 
                         {/* Menu Items */}
                         <div className="p-2">
-                         
+                          <Link
+                            to={getDashboardLink()}
+                            onClick={() => setIsDropdownOpen(false)}
+                            className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors duration-200"
+                          >
+                            <LayoutDashboard size={18} />
+                            <span className="font-medium">{t('dashboard')}</span>
+                          </Link>
                           <Link
                             to="/settings"
                             onClick={() => setIsDropdownOpen(false)}
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors duration-200"
                           >
                             <Settings size={18} />
-                            <span className="font-medium">Settings</span>
+                            <span className="font-medium">{t('settings')}</span>
                           </Link>
                           <Link
                             to="/help"
@@ -476,7 +495,7 @@ const Navbar = () => {
                             className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors duration-200"
                           >
                             <HelpCircle size={18} />
-                            <span className="font-medium">Help & Support</span>
+                            <span className="font-medium">{t('helpSupport')}</span>
                           </Link>
                         </div>
 
@@ -487,7 +506,7 @@ const Navbar = () => {
                             className="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-xl transition-colors duration-200 font-medium"
                           >
                             <LogOut size={18} />
-                            <span>Sign Out</span>
+                            <span>{t('signOut')}</span>
                           </button>
                         </div>
                       </div>
@@ -500,13 +519,13 @@ const Navbar = () => {
                     to="/login"
                     className="px-4 py-2.5 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium rounded-xl transition-colors duration-200"
                   >
-                    Login
+                    {t('login')}
                   </Link>
                   <Link
                     to="/register"
                     className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-xl transition-all duration-200 transform hover:scale-105"
                   >
-                    Sign Up
+                    {t('register')}
                   </Link>
                 </div>
               )}

@@ -1,0 +1,68 @@
+{
+  "title": "Create New Post",
+  "subtitle": "Share your knowledge or ask questions to the community.",
+  "reviewNotice": "Your post will be reviewed by experts before appearing publicly.",
+  "backToForum": "Back to Forum",
+  
+  "form": {
+    "title": "Title *",
+    "titlePlaceholder": "Enter a descriptive title for your post",
+    "titleMinChars": "Need {{count}} more characters",
+    "titleValid": "✓ Good",
+    "titleLength": "{{count}}/200",
+    
+    "category": "Category *",
+    "categoryPlaceholder": "-- Select a category --",
+    "categoryExpertsOnly": "(Experts Only)",
+    "categoryInactive": "(Inactive)",
+    "categorySelected": "Selected: {{name}}",
+    "categoryExpertWarning": "⚠️ Requires expert permissions",
+    "categoryInactiveWarning": "⚠️ Category is inactive",
+    "categoryUnknown": "Unknown category",
+    
+    "tags": "Tags (optional)",
+    "tagsPlaceholder": "Add a tag and press Enter",
+    "tagsHelp": "Add relevant tags (optional)",
+    "tagsCount": "{{count}}/10 tags",
+    
+    "content": "Content *",
+    "contentPlaceholder": "Share your knowledge, ask questions, or discuss farming topics...",
+    "contentMinChars": "Need {{count}} more characters",
+    "contentValid": "✓ Good",
+    "contentLength": "{{count}}/10000",
+    
+    "attachments": "Attachments (optional)",
+    "attachmentsUploading": "Uploading...",
+    "attachmentsTooLarge": "{{name}} is too large. Max file size is 5MB.",
+    "attachmentsInvalidType": "{{name}} is not an allowed file type.",
+    "attachmentsUploaded": "{{filename}} uploaded",
+    "attachmentsFailed": "Failed to upload {{name}}",
+    "attachmentsRemoved": "{{filename}} removed",
+    
+    "postingAs": "Posting as:",
+    "submit": "Create Post",
+    "submitting": "Creating...",
+    "cancel": "Cancel",
+    
+    "errors": {
+      "titleRequired": "Title is required",
+      "titleMinLength": "Title must be at least 5 characters",
+      "contentRequired": "Content is required",
+      "contentMinLength": "Content must be at least 10 characters",
+      "categoryRequired": "Please select a category",
+      "categoryNotFound": "Selected category not found. Please refresh the page and try again.",
+      "categoryExpertOnly": "This category is for experts only. Please select a different category.",
+      "categoryInactive": "This category is not active. Please select a different category.",
+      "networkError": "Network error. Please check your connection.",
+      "badRequest": "Bad request. Please check your input.",
+      "permissionDenied": "You do not have permission to create this post.",
+      "categoryNotFoundRefresh": "Category not found. Please refresh the page and try again.",
+      "generic": "Failed to create post"
+    },
+    
+    "success": {
+      "created": "Post created successfully!",
+      "createdWithReview": "Post created successfully! It will be reviewed by an expert before appearing publicly."
+    }
+  }
+}

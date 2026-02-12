@@ -1,0 +1,115 @@
+{
+  "title": "Jukwaa la Jamii",
+  "subtitle": "Shiriki maarifa, uliza maswali, na ungana na wakulima wenzako na wataalamu.",
+  "createPost": "Unda Chapisho Jipya",
+  "loginRequired": "Tafadhali ingia ili kuona machapisho yako.",
+  "createFirstPost": "Unda Chapisho Lako la Kwanza",
+  
+  "tabs": {
+    "all": "Machapisho Yote",
+    "myPosts": "Machapisho Yangu",
+    "moderation": "Uhakiki",
+    "stats": "Takwimu"
+  },
+
+  "filters": {
+    "search": "Tafuta machapisho...",
+    "allCategories": "Aina Zote",
+    "newest": "Mpya Kwanza",
+    "trending": "Yanayovuma",
+    "mostCommented": "Maoni Mengi",
+    "mostVoted": "Kura Nyingi",
+    "apply": "Tumia Vichujio"
+  },
+
+  "vote": {
+    "upvote": "Pendekeza",
+    "downvote": "Pinga",
+    "removeUpvote": "Ondoa pendekezo",
+    "removeDownvote": "Ondoa pingamizi",
+    "upvoted": "👍 Umependekeza!",
+    "downvoted": "👎 Umepinga",
+    "removed": "Kura imeondolewa",
+    "changedToUpvote": "👍 Imebadilishwa kuwa pendekezo!",
+    "changedToDownvote": "👎 Imebadilishwa kuwa pingamizi",
+    "loginRequired": "Tafadhali ingia ili kupiga kura",
+    "error": "Imeshindwa kupiga kura. Tafadhali jaribu tena."
+  },
+
+  "delete": {
+    "confirm": "Una uhakika unataka kufuta chapisho hili?",
+    "success": "Chapisho limefutwa kwa mafanikio",
+    "error": "Imeshindwa kufuta chapisho."
+  },
+
+  "moderation": {
+    "noPermission": "Unahitaji kuwa mtaalamu au msimamizi ili kufikia sehemu hii.",
+    "noPending": "Hakuna uhakiki unaosubiri",
+    "allReviewed": "Maudhui yote yamehakikiwa.",
+    "pendingReviews": "Uhakiki Unaosubiri ({{count}})",
+    "post": "📝 Chapisho",
+    "comment": "💬 Maoni",
+    "byAuthor": "na {{author}}",
+    "submitted": "Iliwasilishwa",
+    "rejectionReason": "Sababu ya kukataa...",
+    "approve": "Idhinisha",
+    "reject": "Kataa",
+    "view": "Tazama",
+    "confirmReject": "Thibitisha Kukataa",
+    "approved": "Maudhui yameidhinishwa ✓",
+    "rejected": "Maudhui yamekataliwa",
+    "error": "Imeshindwa kuhakiki maudhui.",
+    "reasonRequired": "Tafadhali toa sababu ya kukataa",
+    "approvedReason": "Imeidhinishwa na msimamizi"
+  },
+
+  "stats": {
+    "totalPosts": "Jumla ya Machapisho",
+    "totalComments": "Jumla ya Maoni",
+    "postsToday": "Machapisho Leo",
+    "activeUsers": "Watumiaji Hai",
+    "topCategories": "Aina Maarufu",
+    "recentActivity": "Shughuli za Hivi Karibuni",
+    "postCount": "machapisho {{count}}",
+    "commentCount": "maoni {{count}}",
+    "byAuthor": "Na {{author}}"
+  },
+
+  "badges": {
+    "expert": "Mtaalamu",
+    "pinned": "Chapisho Lililobandikwa",
+    "locked": "Limefungwa",
+    "pending": "Linasubiri Uhakiki",
+    "expertAnswer": "Jibu la Mtaalamu"
+  },
+
+  "post": {
+    "viewComments": "Tazama chapisho na maoni",
+    "edit": "Hariri",
+    "delete": "Futa"
+  },
+
+  "noPosts": {
+    "general": "Hakuna machapisho yaliyopatikana",
+    "my": "Hujatengeneza chapisho bado",
+    "createFirst": "Shiriki maarifa yako au uliza maswali kuanza.",
+    "beFirst": "Kuwa wa kwanza kuchapisha katika jamii!"
+  },
+
+  "date": {
+    "justNow": "Sasa hivi",
+    "hoursAgo": "{{hours}}h iliyopita",
+    "unknown": "Tarehe haijulikani"
+  },
+
+  "error": {
+    "loadFailed": "Imeshindwa kupakia data ya jukwaa. Tafadhali jaribu tena."
+  },
+
+  "common": {
+    "confirm": "Thibitisha",
+    "cancel": "Ghairi"
+  },
+
+  "reactionNotification": "Mtu ame{{reaction}}d chapisho lako!"
+}

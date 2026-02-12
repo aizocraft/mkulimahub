@@ -1,0 +1,20 @@
+{
+  "settings": "Mipangilio",
+  "customizeExperience": "Badilisha uzoefu wako na mapendeleo",
+  "appearance": "Muonekano",
+  "account": "Akaunti",
+  "notifications": "Arifa",
+  "privacySecurity": "Faragha na Usalama",
+  "accessibility": "Ufikiaji",
+  "storageData": "Hifadhi na Data",
+  "language": "Lugha",
+  "resetToDefaults": "Rejesha kwa Chaguo-msingi",
+  "saveChanges": "Hifadhi Mabadiliko",
+  "saved": "Imehifadhiwa!",
+  "savedSuccessfully": "Mipangilio imehifadhiwa kwa mafanikio!",
+  "resetSuccessfully": "Mipangilio imerejeshwa kwa chaguo-msingi",
+  "user": "Mtumiaji",
+  "farmer": "Mkulima",
+  "expert": "Mtaalamu",
+  "admin": "Msimamizi"
+}

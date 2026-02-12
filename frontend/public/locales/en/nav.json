@@ -1,5 +1,15 @@
 {
   "home": "Home",
   "about": "About",
-  "contact": "Contact"
+  "contactUs": "Contact Us",
+  "dashboard": "Dashboard",
+  "login": "Login",
+  "register": "Register",
+  "settings": "Settings",
+  "helpSupport": "Help & Support",
+  "signOut": "Sign Out",
+  "profile": "Profile",
+  "users": "Users",
+  "analytics": "Analytics",
+  "forum": "Forum"
 }

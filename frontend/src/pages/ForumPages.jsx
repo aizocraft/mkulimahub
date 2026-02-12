@@ -1,6 +1,8 @@
+// src/pages/ForumPages.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { forumAPI } from '../api';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -38,6 +40,7 @@ import socketService from '../services/socketService';
 const ForumPages = () => {
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const { theme } = useTheme();
+  const { t } = useTranslation('forum');
   const navigate = useNavigate();
   
   // State with localStorage persistence
@@ -55,15 +58,14 @@ const ForumPages = () => {
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
   const [votedPosts, setVotedPosts] = useState(() => {
-    // Initialize from localStorage if available
     try {
       const saved = localStorage.getItem('forumVotedPosts');
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
     }
-  }); // Track user votes
-  const [votingPostId, setVotingPostId] = useState(null); // Track voting animation
+  });
+  const [votingPostId, setVotingPostId] = useState(null);
 
   // Filters with localStorage persistence
   const [filters, setFilters] = useState(() => {
@@ -86,7 +88,7 @@ const ForumPages = () => {
   // Check if user can moderate
   const canModerate = user?.role === 'admin' || user?.role === 'expert';
 
-  // Persist activeTab to localStorage
+  // Persist states to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('forumActiveTab', activeTab);
@@ -95,7 +97,6 @@ const ForumPages = () => {
     }
   }, [activeTab]);
 
-  // Persist filters to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('forumFilters', JSON.stringify(filters));
@@ -104,7 +105,6 @@ const ForumPages = () => {
     }
   }, [filters]);
 
-  // Persist votedPosts to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('forumVotedPosts', JSON.stringify(votedPosts));
@@ -115,7 +115,7 @@ const ForumPages = () => {
 
   // Fetch data
   useEffect(() => {
-    if (isAuthLoading) return; // wait for auth to initialize to get correct userVote
+    if (isAuthLoading) return;
     fetchForumData();
   }, [filters, activeTab, user?.id, isAuthLoading]);
 
@@ -124,11 +124,8 @@ const ForumPages = () => {
     if (user?.id && !isAuthLoading) {
       const token = localStorage.getItem('token');
       socketService.initialize(token, user.id);
-
-      // Join forum room for real-time updates
       socketService.joinForum();
 
-      // Listen for real-time vote updates
       const handleVoteUpdate = (data) => {
         const { postId, stats, userVote } = data;
         setPosts(currentPosts =>
@@ -142,9 +139,8 @@ const ForumPages = () => {
 
       const handleReactionUpdate = (data) => {
         const { postId, reactionType, userId: reactingUserId } = data;
-        // Handle reaction updates (could show notification or update UI)
         if (reactingUserId !== user.id) {
-          toast.info(`Someone ${reactionType}d your post!`, {
+          toast.info(t('reactionNotification', { reaction: reactionType }), {
             position: 'top-center',
             autoClose: 2000,
             hideProgressBar: true
@@ -155,33 +151,22 @@ const ForumPages = () => {
       socketService.on('forum:vote-update', handleVoteUpdate);
       socketService.on('forum:reaction-update', handleReactionUpdate);
 
-      // Send real-time vote updates
-      const originalHandleVote = handleVote;
-      const enhancedHandleVote = async (postId, voteType) => {
-        const result = await originalHandleVote(postId, voteType);
-        // Emit real-time update
-        socketService.votePost(postId, voteType);
-        return result;
-      };
-
       return () => {
         socketService.off('forum:vote-update', handleVoteUpdate);
         socketService.off('forum:reaction-update', handleReactionUpdate);
         socketService.leaveForum();
       };
     }
-  }, [user?.id, isAuthLoading]);
+  }, [user?.id, isAuthLoading, t]);
 
   const fetchForumData = async () => {
     try {
       setIsLoading(true);
       setError('');
 
-      // Fetch categories
       const categoriesResponse = await forumAPI.getCategories();
       setCategories(categoriesResponse.data.categories || []);
 
-      // Fetch posts
       const postParams = {
         category: filters.category,
         sortBy: filters.sortBy,
@@ -192,50 +177,44 @@ const ForumPages = () => {
       const fetchedPosts = postsResponse.data.posts || [];
       setPosts(fetchedPosts);
 
-      // Preserve localStorage state - only update from server for posts not in localStorage
       const newVoteMap = { ...votedPosts };
       fetchedPosts.forEach(p => {
-        // Only update from server if we don't have localStorage state for this post
         if (newVoteMap[p.id] === undefined) {
           newVoteMap[p.id] = p.userVote || null;
         }
       });
       setVotedPosts(newVoteMap);
 
-      // Fetch pending reviews
       if (canModerate && activeTab === 'moderation') {
         const reviewsResponse = await forumAPI.getPendingReviews();
         setPendingReviews(reviewsResponse.data.items || []);
       }
 
-      // Fetch stats
       const statsResponse = await forumAPI.getForumStats();
       setStats(statsResponse.data.stats);
 
     } catch (err) {
       console.error('Error fetching forum data:', err);
-      setError('Failed to load forum data. Please try again.');
+      setError(t('error.loadFailed'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown date';
+    if (!dateString) return t('date.unknown');
     const date = new Date(dateString);
     const now = new Date();
     const diffHours = Math.floor((now - date) / (1000 * 60 * 60));
     
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 1) return t('date.justNow');
+    if (diffHours < 24) return t('date.hoursAgo', { hours: diffHours });
     return date.toLocaleDateString();
   };
 
-  // Handle vote - server-side toggle for consistency
   const handleVote = async (postId, voteType) => {
     if (!isAuthenticated()) {
-      toast.info('Please login to vote on posts', { position: 'top-center' });
+      toast.info(t('vote.loginRequired'), { position: 'top-center' });
       navigate('/login');
       return;
     }
@@ -243,10 +222,8 @@ const ForumPages = () => {
     try {
       setVotingPostId(postId);
 
-      // Make API call - server handles toggle logic
       const response = await forumAPI.votePost(postId, voteType);
 
-      // Update from server response
       setPosts(currentPosts => currentPosts.map(p => {
         if (p.id === postId) {
           return {
@@ -259,46 +236,41 @@ const ForumPages = () => {
         return p;
       }));
 
-      // Sync votedPosts
       setVotedPosts(prev => ({
         ...prev,
         [postId]: response.data.userVote || null
       }));
 
-      // Show appropriate toast based on server response
       const newUserVote = response.data.userVote;
       if (newUserVote === voteType) {
-        // Vote was added
         if (voteType === 'upvote') {
-          toast.success('👍 Upvoted!', {
+          toast.success(t('vote.upvoted'), {
             position: 'top-center',
             autoClose: 1500,
             hideProgressBar: true
           });
         } else if (voteType === 'downvote') {
-          toast.info('� Downvoted', {
+          toast.info(t('vote.downvoted'), {
             position: 'top-center',
             autoClose: 1500,
             hideProgressBar: true
           });
         }
       } else if (newUserVote === null) {
-        // Vote was removed (server toggled it off)
-        toast.info('Vote removed', {
+        toast.info(t('vote.removed'), {
           position: 'top-center',
           autoClose: 1500,
           hideProgressBar: true
         });
       } else if (newUserVote !== voteType) {
-        // Vote was changed (e.g., upvote changed to downvote)
         if (newUserVote === 'upvote') {
-          toast.success('� Changed to upvote!', {
+          toast.success(t('vote.changedToUpvote'), {
             position: 'top-center',
             autoClose: 1500,
             hideProgressBar: true
           });
         } else if (newUserVote === 'downvote') {
-          toast.info('👎 Changed to downvote', {
+          toast.info(t('vote.changedToDownvote'), {
             position: 'top-center',
             autoClose: 1500,
             hideProgressBar: true
@@ -307,11 +279,8 @@ const ForumPages = () => {
       }
     } catch (err) {
       console.error('Error voting:', err);
-
-      // Refresh data to sync with server on error
       await fetchForumData();
-
-      const errorMsg = err.response?.data?.message || 'Failed to vote. Please try again.';
+      const errorMsg = err.response?.data?.message || t('vote.error');
       toast.error(errorMsg, {
         position: 'top-center',
         autoClose: 3000
@@ -321,20 +290,19 @@ const ForumPages = () => {
     }
   };
 
-  // Handle delete
   const handleDelete = async (postId) => {
-    if (!window.confirm('Are you sure you want to delete this post?')) return;
+    if (!window.confirm(t('delete.confirm'))) return;
 
     try {
       await forumAPI.deletePost(postId);
       setPosts(prev => prev.filter(post => post.id !== postId));
-      toast.success('Post deleted successfully', { 
+      toast.success(t('delete.success'), { 
         position: 'top-center',
         autoClose: 2000 
       });
     } catch (err) {
       console.error('Error deleting post:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to delete post.';
+      const errorMsg = err.response?.data?.message || t('delete.error');
       toast.error(errorMsg, { 
         position: 'top-center',
         autoClose: 3000 
@@ -342,18 +310,17 @@ const ForumPages = () => {
     }
   };
 
-  // Handle moderation
   const handleModerate = async (type, id, action, reason = '') => {
     try {
       if (action === 'approve') {
-        await forumAPI.approveContent(type, id, 'Approved by moderator');
-        toast.success('Content approved ✓', { 
+        await forumAPI.approveContent(type, id, t('moderation.approvedReason'));
+        toast.success(t('moderation.approved'), { 
           position: 'top-center',
           autoClose: 2000 
         });
       } else {
         await forumAPI.rejectContent(type, id, reason);
-        toast.info('Content rejected', { 
+        toast.info(t('moderation.rejected'), { 
           position: 'top-center',
           autoClose: 2000 
         });
@@ -366,7 +333,7 @@ const ForumPages = () => {
       fetchForumData();
     } catch (err) {
       console.error('Error moderating content:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to moderate content.';
+      const errorMsg = err.response?.data?.message || t('moderation.error');
       toast.error(errorMsg, { 
         position: 'top-center',
         autoClose: 3000 
@@ -374,20 +341,18 @@ const ForumPages = () => {
     }
   };
 
-  // Tabs
   const tabs = [
-    { id: 'all', label: 'All Posts', icon: <FileText className="w-4 h-4" /> },
-    { id: 'my', label: 'My Posts', icon: <MessageSquare className="w-4 h-4" /> },
+    { id: 'all', label: t('tabs.all'), icon: <FileText className="w-4 h-4" /> },
+    { id: 'my', label: t('tabs.myPosts'), icon: <MessageSquare className="w-4 h-4" /> },
     ...(canModerate ? [{ 
       id: 'moderation', 
-      label: 'Moderation', 
+      label: t('tabs.moderation'), 
       icon: <AlertCircle className="w-4 h-4" />,
       badge: pendingReviews.length 
     }] : []),
-    { id: 'stats', label: 'Statistics', icon: <BarChart3 className="w-4 h-4" /> }
+    { id: 'stats', label: t('tabs.stats'), icon: <BarChart3 className="w-4 h-4" /> }
   ];
 
-  // Filter posts by current tab
   const filteredPosts = activeTab === 'my' && user
     ? posts.filter(post => post.author?._id === user.id || post.author === user.id)
     : posts;
@@ -407,11 +372,11 @@ const ForumPages = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Community Forum</h1>
+              <h1 className="text-3xl font-bold">{t('title')}</h1>
               <p className={`mt-2 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
               }`}>
-                Share knowledge, ask questions, and connect with fellow farmers and experts.
+                {t('subtitle')}
               </p>
             </div>
             
@@ -421,7 +386,7 @@ const ForumPages = () => {
                 className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Create New Post
+                {t('createPost')}
               </button>
             )}
           </div>
@@ -443,7 +408,7 @@ const ForumPages = () => {
                 }`} />
                 <input
                   type="text"
-                  placeholder="Search posts..."
+                  placeholder={t('filters.search')}
                   value={filters.search}
                   onChange={(e) => setFilters({...filters, search: e.target.value})}
                   className={`w-full pl-10 pr-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
@@ -469,7 +434,7 @@ const ForumPages = () => {
                       : 'bg-white border-gray-300'
                   } border`}
                 >
-                  <option value="">All Categories</option>
+                  <option value="">{t('filters.allCategories')}</option>
                   {categories.map((category) => (
                     <option key={category._id} value={category._id}>
                       {category.name}
@@ -492,10 +457,10 @@ const ForumPages = () => {
                     : 'bg-white border-gray-300'
                 } border`}
               >
-                <option value="newest">Newest First</option>
-                <option value="trending">Trending</option>
-                <option value="most_commented">Most Comments</option>
-                <option value="most_voted">Most Votes</option>
+                <option value="newest">{t('filters.newest')}</option>
+                <option value="trending">{t('filters.trending')}</option>
+                <option value="most_commented">{t('filters.mostCommented')}</option>
+                <option value="most_voted">{t('filters.mostVoted')}</option>
               </select>
             </div>
             
@@ -504,7 +469,7 @@ const ForumPages = () => {
                 type="submit"
                 className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
               >
-                Apply Filters
+                {t('filters.apply')}
               </button>
             </div>
           </form>
@@ -567,31 +532,33 @@ const ForumPages = () => {
             <Loader2 className="w-12 h-12 text-green-600 animate-spin" />
           </div>
         ) : activeTab === 'stats' ? (
-          <StatsTab stats={stats} categories={categories} theme={theme} />
+          <StatsTab stats={stats} categories={categories} theme={theme} t={t} />
         ) : activeTab === 'moderation' ? (
           <ModerationTab 
             pendingReviews={pendingReviews} 
             onModerate={handleModerate}
             canModerate={canModerate}
             theme={theme}
+            t={t}
           />
         ) : (
           <PostsTab 
-              posts={filteredPosts}
-              user={user}
-              onVote={handleVote}
-              onDelete={handleDelete}
-              canModerate={canModerate}
-              formatDate={formatDate}
-              activeTab={activeTab}
-              isAuthenticated={isAuthenticated}
-              navigate={navigate}
-              theme={theme}
-              votingPostId={votingPostId}
-              setVotingPostId={setVotingPostId}
-              votedPosts={votedPosts}
-              setVotedPosts={setVotedPosts}
-            />
+            posts={filteredPosts}
+            user={user}
+            onVote={handleVote}
+            onDelete={handleDelete}
+            canModerate={canModerate}
+            formatDate={formatDate}
+            activeTab={activeTab}
+            isAuthenticated={isAuthenticated}
+            navigate={navigate}
+            theme={theme}
+            votingPostId={votingPostId}
+            setVotingPostId={setVotingPostId}
+            votedPosts={votedPosts}
+            setVotedPosts={setVotedPosts}
+            t={t}
+          />
         )}
       </div>
     </div>
@@ -599,7 +566,7 @@ const ForumPages = () => {
 };
 
 // Stats Tab Component
-const StatsTab = ({ stats, categories, theme }) => {
+const StatsTab = ({ stats, categories, theme, t }) => {
   if (!stats) return null;
 
   return (
@@ -607,10 +574,10 @@ const StatsTab = ({ stats, categories, theme }) => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { value: stats.totalPosts || 0, label: 'Total Posts' },
-          { value: stats.totalComments || 0, label: 'Total Comments' },
-          { value: stats.postsToday || 0, label: 'Posts Today' },
-          { value: stats.totalUsers || 0, label: 'Active Users' },
+          { value: stats.totalPosts || 0, label: t('stats.totalPosts') },
+          { value: stats.totalComments || 0, label: t('stats.totalComments') },
+          { value: stats.postsToday || 0, label: t('stats.postsToday') },
+          { value: stats.totalUsers || 0, label: t('stats.activeUsers') },
         ].map((stat, index) => (
           <div 
             key={index}
@@ -636,7 +603,7 @@ const StatsTab = ({ stats, categories, theme }) => {
       } border`}>
         <h3 className={`text-lg font-semibold mb-4 ${
           theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-        }`}>Top Categories</h3>
+        }`}>{t('stats.topCategories')}</h3>
         <div className="space-y-3">
           {(stats.topCategories || []).slice(0, 5).map((category) => (
             <div key={category._id} className="flex items-center justify-between">
@@ -650,7 +617,7 @@ const StatsTab = ({ stats, categories, theme }) => {
                 </span>
               </div>
               <div className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-                {category.postCount || 0} posts • {category.commentCount || 0} comments
+                {t('stats.postCount', { count: category.postCount || 0 })} • {t('stats.commentCount', { count: category.commentCount || 0 })}
               </div>
             </div>
           ))}
@@ -665,7 +632,7 @@ const StatsTab = ({ stats, categories, theme }) => {
       } border`}>
         <h3 className={`text-lg font-semibold mb-4 ${
           theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-        }`}>Recent Activity</h3>
+        }`}>{t('stats.recentActivity')}</h3>
         <div className="space-y-3">
           {(stats.recentActivity || []).map((post) => (
             <Link
@@ -701,7 +668,7 @@ const StatsTab = ({ stats, categories, theme }) => {
                 <p className={`text-xs ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
                 }`}>
-                  By {post.author?.name} • {new Date(post.createdAt).toLocaleDateString()}
+                  {t('stats.byAuthor', { author: post.author?.name })} • {new Date(post.createdAt).toLocaleDateString()}
                 </p>
               </div>
               <div className={`text-xs px-2 py-1 rounded ${
@@ -720,7 +687,7 @@ const StatsTab = ({ stats, categories, theme }) => {
 };
 
 // Moderation Tab Component
-const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
+const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme, t }) => {
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -734,7 +701,7 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
         <div className="flex items-center">
           <AlertCircle className="w-5 h-5 text-yellow-500 mr-2" />
           <p className={theme === 'dark' ? 'text-yellow-300' : 'text-yellow-700'}>
-            You need to be an expert or administrator to access this section.
+            {t('moderation.noPermission')}
           </p>
         </div>
       </div>
@@ -753,9 +720,9 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
         }`} />
         <h3 className={`text-lg font-semibold mb-2 ${
           theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-        }`}>No pending reviews</h3>
+        }`}>{t('moderation.noPending')}</h3>
         <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
-          All content has been moderated.
+          {t('moderation.allReviewed')}
         </p>
       </div>
     );
@@ -763,7 +730,7 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
 
   const handleReject = (type, id) => {
     if (!rejectionReason.trim()) {
-      alert('Please provide a rejection reason');
+      alert(t('moderation.reasonRequired'));
       return;
     }
     onModerate(type, id, 'reject', rejectionReason);
@@ -777,7 +744,7 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
         <h3 className={`text-lg font-semibold ${
           theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
         }`}>
-          Pending Reviews ({pendingReviews.length})
+          {t('moderation.pendingReviews', { count: pendingReviews.length })}
         </h3>
       </div>
       
@@ -798,12 +765,12 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
                     ? 'bg-yellow-900 text-yellow-300' 
                     : 'bg-yellow-100 text-yellow-800'
                 }`}>
-                  {item.type === 'post' ? '📝 Post' : '💬 Comment'}
+                  {item.type === 'post' ? t('moderation.post') : t('moderation.comment')}
                 </span>
                 <span className={`ml-2 text-sm ${
                   theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                 }`}>
-                  by {item.item.author?.name}
+                  {t('moderation.byAuthor', { author: item.item.author?.name })}
                 </span>
               </div>
               
@@ -816,7 +783,7 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
               <div className={`text-xs ${
                 theme === 'dark' ? 'text-gray-500' : 'text-gray-500'
               }`}>
-                Submitted: {new Date(item.item.createdAt).toLocaleString()}
+                {t('moderation.submitted')}: {new Date(item.item.createdAt).toLocaleString()}
               </div>
             </div>
           </div>
@@ -824,7 +791,7 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
           {rejectingId === `${item.type}-${item.item._id}` ? (
             <div className="mt-4 space-y-3">
               <textarea
-                placeholder="Reason for rejection..."
+                placeholder={t('moderation.rejectionReason')}
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 className={`w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 ${
@@ -843,13 +810,13 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   } border`}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={() => handleReject(item.type, item.item._id)}
                   className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
-                  Confirm Reject
+                  {t('moderation.confirmReject')}
                 </button>
               </div>
             </div>
@@ -859,13 +826,13 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
                 onClick={() => onModerate(item.type, item.item._id, 'approve')}
                 className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
               >
-                Approve
+                {t('moderation.approve')}
               </button>
               <button
                 onClick={() => setRejectingId(`${item.type}-${item.item._id}`)}
                 className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
               >
-                Reject
+                {t('moderation.reject')}
               </button>
               <Link
                 to={item.type === 'post' 
@@ -878,7 +845,7 @@ const ModerationTab = ({ pendingReviews, onModerate, canModerate, theme }) => {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 } border`}
               >
-                View
+                {t('moderation.view')}
               </Link>
             </div>
           )}
@@ -903,7 +870,8 @@ const PostsTab = ({
   votingPostId,
   setVotingPostId,
   votedPosts,
-  setVotedPosts
+  setVotedPosts,
+  t
 }) => {
   if (!isAuthenticated() && activeTab === 'my') {
     return (
@@ -915,7 +883,7 @@ const PostsTab = ({
         <div className="flex items-center">
           <AlertCircle className="w-5 h-5 text-blue-500 mr-2" />
           <p className={theme === 'dark' ? 'text-blue-300' : 'text-blue-700'}>
-            Please login to view your posts.
+            {t('loginRequired')}
           </p>
         </div>
       </div>
@@ -935,12 +903,10 @@ const PostsTab = ({
         <h3 className={`text-lg font-semibold mb-2 ${
           theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
         }`}>
-          {activeTab === 'my' ? "You haven't created any posts yet" : 'No posts found'}
+          {activeTab === 'my' ? t('noPosts.my') : t('noPosts.general')}
         </h3>
         <p className={`mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-          {activeTab === 'my' 
-            ? 'Share your knowledge or ask questions to get started.'
-            : 'Be the first to post in the community!'}
+          {activeTab === 'my' ? t('noPosts.createFirst') : t('noPosts.beFirst')}
         </p>
         {isAuthenticated() && activeTab === 'my' && (
           <button
@@ -948,7 +914,7 @@ const PostsTab = ({
             className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Create Your First Post
+            {t('createFirstPost')}
           </button>
         )}
       </div>
@@ -972,6 +938,7 @@ const PostsTab = ({
           setVotingPostId={setVotingPostId}
           votedPosts={votedPosts}
           setVotedPosts={setVotedPosts}
+          t={t}
         />
       ))}
     </div>
@@ -979,11 +946,9 @@ const PostsTab = ({
 };
 
 // Post Card Component
-const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme, votingPostId, setVotingPostId, votedPosts, setVotedPosts }) => {
+const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, formatDate, navigate, theme, votingPostId, setVotingPostId, votedPosts, setVotedPosts, t }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const canEdit = post.author?._id === user?.id || canModerate;
-
-  // Prioritize localStorage state over server state for immediate UI feedback
   const localUserVote = votedPosts[post.id] !== undefined ? votedPosts[post.id] : (post.userVote || null);
 
   return (
@@ -1018,7 +983,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                 theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
               }`}>{post.author?.name}</h4>
               {post.author?.role === 'expert' && (
-                <CheckCircle className="w-4 h-4 text-green-600 ml-1" />
+                <CheckCircle className="w-4 h-4 text-green-600 ml-1" title={t('badges.expert')} />
               )}
             </div>
             <p className={`text-sm ${
@@ -1031,9 +996,9 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
         
         {/* Status Indicators */}
         <div className="flex items-center space-x-2">
-          {post.isPinned && <Pin className="w-4 h-4 text-yellow-600" />}
-          {post.isLocked && <Lock className="w-4 h-4 text-gray-400" />}
-          {post.status === 'pending_review' && <Clock className="w-4 h-4 text-yellow-600" />}
+          {post.isPinned && <Pin className="w-4 h-4 text-yellow-600" title={t('badges.pinned')} />}
+          {post.isLocked && <Lock className="w-4 h-4 text-gray-400" title={t('badges.locked')} />}
+          {post.status === 'pending_review' && <Clock className="w-4 h-4 text-yellow-600" title={t('badges.pending')} />}
         </div>
       </div>
 
@@ -1046,7 +1011,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
           }`}
         >
           {post.title}
-          {post.isExpertAnswer && <Star className="w-4 h-4 text-yellow-500 inline-block ml-2" />}
+          {post.isExpertAnswer && <Star className="w-4 h-4 text-yellow-500 inline-block ml-2" title={t('badges.expertAnswer')} />}
         </Link>
       </h3>
 
@@ -1077,7 +1042,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                   : 'bg-gray-100 text-gray-600'
               }`}
             >
-              {tag}
+              #{tag}
             </span>
           ))}
         </div>
@@ -1104,7 +1069,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                     }`
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={user ? `${localUserVote === 'upvote' ? 'Remove upvote' : 'Upvote'}` : 'Login to vote'}
+              title={user ? (localUserVote === 'upvote' ? t('vote.removeUpvote') : t('vote.upvote')) : t('vote.loginRequired')}
             >
               <ThumbsUp className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-200 ${
                 localUserVote === 'upvote' ? 'fill-current' : ''
@@ -1131,7 +1096,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                     }` 
                   : 'opacity-50 cursor-not-allowed'
               }`}
-              title={user ? `${localUserVote === 'downvote' ? 'Remove downvote' : 'Downvote'}` : 'Login to vote'}
+              title={user ? (localUserVote === 'downvote' ? t('vote.removeDownvote') : t('vote.downvote')) : t('vote.loginRequired')}
             >
               <ThumbsDown className={`w-4 sm:w-5 h-4 sm:h-5 transition-all duration-200 ${
                 localUserVote === 'downvote' ? 'fill-current' : ''
@@ -1145,7 +1110,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
               type="button"
               onClick={() => navigate(`/forum/posts/${post.id}`)}
               className="flex items-center space-x-2 focus:outline-none"
-              title="View post and comments"
+              title={t('post.viewComments')}
             >
               <MessageSquare className={`w-4 sm:w-5 h-4 sm:h-5 ${
                 theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
@@ -1176,7 +1141,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                   onClick={() => onDelete(post.id)}
                   className="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors duration-200"
                 >
-                  Confirm
+                  {t('common.confirm')}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(false)}
@@ -1186,7 +1151,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                       : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                   } border`}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
               </>
             ) : (
@@ -1200,7 +1165,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                   }`}
                 >
                   <Edit className="w-4 h-4 mr-1" />
-                  Edit
+                  {t('post.edit')}
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
@@ -1211,7 +1176,7 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
                   }`}
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
-                  Delete
+                  {t('post.delete')}
                 </button>
               </>
             )}
@@ -1221,7 +1186,6 @@ const PostCard = React.memo(({ post, user, onVote, onDelete, canModerate, format
     </div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if post or voting state actually changed
   return (
     prevProps.post.id === nextProps.post.id &&
     prevProps.post.userVote === nextProps.post.userVote &&

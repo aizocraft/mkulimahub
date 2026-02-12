@@ -1,0 +1,20 @@
+{
+  "settings": "Settings",
+  "customizeExperience": "Customize your experience and preferences",
+  "appearance": "Appearance",
+  "account": "Account",
+  "notifications": "Notifications",
+  "privacySecurity": "Privacy & Security",
+  "accessibility": "Accessibility",
+  "storageData": "Storage & Data",
+  "language": "Language",
+  "resetToDefaults": "Reset to Defaults",
+  "saveChanges": "Save Changes",
+  "saved": "Saved!",
+  "savedSuccessfully": "Settings saved successfully!",
+  "resetSuccessfully": "Settings reset to defaults",
+  "user": "User",
+  "farmer": "Farmer",
+  "expert": "Expert",
+  "admin": "Administrator"
+}

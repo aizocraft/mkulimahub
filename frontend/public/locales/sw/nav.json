@@ -1,7 +1,7 @@
 {
   "home": "Nyumbani",
   "about": "Kuhusu",
-  "contact": "Wasiliana",
+  "contactUs": "Wasiliana Nasi",
   "users": "Watumiaji",
   "analytics": "Takwimu",
   "dashboard": "Dashibodi",
@@ -10,5 +10,6 @@
   "settings": "Mipangilio",
   "helpSupport": "Msaada na Usaidizi",
   "signOut": "Toka",
-  "profile": "Wasifu"
+  "profile": "Wasifu",
+  "forum": "Jukwaa"
 }

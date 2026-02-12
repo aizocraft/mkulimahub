@@ -48,27 +48,30 @@ const VideoGrid = ({
         muted: video.muted
       });
 
-      // Clear any existing srcObject first
-      video.srcObject = null;
+      // Ensure video is properly configured for remote stream
+      video.muted = true;
+      video.volume = 0;
+      video.autoplay = true;
+      video.playsInline = true;
 
-      // Small delay to ensure cleanup, then assign stream and attempt play
-      setTimeout(async () => {
-        video.srcObject = remoteStream;
+      // Assign stream directly
+      video.srcObject = remoteStream;
 
-        console.log('Video element after assignment:', {
-          srcObject: video.srcObject,
-          readyState: video.readyState,
-          networkState: video.networkState,
-          paused: video.paused,
-          muted: video.muted
-        });
+      console.log('Video element after assignment:', {
+        srcObject: video.srcObject,
+        readyState: video.readyState,
+        networkState: video.networkState,
+        paused: video.paused,
+        muted: video.muted
+      });
 
-        // Force load the video
-        video.load();
+      // Force load the video
+      video.load();
 
-        // Now attempt to play
-        await attemptPlay();
-      }, 50);
+      // Attempt to play immediately if ready, otherwise wait for events
+      if (video.readyState >= 2) { // HAVE_CURRENT_DATA
+        attemptPlay();
+      }
 
       // Force video to load and play
       const attemptPlay = async (force = false) => {
