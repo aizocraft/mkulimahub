@@ -11,14 +11,21 @@ import {
   Edit3,
   Calendar,
   BarChart3,
-  Settings
+  Settings,
+  MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api, { bookingAPI, forumAPI, dashboardAPI } from '../../../api';
+import ExpertReviews from '../../../components/ExpertReviews';
+import ViewClients from '../../../components/ViewClients';
 
 const Overview = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const [showReviewsModal, setShowReviewsModal] = useState(false);
+  const [showClientsModal, setShowClientsModal] = useState(false);
 
   const [expertStats, setExpertStats] = useState({
     totalConsultations: 0,
@@ -333,25 +340,34 @@ const Overview = () => {
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group">
+              <button
+                onClick={() => navigate('/forum')}
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group"
+              >
                 <div className="p-3 bg-blue-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
-                  <MessageCircle size={20} className="text-white" />
-                </div>
-    <div className="text-center">
-      <div className="font-semibold text-gray-900 dark:text-white text-sm">Forum Posts</div>
-    </div>
-              </button>
-
-              <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group">
-                <div className="p-3 bg-green-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
-                  <Calendar size={20} className="text-white" />
+                  <MessageSquare size={20} className="text-white" />
                 </div>
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900 dark:text-white text-sm">Manage Schedule</div>
+                  <div className="font-semibold text-gray-900 dark:text-white text-sm">Forum Posts</div>
                 </div>
               </button>
 
-              <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group">
+              <button
+                onClick={() => setShowReviewsModal(true)}
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group"
+              >
+                <div className="p-3 bg-green-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
+                  <Star size={20} className="text-white" />
+                </div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-900 dark:text-white text-sm">Reviews</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setShowClientsModal(true)}
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group"
+              >
                 <div className="p-3 bg-purple-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
                   <Users size={20} className="text-white" />
                 </div>
@@ -360,7 +376,10 @@ const Overview = () => {
                 </div>
               </button>
 
-              <button className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group">
+              <button
+                onClick={() => navigate('/dashboard/expert?tab=analytics')}
+                className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group"
+              >
                 <div className="p-3 bg-orange-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
                   <BarChart3 size={20} className="text-white" />
                 </div>
@@ -487,6 +506,19 @@ const Overview = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      <ExpertReviews
+        isOpen={showReviewsModal}
+        onClose={() => setShowReviewsModal(false)}
+        expertId={user?.id}
+      />
+
+      <ViewClients
+        isOpen={showClientsModal}
+        onClose={() => setShowClientsModal(false)}
+        expertId={user?.id}
+      />
     </div>
   );
 };

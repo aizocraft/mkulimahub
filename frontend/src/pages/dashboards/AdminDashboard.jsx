@@ -7,6 +7,7 @@ import Overview from './admin/Overview';
 import Weather from './admin/Weather';
 import Logs from './admin/Logs';
 import Transactions from './admin/Transactions';
+import SystemAnalytics from '../../components/SystemAnalytics';
 import {
   BarChart3,
   Users,
@@ -15,7 +16,8 @@ import {
   CheckCircle,
   Settings,
   FileText,
-  CreditCard
+  CreditCard,
+  TrendingUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -45,6 +47,7 @@ const AdminDashboard = () => {
     { id: 'weather', label: 'Weather', icon: Cloud },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
     { id: 'logs', label: 'System Logs', icon: FileText },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
   ];
 
   return (
@@ -142,6 +145,7 @@ const AdminDashboard = () => {
           {activeTab === 'weather' && <Weather />}
           {activeTab === 'transactions' && <Transactions />}
           {activeTab === 'logs' && <Logs />}
+          {activeTab === 'analytics' && <SystemAnalytics />}
         </div>
       </div>
     </div>

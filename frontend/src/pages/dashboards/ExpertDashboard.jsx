@@ -9,6 +9,7 @@ import Consultations from './expert/Consultations';
 import Weather from './admin/Weather';
 import ForumPages from '../ForumPages';
 import Transactions from './admin/Transactions';
+import SystemAnalytics from '../../components/SystemAnalytics';
 
 import {
   BarChart3,
@@ -25,7 +26,8 @@ import {
   Globe,
   Cloud,
   MessageSquare,
-  CreditCard
+  CreditCard,
+  TrendingUp
 } from 'lucide-react';
 
 const ExpertDashboard = () => {
@@ -75,7 +77,8 @@ const ExpertDashboard = () => {
     { id: 'consultations', label: 'Consultations', icon: MessageCircle },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
     { id: 'forum', label: 'Forum', icon: MessageSquare },
-    { id: 'weather', label: 'Weather', icon: Cloud }
+    { id: 'weather', label: 'Weather', icon: Cloud },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp }
   ];
 
   // Function to get verification display text
@@ -269,6 +272,8 @@ const ExpertDashboard = () => {
           {activeTab === 'transactions' && <Transactions />}
           {activeTab === 'forum' && <ForumPages />}
           {activeTab === 'weather' && <Weather />}
+          {activeTab === 'analytics' && <SystemAnalytics />}
+
 
         </div>
 
