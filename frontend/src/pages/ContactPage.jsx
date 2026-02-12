@@ -26,15 +26,29 @@ const ContactPage = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setIsSubmitting(true);
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    setResult("Sending....");
+    const formDataToSend = new FormData(event.target);
+    formDataToSend.append("access_key", "c60950a6-f19d-465f-b72f-681e1ab34cf9");
+
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      body: formDataToSend
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      setResult("Form Submitted Successfully");
+      event.target.reset();
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    } else {
+      setResult("Error");
+    }
     setIsSubmitting(false);
-    alert('Thank you for your message! Our agricultural experts will contact you ...');
-    setFormData({ name: '', email: '', subject: '', message: '' });
   };
 
   const handleChange = (e) => {
@@ -205,7 +219,7 @@ const ContactPage = () => {
                           required
                           value={formData.name}
                           onChange={handleChange}
-                          className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200 text-base"
+                          className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 transform focus:scale-[1.02] text-base"
                           placeholder="Enter your full name"
                         />
                       </div>
@@ -233,24 +247,21 @@ const ContactPage = () => {
 
                   <div>
                     <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      What do you need help with? *
+                      Subject *
                     </label>
-                    <select
-                      id="subject"
-                      name="subject"
-                      required
-                      value={formData.subject}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200 text-base"
-                    >
-                      <option value="">Select topic</option>
-                      <option value="pest-control">Pest & Disease Control</option>
-                      <option value="soil-management">Soil Management</option>
-                      <option value="crop-planning">Crop Planning</option>
-                      <option value="irrigation">Irrigation Systems</option>
-                      <option value="market-access">Market Access</option>
-                      <option value="other">Other Agricultural Issue</option>
-                    </select>
+                    <div className="relative">
+                      <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <input
+                        type="text"
+                        id="subject"
+                        name="subject"
+                        required
+                        value={formData.subject}
+                        onChange={handleChange}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 transform focus:scale-[1.02] text-base"
+                        placeholder="Enter your subject"
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -264,7 +275,7 @@ const ContactPage = () => {
                       rows="5"
                       value={formData.message}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200 text-base resize-none"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 transform focus:scale-[1.02] text-base resize-none"
                       placeholder="Tell us about your specific farming situation, crops, and challenges..."
                     ></textarea>
                   </div>
@@ -272,20 +283,32 @@ const ContactPage = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 disabled:opacity-50 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-emerald-500/50 flex items-center justify-center gap-3 text-base"
+                    className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 disabled:opacity-50 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg focus:outline-none focus:ring-4 focus:ring-emerald-500/50 flex items-center justify-center gap-3 text-base"
                   >
                     {isSubmitting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Connecting to Expert...
+                        Sending...
                       </>
                     ) : (
                       <>
                         <Send className="w-5 h-5" />
-                        Connect with Agricultural Expert
+                        Send Message
                       </>
                     )}
                   </button>
+
+                  {result && (
+                    <div className={`mt-4 p-4 rounded-xl text-center font-semibold transition-all duration-500 ${
+                      result === "Form Submitted Successfully"
+                        ? "bg-green-100 text-green-800 border border-green-200 animate-fade-in"
+                        : result === "Error"
+                        ? "bg-red-100 text-red-800 border border-red-200 animate-fade-in"
+                        : "bg-blue-100 text-blue-800 border border-blue-200"
+                    }`}>
+                      {result}
+                    </div>
+                  )}
 
                 </form>
               </div>
