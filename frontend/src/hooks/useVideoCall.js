@@ -357,12 +357,20 @@ const useVideoCall = (consultationId, user) => {
         event: 'video-call:answer',
         handler: async (data) => {
           console.log('📨 Received answer from:', data.fromUserName);
-          if (peerConnectionRef.current && peerConnectionRef.current.signalingState !== 'stable') {
+          if (peerConnectionRef.current) {
             try {
               await peerConnectionRef.current.setRemoteDescription(
                 new RTCSessionDescription(data.answer)
               );
               console.log('✅ Remote description set from answer');
+
+              // Process any pending ICE candidates
+              pendingIceCandidatesRef.current.forEach(candidate => {
+                peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate)).catch(error => {
+                  console.error('Error adding pending ICE candidate:', error);
+                });
+              });
+              pendingIceCandidatesRef.current = [];
             } catch (error) {
               console.error('Error setting remote description:', error);
             }

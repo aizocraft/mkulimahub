@@ -25,8 +25,8 @@ const VideoCallModal = ({ consultation, user, isOpen, onClose, onEndCall }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 md:p-4">
+      <div className="bg-gray-900 w-full h-full md:rounded-xl md:max-w-6xl md:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Modal Header */}
         <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
           <div>
