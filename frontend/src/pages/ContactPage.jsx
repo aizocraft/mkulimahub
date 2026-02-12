@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { 
   Mail, 
   Phone, 
@@ -19,6 +20,7 @@ import {
 
 const ContactPage = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation('contact');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -61,13 +63,13 @@ const ContactPage = () => {
   const contactMethods = [
      {
       icon: <Phone className="w-5 h-5" />,
-      title: "Phone",
+      title: t('phone'),
       details: "+254 711 123 456",
       color: "from-emerald-500 to-green-500"
     },
     {
       icon: <Mail className="w-5 h-5" />,
-      title: "Email",
+      title: t('email'),
       details: "support@mkulimahub.com",
       color: "from-blue-500 to-cyan-500"
     }
@@ -76,15 +78,15 @@ const ContactPage = () => {
   const supportFeatures = [
     {
       icon: <Globe className="w-4 h-4" />,
-      text: "Multilingual support"
+      text: t('multilingualSupport')
     },
     {
       icon: <CheckCircle className="w-4 h-4" />,
-      text: "Certified experts"
+      text: t('certifiedExperts')
     },
     {
       icon: <Shield className="w-4 h-4" />,
-      text: "Secure & private"
+      text: t('securePrivate')
     }
   ];
 
@@ -103,7 +105,7 @@ const ContactPage = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
           <div className="text-center">
             <h1 className="text-4xl lg:text-6xl font-bold text-white mb-4 leading-tight">
-              Contact Us
+              {t('contactUs')}
             </h1>
 
           </div>
@@ -143,10 +145,10 @@ const ContactPage = () => {
             <div className="lg:col-span-1 space-y-6">
               <div className="text-center lg:text-left mb-6">
                 <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white mb-3">
-                  How Can We Help You?
+                  {t('howCanWeHelp')}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  Choose your preferred way to connect
+                  {t('choosePreferredWay')}
                 </p>
               </div>
 
@@ -176,7 +178,7 @@ const ContactPage = () => {
               <div className="bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl p-6 text-white shadow-lg">
                 <div className="flex items-center gap-3 mb-4">
                   <Sparkles className="w-5 h-5" />
-                  <h3 className="font-bold text-lg">Support Features</h3>
+                  <h3 className="font-bold text-lg">{t('supportFeatures')}</h3>
                 </div>
                 <div className="space-y-3">
                   {supportFeatures.map((feature, index) => (
@@ -199,8 +201,8 @@ const ContactPage = () => {
                     <Send className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Send us a Message</h2>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg">We'll connect you with the right expert</p>
+                    <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">{t('sendMessage')}</h2>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg">{t('connectWithExpert')}</p>
                   </div>
                 </div>
 
@@ -208,7 +210,7 @@ const ContactPage = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Your Name *
+                        {t('yourName')}
                       </label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -220,14 +222,14 @@ const ContactPage = () => {
                           value={formData.name}
                           onChange={handleChange}
                           className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 transform focus:scale-[1.02] text-base"
-                          placeholder="Enter your full name"
+                          placeholder={t('enterFullName')}
                         />
                       </div>
                     </div>
 
                     <div>
                       <label htmlFor="email" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        Email Address *
+                        {t('emailAddress')}
                       </label>
                       <div className="relative">
                         <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -247,7 +249,7 @@ const ContactPage = () => {
 
                   <div>
                     <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Subject *
+                      {t('subject')}
                     </label>
                     <div className="relative">
                       <MessageCircle className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -259,14 +261,14 @@ const ContactPage = () => {
                         value={formData.subject}
                         onChange={handleChange}
                         className="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 transform focus:scale-[1.02] text-base"
-                        placeholder="Enter your subject"
+                        placeholder={t('enterSubject')}
                       />
                     </div>
                   </div>
 
                   <div>
                     <label htmlFor="message" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Describe your farming challenge *
+                      {t('describeChallenge')}
                     </label>
                     <textarea
                       id="message"
@@ -276,7 +278,7 @@ const ContactPage = () => {
                       value={formData.message}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 transform focus:scale-[1.02] text-base resize-none"
-                      placeholder="Tell us about your specific farming situation, crops, and challenges..."
+                      placeholder={t('messagePlaceholder')}
                     ></textarea>
                   </div>
 
@@ -288,12 +290,12 @@ const ContactPage = () => {
                     {isSubmitting ? (
                       <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Sending...
+                        {t('sending')}
                       </>
                     ) : (
                       <>
                         <Send className="w-5 h-5" />
-                        Send Message
+                        {t('sendMessageButton')}
                       </>
                     )}
                   </button>
@@ -306,7 +308,7 @@ const ContactPage = () => {
                         ? "bg-red-100 text-red-800 border border-red-200 animate-fade-in"
                         : "bg-blue-100 text-blue-800 border border-blue-200"
                     }`}>
-                      {result}
+                      {result === "Form Submitted Successfully" ? t('formSubmittedSuccessfully') : result === "Error" ? t('error') : result}
                     </div>
                   )}
 

@@ -153,13 +153,15 @@ const VideoGrid = ({
         }
       };
 
-      // Try to play immediately and also on loadedmetadata
-      attemptPlay();
+      // Remove the immediate attemptPlay() call - it will be called after stream assignment
 
       const onLoadedMetadata = () => {
         console.log('Remote video metadata loaded');
         console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
-        attemptPlay();
+        // Only attempt play if video is ready
+        if (video.readyState >= 2) {
+          attemptPlay();
+        }
       };
 
       const onCanPlay = () => {

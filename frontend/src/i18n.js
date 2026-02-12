@@ -12,8 +12,8 @@ i18n
     supportedLngs: ['en', 'sw'], // Explicitly allow English and Kiswahili
     
     // Namespaces: these match your JSON filenames
-    ns: ['home', 'nav'], 
-    defaultNS: 'home', 
+    ns: ['home', 'nav', 'contact'],
+    defaultNS: 'home',
 
     backend: {
       // The {{ns}} variable tells i18next which file to fetch
