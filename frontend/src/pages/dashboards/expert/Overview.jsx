@@ -19,6 +19,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api, { bookingAPI, forumAPI, dashboardAPI } from '../../../api';
 import ExpertReviews from '../../../components/ExpertReviews';
 import ViewClients from '../../../components/ViewClients';
+import SystemAnalytics from '../../../components/SystemAnalytics';
 
 const Overview = () => {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ const Overview = () => {
 
   const [showReviewsModal, setShowReviewsModal] = useState(false);
   const [showClientsModal, setShowClientsModal] = useState(false);
+  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
 
   const [expertStats, setExpertStats] = useState({
     totalConsultations: 0,
@@ -377,7 +379,7 @@ const Overview = () => {
               </button>
 
               <button
-                onClick={() => navigate('/dashboard/expert?tab=analytics')}
+                onClick={() => navigate('/dashboard')}
                 className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-all duration-200 hover:border-purple-300 dark:hover:border-purple-600 group"
               >
                 <div className="p-3 bg-orange-500 rounded-lg w-12 h-12 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-200 mx-auto">
@@ -518,6 +520,11 @@ const Overview = () => {
         isOpen={showClientsModal}
         onClose={() => setShowClientsModal(false)}
         expertId={user?.id}
+      />
+
+      <SystemAnalytics
+        isOpen={showAnalyticsModal}
+        onClose={() => setShowAnalyticsModal(false)}
       />
     </div>
   );

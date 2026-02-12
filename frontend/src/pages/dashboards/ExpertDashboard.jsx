@@ -274,7 +274,6 @@ const ExpertDashboard = () => {
           {activeTab === 'weather' && <Weather />}
           {activeTab === 'analytics' && <SystemAnalytics />}
 
-
         </div>
 
         {/* Expert Stats Summary */}
