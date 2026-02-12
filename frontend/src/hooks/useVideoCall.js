@@ -315,16 +315,7 @@ const useVideoCall = (consultationId, user) => {
           setConnectedUsers(users);
           setIsInitiator(data.isInitiator);
 
-          // Now that room is set up, we can create offer if we're initiator
-          if (data.isInitiator && data.connectedUsers.length > 0) {
-            console.log('Other user present, creating offer...');
-            setTimeout(() => createAndSendOffer(data.roomId), 1000); // Increased delay
-          }
 
-          // If we're not the initiator and there's someone else, we should wait for their offer
-          if (!data.isInitiator && data.connectedUsers.length > 0) {
-            console.log('Waiting for offer from initiator...');
-          }
         }
       },
       
@@ -338,10 +329,6 @@ const useVideoCall = (consultationId, user) => {
             return exists ? prev : [...prev, newUser];
           });
           connectedUsersRef.current = [...connectedUsersRef.current.filter(u => u.userId !== data.userId), newUser];
-          if (isInitiatorRef.current && data.shouldCreateOffer) {
-            console.log('New user joined, creating offer...');
-            setTimeout(() => createAndSendOffer(), 800);
-          }
         }
       },
       
