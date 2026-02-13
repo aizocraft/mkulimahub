@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
@@ -21,8 +21,44 @@ import {
   ArrowRight,
   CheckCircle,
   Quote,
-  Target
+  Target,
+  Play
 } from 'lucide-react';
+
+// Animated Counter Hook
+const useAnimatedCounter = (end, duration = 2000, start = 0) => {
+  const [count, setCount] = useState(start);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let startTime = null;
+    const step = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * (end - start) + start));
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
+  }, [isInView, end, duration, start]);
+
+  return { count, ref };
+};
+
+// Counter Component
+const AnimatedCounter = ({ end, suffix = '', prefix = '', duration = 2000 }) => {
+  const { count, ref } = useAnimatedCounter(end, duration);
+  
+  return (
+    <span ref={ref} className="inline-block">
+      {prefix}{count.toLocaleString()}{suffix}
+    </span>
+  );
+};
 
 // Animation Variants
 const fadeInUp = {
@@ -86,10 +122,10 @@ const HomePage = () => {
   ];
 
   const stats = [
-    { icon: <Users className="w-5 h-5" />, value: t('activeFarmers'), label: 'activeFarmers' },
-    { icon: <Award className="w-5 h-5" />, value: t('certifiedExperts'), label: 'certifiedExperts' },
-    { icon: <Sprout className="w-5 h-5" />, value: t('cropVarieties'), label: 'cropVarieties' },
-    { icon: <Clock className="w-5 h-5" />, value: t('supportAvailable'), label: 'supportAvailable' }
+    { icon: <Users className="w-5 h-5" />, value: 10000, suffix: '+', label: 'activeFarmers' },
+    { icon: <Award className="w-5 h-5" />, value: 500, suffix: '+', label: 'certifiedExperts' },
+    { icon: <Sprout className="w-5 h-5" />, value: 50, suffix: '+', label: 'cropVarieties' },
+    { icon: <Clock className="w-5 h-5" />, value: 24, suffix: '/7', label: 'supportAvailable' }
   ];
 
   const testimonials = [
@@ -216,7 +252,7 @@ const HomePage = () => {
                 )}
               </motion.div>
 
-              {/* Stats */}
+              {/* Stats with Animated Counters */}
               <motion.div 
                 variants={fadeInUp}
                 className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-12"
@@ -226,7 +262,11 @@ const HomePage = () => {
                     <div className={`text-2xl font-bold ${
                       theme === 'dark' ? 'text-white' : 'text-gray-900'
                     }`}>
-                      {stat.value}
+                      <AnimatedCounter 
+                        end={stat.value} 
+                        suffix={stat.suffix || ''} 
+                        duration={2000 + index * 300}
+                      />
                     </div>
                     <div className={`text-sm ${
                       theme === 'dark' ? 'text-gray-400' : 'text-gray-600'

@@ -1,72 +1,72 @@
 {
-  "title": "Unda Chapisho Jipya",
-  "subtitle": "Shiriki maarifa yako au uliza maswali kwa jamii.",
-  "reviewNotice": "Chapisho lako litahakikiwa na wataalamu kabla ya kuonekana hadharani.",
-  "backToForum": "Rudi kwenye Jukwaa",
+  "title": "Create New Post",
+  "subtitle": "Share your knowledge or ask questions to the community.",
+  "reviewNotice": "Your post will be reviewed by experts before becoming public.",
+  "backToForum": "Back to Forum",
   "form": {
-    "refreshCategories": "Burudisha Aina",
-    "postingAs": "Unachapisha kama:",
-    "submit": "Unda Chapisho",
-    "submitting": "Inaunda...",
+    "refreshCategories": "Refresh Categories",
+    "postingAs": "Posting as:",
+    "submit": "Create Post",
+    "submitting": "Creating...",
     "title": {
-      "label": "Kichwa *",
-      "placeholder": "Weka kichwa kinachoelezea chapisho lako",
-      "minChars": "Haja herufi {{count}} zaidi",
-      "valid": "✓ Sawa",
+      "label": "Title *",
+      "placeholder": "Enter a descriptive title for your post",
+      "minChars": "{{count}} more characters needed",
+      "valid": "✓ Good",
       "length": "{{count}}/200"
     },
     "category": {
-      "label": "Aina *",
-      "placeholder": "-- Chagua aina --",
-      "expertsOnly": " (Wataalamu Pekee)",
-      "inactive": " (Haifanyi kazi)",
-      "selected": "Umechagua: {{name}}",
-      "expertWarning": "⚠️ Inahitaji ruhusa za mtaalamu",
-      "inactiveWarning": "⚠️ Aina haifanyi kazi",
-      "unknown": "Aina isiyojulikana"
+      "label": "Category *",
+      "placeholder": "-- Select a category --",
+      "expertsOnly": " (Experts Only)",
+      "inactive": " (Inactive)",
+      "selected": "Selected: {{name}}",
+      "expertWarning": "⚠️ Requires expert permissions",
+      "inactiveWarning": "⚠️ Category is inactive",
+      "unknown": "Unknown category"
     },
     "tags": {
-      "label": "Lebo (si lazima)",
-      "placeholder": "Ongeza lebo na ubonyeze Enter",
-      "help": "Ongeza lebo zinazofaa (si lazima)",
-      "count": "lebo {{count}}/10"
+      "label": "Tags (optional)",
+      "placeholder": "Add tags and press Enter",
+      "help": "Add relevant tags (optional)",
+      "count": "{{count}}/10 tags"
     },
     "content": {
-      "label": "Maudhui *",
-      "placeholder": "Shiriki maarifa yako, uliza maswali, au jadili mada za kilimo...",
-      "minChars": "Haja herufi {{count}} zaidi",
-      "valid": "✓ Sawa",
+      "label": "Content *",
+      "placeholder": "Share your knowledge, ask questions, or discuss agricultural topics...",
+      "minChars": "{{count}} more characters needed",
+      "valid": "✓ Good",
       "length": "{{count}}/10000"
     },
     "attachments": {
-      "label": "Viambatisho (si lazima)",
-      "tooLarge": "{{name}} ni kubwa sana. Ukubwa wa juu ni 5MB.",
-      "invalidType": "{{name}} si aina inayoruhusiwa ya faili.",
-      "uploaded": "{{filename}} imepakiwa",
-      "failed": "Imeshindwa kupakia {{name}}",
-      "removed": "{{filename}} imeondolewa"
+      "label": "Attachments (optional)",
+      "tooLarge": "{{name}} is too large. Maximum size is 5MB.",
+      "invalidType": "{{name}} is not an allowed file type.",
+      "uploaded": "{{filename}} uploaded",
+      "failed": "Failed to upload {{name}}",
+      "removed": "{{filename}} removed"
     },
     "errors": {
-      "title": "Hitilafu katika kuunda chapisho",
-      "titleRequired": "Kichwa kinahitajika",
-      "titleMinLength": "Kichwa lazima kiwe angalau herufi 5",
-      "contentRequired": "Maudhui yanahitajika",
-      "contentMinLength": "Maudhui lazima yawe angalau herufi 10",
-      "categoryRequired": "Tafadhali chagua aina",
-      "categoryNotFound": "Aina iliyochaguliwa haikupatikana. Tafadhali burudisha ukurasa na ujaribu tena.",
-      "categoryExpertOnly": "Aina hii ni ya wataalamu pekee. Tafadhali chagua aina tofauti.",
-      "categoryInactive": "Aina hii haifanyi kazi. Tafadhali chagua aina tofauti.",
-      "categoryLoadFailed": "Imeshindwa kupakia aina",
-      "categoryNotFoundRefresh": "Aina haikupatikana. Tafadhali burudisha ukurasa na ujaribu tena.",
-      "categoryInvalid": "Aina isiyo sahihi imechaguliwa. Tafadhali chagua aina tofauti.",
-      "networkError": "Hitilafu ya mtandao. Tafadhali angalia muunganisho wako.",
-      "badRequest": "Ombi baya. Tafadhali angalia maelezo yako.",
-      "permissionDenied": "Huna ruhusa ya kuunda chapisho hili.",
-      "generic": "Imeshindwa kuunda chapisho"
+      "title": "Error creating post",
+      "titleRequired": "Title is required",
+      "titleMinLength": "Title must be at least 5 characters",
+      "contentRequired": "Content is required",
+      "contentMinLength": "Content must be at least 10 characters",
+      "categoryRequired": "Please select a category",
+      "categoryNotFound": "Selected category was not found. Please refresh the page and try again.",
+      "categoryExpertOnly": "This category is for experts only. Please choose a different category.",
+      "categoryInactive": "This category is inactive. Please choose a different category.",
+      "categoryLoadFailed": "Failed to load categories",
+      "categoryNotFoundRefresh": "Category not found. Please refresh the page and try again.",
+      "categoryInvalid": "Invalid category selected. Please choose a different category.",
+      "networkError": "Network error. Please check your connection.",
+      "badRequest": "Bad request. Please check your information.",
+      "permissionDenied": "You do not have permission to create this post.",
+      "generic": "Failed to create post"
     },
     "success": {
-      "created": "Chapisho limeundwa kwa mafanikio!",
-      "createdWithReview": "Chapisho limeundwa kwa mafanikio! Litahakikiwa na mtaalamu kabla ya kuonekana hadharani."
+      "created": "Post created successfully!",
+      "createdWithReview": "Post created successfully! It will be reviewed by an expert before becoming public."
     }
   }
 }
