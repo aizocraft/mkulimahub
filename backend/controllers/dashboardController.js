@@ -365,6 +365,83 @@ exports.getExpertStats = async (req, res, next) => {
   }
 };
 
+// Get expert reviews
+exports.getExpertReviews = async (req, res, next) => {
+  try {
+    const expertId = req.user.id;
+    logger.info('Fetching expert reviews', {
+      expertId
+    });
+
+    // Get all completed consultations with reviews for this expert
+    const consultations = await Consultation.find({
+      expert: expertId,
+      status: 'completed',
+      rating: { $exists: true, $ne: null }
+    })
+      .populate('farmer', 'name')
+      .sort({ reviewedAt: -1 });
+
+    // Transform the data to match the frontend expected format
+    const reviews = consultations.map(consultation => {
+      const farmer = consultation.farmer;
+      const farmerName = farmer?.name || 'Unknown Client';
+      const farmerInitials = farmerName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
+      return {
+        id: consultation._id,
+        clientName: farmerName,
+        clientInitials: farmerInitials,
+        rating: consultation.rating,
+        comment: consultation.review || '',
+        date: consultation.reviewedAt ? consultation.reviewedAt.toISOString().split('T')[0] : consultation.updatedAt.toISOString().split('T')[0],
+        consultationType: consultation.topic
+      };
+    });
+
+    // Calculate stats
+    const totalReviews = reviews.length;
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = totalReviews > 0 ? (totalRating / totalReviews).toFixed(1) : 0;
+
+    const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(review => {
+      if (ratingDistribution[review.rating] !== undefined) {
+        ratingDistribution[review.rating]++;
+      }
+    });
+
+    const stats = {
+      averageRating: parseFloat(averageRating),
+      totalReviews,
+      ratingDistribution
+    };
+
+    logger.info('Expert reviews fetched successfully', {
+      expertId,
+      count: reviews.length
+    });
+
+    res.status(200).json({
+      success: true,
+      reviews,
+      stats
+    });
+  } catch (error) {
+    logger.error('Error fetching expert reviews', {
+      error: error.message,
+      expertId: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
 // Helper function to format time ago
 function formatTimeAgo(date) {
   const now = new Date();

@@ -189,6 +189,7 @@ export const dashboardAPI = {
   getActivities: () => api.get('/dashboard/activities'),
   getUserDistribution: () => api.get('/dashboard/user-distribution'),
   getExpertStats: () => api.get('/dashboard/expert-stats'),
+  getAnalytics: () => api.get('/dashboard/analytics'),
 };
 
 // ========== CROP API ==========

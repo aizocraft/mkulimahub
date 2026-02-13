@@ -20,62 +20,16 @@ const ExpertReviews = ({ isOpen, onClose, expertId }) => {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      // Mock data for now - replace with actual API call
-      const mockReviews = [
-        {
-          id: 1,
-          clientName: 'John Farmer',
-          clientInitials: 'JF',
-          rating: 5,
-          comment: 'Excellent consultation! The expert provided very detailed and practical advice about crop rotation and pest management. Highly recommended!',
-          date: '2024-01-15',
-          consultationType: 'Crop Management'
-        },
-        {
-          id: 2,
-          clientName: 'Mary Johnson',
-          clientInitials: 'MJ',
-          rating: 4,
-          comment: 'Good advice on irrigation systems. The expert was knowledgeable and responsive. Would consult again.',
-          date: '2024-01-10',
-          consultationType: 'Irrigation'
-        },
-        {
-          id: 3,
-          clientName: 'David Smith',
-          clientInitials: 'DS',
-          rating: 5,
-          comment: 'Outstanding expertise in soil management. Helped me increase my yield by 30%. Professional and thorough.',
-          date: '2024-01-08',
-          consultationType: 'Soil Management'
-        },
-        {
-          id: 4,
-          clientName: 'Sarah Wilson',
-          clientInitials: 'SW',
-          rating: 3,
-          comment: 'Decent consultation but could be more detailed. Some suggestions were basic.',
-          date: '2024-01-05',
-          consultationType: 'Pest Control'
-        }
-      ];
-
-      setReviews(mockReviews);
-
-      // Calculate stats
-      const totalRating = mockReviews.reduce((sum, review) => sum + review.rating, 0);
-      const averageRating = totalRating / mockReviews.length;
-
-      const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-      mockReviews.forEach(review => {
-        ratingDistribution[review.rating]++;
-      });
-
-      setStats({
-        averageRating: averageRating.toFixed(1),
-        totalReviews: mockReviews.length,
-        ratingDistribution
-      });
+      const response = await api.get('/dashboard/expert-reviews');
+      
+      if (response.data.success) {
+        setReviews(response.data.reviews);
+        setStats({
+          averageRating: response.data.stats.averageRating,
+          totalReviews: response.data.stats.totalReviews,
+          ratingDistribution: response.data.stats.ratingDistribution
+        });
+      }
 
     } catch (error) {
       console.error('Error fetching reviews:', error);
