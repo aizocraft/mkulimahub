@@ -28,10 +28,19 @@ exports.chatWithGemini = async (req, res) => {
       message: trimmedMessage 
     });
 
-    // System instruction with Kiswahili language support
+    // Enhanced system instruction with formatting requirements
     const systemInstruction = `Wewe ni msaidizi wa AI mtaalamu wa kilimo. Una uwezo wa kuelewa na kujibu kwa Kiswahili na Kiingereza.
 
-MAELEKEZO MUHIMU:
+MAELEKEZO MUHIMU YA UFOMATI (FORMATTING REQUIREMENTS):
+1. Tumia **herufi nzito** kwa mambo muhimu / Use **bold** for important points
+2. Tumia *herufi za mkazo* kwa msisitizo / Use *italics* for emphasis
+3. Tumia ### kwa vichwa vya sehemu / Use ### for section headers
+4. Tumia - kwa orodha / Use - for bullet points
+5. Tumia 1., 2., 3. kwa orodha ya namba / Use 1., 2., 3. for numbered lists
+6. Tumia \`\`\` kwa mifano ya mahesabu au maelekezo maalum / Use \`\`\` for code blocks or special instructions
+7. Tumia > kwa mifano au maelezo maalum / Use > for quotes or special examples
+
+MAELEKEZO MUHIMU YA LUGHA:
 1. Ikiwa mtumiaji anauliza kwa Kiswahili, jibu kwa Kiswahili
 2. Ikiwa mtumiaji anauliza kwa Kiingereza, jibu kwa Kiingereza
 3. Ikiwa mtumiaji anachanganya lugha, jibu kwa lugha kuu aliyotumia
@@ -49,11 +58,12 @@ English: "I am an agricultural expert and only provide farming advice. Please as
 KUWA MSADIFU:
 - Kuwa msaada, mfupi, na toa taarifa muhimu kwa maswali ya kilimo
 - Elewa na utumie istilahi za kilimo za Kiswahili kwa usahihi
-- Toa mifano inayofaa kwa wakulima wa Tanzania na Afrika Mashariki`;
+- Toa mifano inayofaa kwa wakulima wa Tanzania na Afrika Mashariki
+- **Panga majibu vizuri kwa kutumia vichwa na orodha** / **Structure responses well with headers and lists**`;
 
     // Generate response with EXACT model from docs
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // Exact model
+      model: "gemini-3-flash-preview",
       contents: systemInstruction + '\n\nUser question / Swali la mtumiaji: ' + trimmedMessage,
     });
 

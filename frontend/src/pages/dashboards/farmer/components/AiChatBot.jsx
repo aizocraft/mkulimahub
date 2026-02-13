@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, Loader2, Sparkles } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -38,7 +40,7 @@ const AiChatBot = () => {
         })));
       } else {
         setMessages([{ 
-          text: "Hello! I'm your AI assistant powered by Gemini-3-Flash-Preview. How can I help you today?", 
+          text: "Hello! I'm your AI assistant powered by Gemini. How can I help you today?", 
           sender: 'bot', 
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
         }]);
@@ -51,8 +53,6 @@ const AiChatBot = () => {
       }]);
     }
   };
-
-
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -99,6 +99,77 @@ const AiChatBot = () => {
     }
   };
 
+  // Custom components for markdown rendering - WITHOUT className props
+  const MarkdownComponents = {
+    // Style headers using inline styles or wrapper divs
+    h1: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem', marginBottom: '0.25rem' }} {...rest}>{children}</h1>;
+    },
+    h2: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <h2 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginTop: '0.5rem', marginBottom: '0.25rem' }} {...rest}>{children}</h2>;
+    },
+    h3: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <h3 style={{ fontSize: '1rem', fontWeight: 'bold', marginTop: '0.5rem', marginBottom: '0.25rem' }} {...rest}>{children}</h3>;
+    },
+    h4: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <h4 style={{ fontSize: '0.875rem', fontWeight: 'bold', marginTop: '0.25rem', marginBottom: '0.125rem' }} {...rest}>{children}</h4>;
+    },
+    
+    // Style lists with inline styles
+    ul: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <ul style={{ listStyleType: 'disc', marginLeft: '1rem', marginTop: '0.25rem', marginBottom: '0.25rem' }} {...rest}>{children}</ul>;
+    },
+    ol: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <ol style={{ listStyleType: 'decimal', marginLeft: '1rem', marginTop: '0.25rem', marginBottom: '0.25rem' }} {...rest}>{children}</ol>;
+    },
+    li: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <li style={{ marginBottom: '0.125rem' }} {...rest}>{children}</li>;
+    },
+    
+    // Style emphasis
+    strong: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <strong style={{ fontWeight: 'bold', color: '#2563eb' }} {...rest}>{children}</strong>;
+    },
+    em: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <em style={{ fontStyle: 'italic' }} {...rest}>{children}</em>;
+    },
+    
+    // Style code blocks
+    code: ({node, inline, ...props}) => {
+      const { children, ...rest } = props;
+      if (inline) {
+        return <code style={{ backgroundColor: '#e5e7eb', borderRadius: '0.25rem', padding: '0.125rem 0.25rem', fontSize: '0.875rem' }} {...rest}>{children}</code>;
+      }
+      return <pre style={{ backgroundColor: '#e5e7eb', borderRadius: '0.375rem', padding: '0.5rem', marginTop: '0.5rem', marginBottom: '0.5rem', overflowX: 'auto', fontSize: '0.875rem' }}><code {...rest}>{children}</code></pre>;
+    },
+    
+    // Style blockquotes
+    blockquote: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <blockquote style={{ borderLeftWidth: '4px', borderLeftColor: '#3b82f6', paddingLeft: '0.75rem', paddingTop: '0.25rem', paddingBottom: '0.25rem', marginTop: '0.5rem', marginBottom: '0.5rem', backgroundColor: '#eff6ff', borderRadius: '0 0.25rem 0.25rem 0' }} {...rest}>{children}</blockquote>;
+    },
+    
+    // Style paragraphs
+    p: ({node, ...props}) => {
+      const { children, ...rest } = props;
+      return <p style={{ marginBottom: '0.5rem', lineHeight: '1.5' }} {...rest}>{children}</p>;
+    },
+    
+    // Style horizontal rule
+    hr: ({node, ...props}) => {
+      return <hr style={{ marginTop: '0.75rem', marginBottom: '0.75rem', borderColor: '#d1d5db' }} {...props} />;
+    },
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[999]">
       <button
@@ -142,7 +213,16 @@ const AiChatBot = () => {
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md shadow-blue-500/20'
                   : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border dark:border-gray-700 rounded-bl-md shadow-gray-200 dark:shadow-gray-800/50'
                 }`}>
-                  {m.text}
+                  {m.sender === 'user' ? (
+                    <div className="whitespace-pre-wrap">{m.text}</div>
+                  ) : (
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={MarkdownComponents}
+                    >
+                      {m.text}
+                    </ReactMarkdown>
+                  )}
                   <div className="text-xs opacity-70 mt-2">{m.time}</div>
                 </div>
               </div>
@@ -178,7 +258,7 @@ const AiChatBot = () => {
               disabled={isLoading || !input.trim()}
               className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-30 disabled:cursor-not-allowed text-sm font-medium transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
             >
-              <Send size={18} className="transition-transform duration-200 group-hover:translate-x-1" />
+              <Send size={18} />
             </button>
           </form>
         </div>

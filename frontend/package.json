@@ -21,9 +21,11 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.5.4",
     "react-icons": "^5.5.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.6.3",
     "react-toastify": "^11.0.5",
     "recharts": "^3.3.0",
+    "remark-gfm": "^4.0.1",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
