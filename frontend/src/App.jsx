@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AccessibilityProvider } from './context/AccessibilityContext';
 import GoogleAuthSuccess from './components/GoogleAuthSuccess.jsx';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import SocketInitializer from './components/SocketInitializer';
@@ -48,141 +49,143 @@ const PageLayout = ({ children }) => (
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <SocketInitializer />
-        <BrowserRouter>
-          <ScrollToTop /> 
-          <Routes>
-            {/* Routes with Navbar + Footer */}
-            <Route path="/" element={
-              <PageLayout>
-                <HomePage />
-              </PageLayout>
-            } />
-            <Route path="/about" element={
-              <PageLayout>
-                <AboutPage />
-              </PageLayout>
-            } />
-            <Route path="/contact" element={
-              <PageLayout>
-                <ContactPage />
-              </PageLayout>
-            } />
-             
-            <Route path="/crops" element={
-              <PageLayout>
-                <CropsPage />
-              </PageLayout>
-            } />
-            <Route path="/dashboard" element={
-              <PageLayout>
-                <Dashboard />
-              </PageLayout>
-            } />
-            <Route path="/dashboard/admin" element={
-              <PageLayout>
-                <AdminDashboard />
-              </PageLayout>
-            } />
-            <Route path="/dashboard/farmer" element={
-              <PageLayout>
-                <FarmerDashboard />
-              </PageLayout>
-            } />
-            <Route path="/dashboard/expert" element={
-              <PageLayout>
-                <ExpertDashboard />
-              </PageLayout>
-            } />
-            <Route path="/profile" element={
-              <PageLayout>
-                <ProfilePage />
-              </PageLayout>
-            } />
-            <Route path="/settings" element={
-              <PageLayout>
-                <SettingsPage />
-              </PageLayout>
-            } />
-            <Route path="/terms" element={
-              <PageLayout>
-                <TermsPage />
-              </PageLayout>
-             } />
+      <AccessibilityProvider>
+        <AuthProvider>
+          <SocketInitializer />
+          <BrowserRouter>
+            <ScrollToTop /> 
+            <Routes>
+              {/* Routes with Navbar + Footer */}
+              <Route path="/" element={
+                <PageLayout>
+                  <HomePage />
+                </PageLayout>
+              } />
+              <Route path="/about" element={
+                <PageLayout>
+                  <AboutPage />
+                </PageLayout>
+              } />
+              <Route path="/contact" element={
+                <PageLayout>
+                  <ContactPage />
+                </PageLayout>
+              } />
+               
+              <Route path="/crops" element={
+                <PageLayout>
+                  <CropsPage />
+                </PageLayout>
+              } />
+              <Route path="/dashboard" element={
+                <PageLayout>
+                  <Dashboard />
+                </PageLayout>
+              } />
+              <Route path="/dashboard/admin" element={
+                <PageLayout>
+                  <AdminDashboard />
+                </PageLayout>
+              } />
+              <Route path="/dashboard/farmer" element={
+                <PageLayout>
+                  <FarmerDashboard />
+                </PageLayout>
+              } />
+              <Route path="/dashboard/expert" element={
+                <PageLayout>
+                  <ExpertDashboard />
+                </PageLayout>
+              } />
+              <Route path="/profile" element={
+                <PageLayout>
+                  <ProfilePage />
+                </PageLayout>
+              } />
+              <Route path="/settings" element={
+                <PageLayout>
+                  <SettingsPage />
+                </PageLayout>
+              } />
+              <Route path="/terms" element={
+                <PageLayout>
+                  <TermsPage />
+                </PageLayout>
+               } />
 
-            <Route path="/notifications" element={
+              <Route path="/notifications" element={
+                <PageLayout>
+                  <NotificationPage />
+                </PageLayout>
+              } />
+            <Route path="/help" element={
               <PageLayout>
-                <NotificationPage />
-              </PageLayout>
-            } />
-          <Route path="/help" element={
-            <PageLayout>
-              <HelpPage />
-            </PageLayout>
-          } />
-
- {/* Forum Routes */}
-            <Route path="/forum" element={
-              <PageLayout>
-                <ForumPages />
-              </PageLayout>
-            } />
-            <Route path="/forum/create" element={
-              <PageLayout>
-                <CreatePostPage />
-              </PageLayout>
-            } />
-            <Route path="/forum/posts/:id" element={
-              <PageLayout>
-                <PostDetailPage />
-              </PageLayout>
-            } />
-            <Route path="/forum/edit/:id" element={
-              <PageLayout>
-                <EditPostPage />
+                <HelpPage />
               </PageLayout>
             } />
 
+    {/* Forum Routes */}
+              <Route path="/forum" element={
+                <PageLayout>
+                  <ForumPages />
+                </PageLayout>
+              } />
+              <Route path="/forum/create" element={
+                <PageLayout>
+                  <CreatePostPage />
+                </PageLayout>
+              } />
+              <Route path="/forum/posts/:id" element={
+                <PageLayout>
+                  <PostDetailPage />
+                </PageLayout>
+              } />
+              <Route path="/forum/edit/:id" element={
+                <PageLayout>
+                  <EditPostPage />
+                </PageLayout>
+              } />
 
 
 
-            <Route path="/users" element={
-              <PageLayout>
-                <UserPage />
-              </PageLayout>
-            } />
-            <Route path="/analytics" element={
-              <PageLayout>
-                <Analytics />
-              </PageLayout>
-            } />
-            <Route path="/experts" element={
-              <PageLayout>
-                <ExpertsPage />
-              </PageLayout>
-            } />
-            
-            {/* Routes without Navbar + Footer (login/register) */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/auth/success" element={<GoogleAuthSuccess />} />
-            <Route path="/role-selection" element={<RoleSelectionPage />} />
-          </Routes>
-        </BrowserRouter>
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-        />
-        <Toaster position="top-center" />
-      </AuthProvider>
+
+              <Route path="/users" element={
+                <PageLayout>
+                  <UserPage />
+                </PageLayout>
+              } />
+              <Route path="/analytics" element={
+                <PageLayout>
+                  <Analytics />
+                </PageLayout>
+              } />
+              <Route path="/experts" element={
+                <PageLayout>
+                  <ExpertsPage />
+                </PageLayout>
+              } />
+              
+              {/* Routes without Navbar + Footer (login/register) */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/auth/success" element={<GoogleAuthSuccess />} />
+              <Route path="/role-selection" element={<RoleSelectionPage />} />
+            </Routes>
+          </BrowserRouter>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+          <Toaster position="top-center" />
+        </AuthProvider>
+      </AccessibilityProvider>
     </ThemeProvider>
   );
 }
