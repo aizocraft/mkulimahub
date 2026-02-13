@@ -28,10 +28,17 @@ exports.chatWithGemini = async (req, res) => {
       message: trimmedMessage 
     });
 
+    // System instruction to keep the AI focused on farming topics only
+    const systemInstruction = `You are an agricultural expert AI assistant. Your only area of expertise is farming and agriculture. 
+- Provide helpful advice only about farming, crops, livestock, soil management, weather for agriculture, agricultural techniques, pest control for farms, irrigation, fertilizers, and other farming-related topics.
+- If the user asks about anything unrelated to farming (such as medical advice, technology, entertainment, politics, sports, finance, cooking, travel, relationships, or any other non-farming topic), respond with: "I am an agricultural expert and only provide farming advice. I'm not an expert in that field. Please ask me about farming or agricultural topics."
+- Stay focused on farming and agriculture. Do not provide information about other topics.
+- Be helpful, concise, and informative for farming-related questions.`;
+
     // Generate response with EXACT model from docs
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview", // Exact model
-      contents: trimmedMessage,
+      contents: systemInstruction + '\n\nUser question: ' + trimmedMessage,
     });
 
     const aiText = response.text;
