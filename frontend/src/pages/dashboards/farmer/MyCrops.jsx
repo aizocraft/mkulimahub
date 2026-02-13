@@ -1834,17 +1834,7 @@ const handleEditCrop = (crop) => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-purple-200 dark:border-gray-600">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Planning</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{planningCrops}</p>
-              </div>
-              <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-          </div>
+      
 
           <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-amber-200 dark:border-gray-600">
             <div className="flex items-center justify-between">
@@ -1858,17 +1848,7 @@ const handleEditCrop = (crop) => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-red-200 dark:border-gray-600">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Needs Care</p>
-                <p className="text-2xl font-bold text-red-600 dark:text-red-400">{warningCrops}</p>
-              </div>
-              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
-              </div>
-            </div>
-          </div>
+         
         </div>
       </div>
 
