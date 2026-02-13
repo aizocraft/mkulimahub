@@ -36,217 +36,43 @@ const VideoGrid = ({
     if (remoteStream && remoteVideoRef.current) {
       console.log('🎥 VideoGrid: Setting remote stream to video element');
       console.log('Remote stream tracks:', remoteStream.getTracks().map(t => `${t.kind}: ${t.label} (${t.readyState}, enabled: ${t.enabled})`));
-      console.log('Remote stream active:', remoteStream.active);
-      console.log('Remote stream id:', remoteStream.id);
 
       const video = remoteVideoRef.current;
-      console.log('Video element before assignment:', {
-        srcObject: video.srcObject,
-        readyState: video.readyState,
-        networkState: video.networkState,
-        paused: video.paused,
-        muted: video.muted
-      });
 
       // Clear any existing stream first
       if (video.srcObject) {
         video.srcObject = null;
       }
 
-      // Ensure video is properly configured for remote stream
+      // Configure video element for remote stream
       video.muted = true;
       video.volume = 0;
       video.autoplay = true;
       video.playsInline = true;
       video.controls = false;
-      video.disablePictureInPicture = true;
 
-      // Assign stream directly
+      // Assign the stream
       video.srcObject = remoteStream;
 
-      console.log('Video element after assignment:', {
-        srcObject: video.srcObject,
-        readyState: video.readyState,
-        networkState: video.networkState,
-        paused: video.paused,
-        muted: video.muted
-      });
-
-      // Force load the video
-      video.load();
-
-      // Set up immediate play attempt with multiple retries
-      const playVideo = async (attempt = 1) => {
+      // Simple play attempt
+      const playVideo = async () => {
         try {
-          console.log(`Attempting to play remote video (attempt ${attempt})...`);
-
-          // Wait for the stream to be ready
-          if (video.readyState < 1 && attempt === 1) { // HAVE_METADATA
-            await new Promise(resolve => setTimeout(resolve, 200));
-          }
-
-          // Ensure video is properly configured
-          video.muted = true;
-          video.volume = 0;
-          video.autoplay = true;
-          video.playsInline = true;
-
           await video.play();
-          console.log('✅ Remote video started playing successfully');
-          return true;
+          console.log('✅ Remote video playing successfully');
         } catch (error) {
-          console.log(`Video play failed (attempt ${attempt}):`, error.message);
-
-          if (attempt < 5) {
-            // Retry with increasing delay
-            setTimeout(() => playVideo(attempt + 1), attempt * 500);
-          } else {
-            console.log('Max play attempts reached, will rely on event listeners');
-          }
-          return false;
+          console.warn('Could not play remote video:', error.message);
+          // Try again after a short delay
+          setTimeout(() => {
+            if (video.srcObject === remoteStream) {
+              video.play().catch(e => console.warn('Retry play failed:', e.message));
+            }
+          }, 1000);
         }
       };
 
-      // Try to play immediately with retries
+      // Play immediately
       playVideo();
 
-      // Force video to load and play
-      const attemptPlay = async (force = false) => {
-        try {
-          // Ensure video is muted for autoplay
-          video.muted = true;
-          video.volume = 0;
-
-          // Check if video is ready to play
-          if (!force && video.readyState < 2) { // HAVE_CURRENT_DATA
-            console.log('Video not ready yet, waiting... (readyState:', video.readyState, ')');
-            return false;
-          }
-
-          console.log('Attempting to play remote video... (readyState:', video.readyState, ')');
-
-          // Try to play
-          const playPromise = video.play();
-
-          // Handle the promise
-          try {
-            await playPromise;
-            console.log('✅ Play promise resolved successfully');
-          } catch (playError) {
-            console.error('❌ Play promise rejected:', playError);
-            throw playError; // Re-throw to be caught by outer try-catch
-          }
-
-          console.log('✅ Remote video playing successfully');
-          console.log('Video element after play:', {
-            readyState: video.readyState,
-            networkState: video.networkState,
-            paused: video.paused,
-            currentTime: video.currentTime,
-            duration: video.duration,
-            videoWidth: video.videoWidth,
-            videoHeight: video.videoHeight
-          });
-
-          // Double-check that video is actually playing
-          setTimeout(() => {
-            console.log('Video status check after 1s:', {
-              paused: video.paused,
-              currentTime: video.currentTime,
-              readyState: video.readyState,
-              networkState: video.networkState,
-              videoWidth: video.videoWidth,
-              videoHeight: video.videoHeight
-            });
-          }, 1000);
-
-          return true;
-        } catch (err) {
-          console.warn('Could not auto-play remote video in VideoGrid:', err);
-          console.warn('Play error details:', {
-            name: err.name,
-            message: err.message,
-            code: err.code
-          });
-
-          // If it's a NotAllowedError, we need user interaction
-          if (err.name === 'NotAllowedError') {
-            console.log('Video play blocked by browser - requires user interaction');
-            // Set up a one-time click handler to start video
-            const startVideoOnClick = async () => {
-              try {
-                await video.play();
-                console.log('✅ Video started after user interaction');
-                document.removeEventListener('click', startVideoOnClick);
-              } catch (e) {
-                console.warn('Failed to start video after click:', e);
-              }
-            };
-            document.addEventListener('click', startVideoOnClick, { once: true });
-          } else {
-            // For other errors, try again after a delay
-            console.log('Retrying video play in 2 seconds...');
-            setTimeout(() => attemptPlay(true), 2000);
-          }
-
-          return false;
-        }
-      };
-
-      // Remove the immediate attemptPlay() call - it will be called after stream assignment
-
-      const onLoadedMetadata = () => {
-        console.log('Remote video metadata loaded');
-        console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
-        // Only attempt play if video is ready
-        if (video.readyState >= 2) {
-          attemptPlay();
-        }
-      };
-
-      const onCanPlay = () => {
-        console.log('Remote video can play');
-        console.log('Video dimensions:', video.videoWidth, 'x', video.videoHeight);
-        attemptPlay();
-      };
-
-      const onError = (e) => {
-        console.error('Remote video error:', e);
-        console.error('Error details:', {
-          code: e.target?.error?.code,
-          message: e.target?.error?.message
-        });
-      };
-
-      const onLoadStart = () => console.log('Remote video load start');
-      const onLoadedData = () => console.log('Remote video data loaded');
-      const onPlaying = () => console.log('Remote video playing');
-      const onPause = () => console.log('Remote video paused');
-      const onWaiting = () => console.log('Remote video waiting');
-      const onStalled = () => console.log('Remote video stalled');
-
-      video.addEventListener('loadedmetadata', onLoadedMetadata);
-      video.addEventListener('canplay', onCanPlay);
-      video.addEventListener('error', onError);
-      video.addEventListener('loadstart', onLoadStart);
-      video.addEventListener('loadeddata', onLoadedData);
-      video.addEventListener('playing', onPlaying);
-      video.addEventListener('pause', onPause);
-      video.addEventListener('waiting', onWaiting);
-      video.addEventListener('stalled', onStalled);
-
-      // Cleanup function to remove listeners if component unmounts
-      return () => {
-        video.removeEventListener('loadedmetadata', onLoadedMetadata);
-        video.removeEventListener('canplay', onCanPlay);
-        video.removeEventListener('error', onError);
-        video.removeEventListener('loadstart', onLoadStart);
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('playing', onPlaying);
-        video.removeEventListener('pause', onPause);
-        video.removeEventListener('waiting', onWaiting);
-        video.removeEventListener('stalled', onStalled);
-      };
     } else if (!remoteStream && remoteVideoRef.current) {
       console.log('Clearing remote video element');
       remoteVideoRef.current.srcObject = null;

@@ -1,128 +1,274 @@
 // src/components/VideoCall/VideoCallModal.jsx
 import React, { useState, useEffect } from 'react';
-import VideoCallContainer from './VideoCallContainer';
 import { apiUtils } from '../../api';
-import { X } from 'lucide-react';
+import { X, Video, Copy, ExternalLink, MessageCircle, Minimize2 } from 'lucide-react';
+import ChatContainer from '../Chat/ChatContainer';
+import useChat from '../../hooks/useChat';
+import { useTheme } from '../../context/ThemeContext';
 
 const VideoCallModal = ({ consultation, user, isOpen, onClose, onEndCall }) => {
   const [browserSupport, setBrowserSupport] = useState(null);
-  const [validation, setValidation] = useState({ isValid: false, errors: [] });
+  const [copied, setCopied] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  
+  // Use theme context for light/dark mode
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
+  // Chat hook for consultation chat
+  const chat = useChat(consultation?._id, user);
 
   useEffect(() => {
     // Check browser support
     const support = apiUtils.videoCall.checkBrowserSupport();
     setBrowserSupport(support);
     
-    // Validate consultation for video call
-    const validationResult = apiUtils.videoCall.validateConsultationForVideoCall(consultation);
-    setValidation(validationResult);
-    
     if (!support.allSupported) {
       console.warn(support.message);
     }
   }, [consultation]);
 
+  // Get meeting info from consultation
+  const meetingId = consultation?.meetingId;
+  const meetingLink = consultation?.meetingLink;
+
+  // Copy meeting link to clipboard
+  const copyMeetingLink = () => {
+    if (meetingLink) {
+      navigator.clipboard.writeText(meetingLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Open meeting link in new tab
+  const openMeetingLink = () => {
+    if (meetingLink) {
+      window.open(meetingLink, '_blank');
+    }
+  };
+
   if (!isOpen) return null;
 
+  // Theme-aware classes
+  const themeClasses = {
+    modalBg: isDark 
+      ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+      : 'bg-gradient-to-br from-white to-gray-50',
+    modalBorder: isDark ? 'border-gray-700/50' : 'border-gray-200',
+    headerBg: isDark 
+      ? 'bg-gradient-to-r from-gray-800/80 to-gray-900/80' 
+      : 'bg-gradient-to-r from-gray-100/80 to-white/80',
+    headerBorder: isDark ? 'border-gray-700/30' : 'border-gray-200/50',
+    titleText: isDark ? 'text-white' : 'text-gray-900',
+    subtitleText: isDark ? 'text-gray-400' : 'text-gray-600',
+    cardBg: isDark 
+      ? 'from-emerald-900/60 to-teal-900/60' 
+      : 'from-emerald-50 to-teal-50',
+    cardBorder: isDark ? 'border-emerald-500/30' : 'border-emerald-200',
+    cardText: isDark ? 'text-white' : 'text-gray-900',
+    cardSubtext: isDark ? 'text-emerald-400' : 'text-emerald-600',
+    cardCodeBg: isDark ? 'bg-black/50' : 'bg-black/10',
+    cardCodeText: isDark ? 'text-emerald-300' : 'text-emerald-700',
+    cardCodeBorder: isDark ? 'border-emerald-500/30' : 'border-emerald-300/30',
+    buttonSecondary: isDark 
+      ? 'bg-gray-700/50 hover:bg-gray-600/50 text-white border-gray-600/30 hover:border-gray-500' 
+      : 'bg-gray-100/50 hover:bg-gray-200/50 text-gray-700 border-gray-200 hover:border-gray-300',
+    tipText: isDark ? 'text-gray-300' : 'text-gray-600',
+    chatHeaderBg: isDark 
+      ? 'bg-gray-800/50 hover:bg-gray-800/70' 
+      : 'bg-gray-100/50 hover:bg-gray-200/50',
+    chatHeaderBorder: isDark ? 'border-gray-700/30' : 'border-gray-200/50',
+    chatContainerBg: isDark 
+      ? 'bg-gray-900/50' 
+      : 'bg-gray-50/50',
+    chatContainerBorder: isDark ? 'border-gray-700/30' : 'border-gray-200/30',
+    closeButton: isDark 
+      ? 'text-gray-400 hover:text-white hover:bg-gray-700/50' 
+      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100',
+  };
+
+  // Dynamic height classes based on chat state
+  const modalHeightClass = showChat 
+    ? 'md:max-h-[95vh] h-[auto] min-h-[60vh]' 
+    : 'md:max-h-[70vh] h-[auto] min-h-[50vh]';
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 md:p-4">
-      <div className="bg-gray-900 w-full h-full md:rounded-xl md:max-w-6xl md:max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
-          <div>
-            <h2 className="text-xl font-bold text-white">
-              Video Call - {consultation.topic}
-            </h2>
-            <p className="text-gray-400 text-sm">
-              Expert: {consultation.expert?.name}
-            </p>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+      <div 
+        className={`
+          w-full md:rounded-2xl md:max-w-5xl 
+          overflow-hidden flex flex-col shadow-2xl 
+          border ${themeClasses.modalBorder}
+          ${themeClasses.modalBg}
+          transition-all duration-300 ease-in-out
+          ${modalHeightClass}
+        `}
+      >
+        {/* Header - Sleek & Modern */}
+        <div className={`
+          flex items-center justify-between px-4 sm:px-6 py-4 
+          ${themeClasses.headerBg} 
+          border-b ${themeClasses.headerBorder}
+          backdrop-blur-sm transition-all duration-300
+        `}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Video size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className={`text-lg sm:text-xl font-bold tracking-tight ${themeClasses.titleText}`}>
+                {consultation?.topic}
+              </h2>
+              <p className={`text-xs sm:text-sm flex items-center gap-1 ${themeClasses.subtitleText}`}>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Expert: {consultation?.expert?.name}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            className={`p-2 rounded-xl transition-all duration-200 group ${themeClasses.closeButton}`}
           >
-            <X size={24} className="text-gray-400" />
+            <X size={20} className="transition-colors" />
           </button>
         </div>
 
-        {/* Browser Compatibility Warning */}
-        {!browserSupport?.allSupported && (
-          <div className="bg-yellow-900/30 border-l-4 border-yellow-500 p-4 m-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
+        {/* Meeting Card - Premium Design */}
+        <div className={`
+          mx-4 sm:mx-6 mt-4 p-4 sm:p-5 
+          bg-gradient-to-r ${themeClasses.cardBg}
+          rounded-xl border ${themeClasses.cardBorder}
+          shadow-lg shadow-emerald-500/10 transition-all duration-300
+        `}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                <Video size={24} className="text-white" />
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-300">
-                  {browserSupport?.message}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Validation Errors */}
-        {!validation.isValid && validation.errors.length > 0 && (
-          <div className="bg-red-900/30 border-l-4 border-red-500 p-4 m-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-300">
-                  Cannot start video call
-                </h3>
-                <div className="mt-2 text-sm text-red-200">
-                  <ul className="list-disc pl-5 space-y-1">
-                    {validation.errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
+              <div>
+                <h3 className={`${themeClasses.cardText} font-semibold text-lg`}>Video Consultation</h3>
+                {meetingId ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`${themeClasses.cardSubtext} text-xs uppercase tracking-wider`}>Meeting ID</span>
+                    <code className={`${themeClasses.cardCodeBg} px-2 py-1 rounded-lg ${themeClasses.cardCodeText} font-mono text-sm border ${themeClasses.cardCodeBorder}`}>
+                      {meetingId}
+                    </code>
+                  </div>
+                ) : (
+                  <p className="text-yellow-500/80 text-sm mt-1">Preparing your meeting...</p>
+                )}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Video Call Container */}
-        <div className="flex-1 overflow-hidden">
-          {validation.isValid && browserSupport?.allSupported ? (
-            <VideoCallContainer
-              consultation={consultation}
-              user={user}
-              onEndCall={() => {
-                onEndCall?.();
-                onClose();
-              }}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full p-8">
-              <div className="text-center">
-                <div className="mx-auto h-24 w-24 text-gray-600 mb-4">
-                  <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-300 mb-2">
-                  Video call not available
-                </h3>
-                <p className="text-gray-400">
-                  {validation.errors[0] || browserSupport?.message}
-                </p>
+            
+            {meetingLink && (
+              <div className="flex gap-2">
                 <button
-                  onClick={onClose}
-                  className="mt-6 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  onClick={copyMeetingLink}
+                  className={`
+                    flex items-center gap-2 px-3 py-2.5 
+                    rounded-xl transition-all duration-200 text-sm font-medium border
+                    ${themeClasses.buttonSecondary}
+                  `}
                 >
-                  Close
+                  <Copy size={16} className={copied ? 'text-emerald-400' : ''} />
+                  <span className="hidden sm:inline">{copied ? 'Copied!' : 'Copy Link'}</span>
+                  <span className="sm:hidden">{copied ? '✓' : 'Copy'}</span>
+                </button>
+                <button
+                  onClick={openMeetingLink}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-xl transition-all duration-200 text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transform hover:scale-[1.02]"
+                >
+                  <ExternalLink size={16} />
+                  <span>Join Call</span>
                 </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          
+          {/* Tip & Open Chat Button Row */}
+          <div className="mt-4 pt-4 border-t border-emerald-500/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p className={`${themeClasses.tipText} text-xs sm:text-sm leading-relaxed`}>
+              <span className={`${themeClasses.cardSubtext} font-medium`}>💡 Tip:</span> Click "Join Call" to open the video meeting. 
+              Message your {consultation?.expert?.role === 'expert' ? 'farmer' : 'expert'} while on the call.
+            </p>
+            {!showChat && (
+              <button
+                onClick={() => setShowChat(true)}
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white rounded-xl transition-all duration-200 text-sm font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:scale-[1.02] whitespace-nowrap"
+              >
+                <MessageCircle size={16} />
+                <span>Open Chat</span>
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Chat Section - Dynamic height with smooth transition */}
+        <div 
+          className={`
+            flex-1 flex flex-col min-h-0 mt-4 mx-4 sm:mx-6 mb-4
+            transition-all duration-300 ease-in-out overflow-hidden
+            ${showChat ? 'opacity-100 max-h-[500px]' : 'opacity-0 max-h-0'}
+          `}
+        >
+          {/* Chat Header */}
+          <div 
+            className={`
+              flex items-center justify-between px-4 py-3 
+              rounded-t-xl border cursor-pointer transition-all duration-200
+              ${themeClasses.chatHeaderBg} ${themeClasses.chatHeaderBorder}
+              ${showChat ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+            `}
+            onClick={() => setShowChat(!showChat)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                <MessageCircle size={16} className="text-white" />
+              </div>
+              <span className={`${themeClasses.titleText} font-medium`}>Chat</span>
+              <span className={themeClasses.subtitleText}>({chat.messages?.length || 0})</span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowChat(false);
+              }}
+              className="p-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 transition-all duration-200"
+            >
+              <Minimize2 size={16} />
+            </button>
+          </div>
+
+          {/* Chat Container */}
+          <div className={`
+            flex-1 min-h-0 rounded-b-xl border border-t-0 overflow-hidden
+            ${themeClasses.chatContainerBg} ${themeClasses.chatContainerBorder}
+            ${showChat ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+          `}>
+            <ChatContainer
+              messages={chat.messages}
+              onSendMessage={(content) => chat.sendMessage(content)}
+              onTyping={chat.handleTyping}
+              typingUsers={chat.typingUsers}
+              messagesEndRef={chat.messagesEndRef}
+              user={user}
+            />
+          </div>
+        </div>
+
+        {/* Show Chat Toggle Button when chat is hidden */}
+        {!showChat && (
+          <div className="px-4 sm:px-6 pb-4">
+            <button
+              onClick={() => setShowChat(true)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-400 hover:to-purple-500 text-white rounded-xl transition-all duration-200 text-sm font-medium shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transform hover:scale-[1.01]"
+            >
+              <MessageCircle size={18} />
+              <span>Open Chat</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

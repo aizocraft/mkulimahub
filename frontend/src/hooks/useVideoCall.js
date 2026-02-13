@@ -36,21 +36,21 @@ const useVideoCall = (consultationId, user) => {
   const initializeWebRTC = useCallback(() => {
     try {
       console.log('Initializing WebRTC...');
-      
+
       // Enhanced configuration for better connectivity
       const config = {
         iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
           { urls: 'stun:stun1.l.google.com:19302' },
           { urls: 'stun:stun2.l.google.com:19302' },
-          { urls: 'stun:stun3.l.google.com:19302' }
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' }
         ],
         iceCandidatePoolSize: 10,
         iceTransportPolicy: 'all',
         bundlePolicy: 'max-bundle',
         rtcpMuxPolicy: 'require'
       };
-      
+
       const peerConnection = new RTCPeerConnection(config);
       
       // Enhanced logging

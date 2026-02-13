@@ -302,6 +302,7 @@ const CreatePostPage = () => {
       theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* Back Button */}
         <button
           onClick={() => navigate('/forum')}
           className={`inline-flex items-center mb-6 transition-colors duration-200 ${
@@ -314,6 +315,7 @@ const CreatePostPage = () => {
           {t('backToForum')}
         </button>
 
+        {/* Form */}
         <div className={`rounded-lg shadow-sm border p-6 transition-colors duration-300 ${
           theme === 'dark' 
             ? 'bg-gray-800 border-gray-700' 
@@ -321,7 +323,9 @@ const CreatePostPage = () => {
         }`}>
           <h1 className={`text-2xl font-bold mb-2 ${
             theme === 'dark' ? 'text-gray-100' : 'text-gray-900'
-          }`}>{t('title')}</h1>
+          }`}>
+            {t('title')}
+          </h1>
           <p className={`mb-6 ${
             theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
           }`}>
@@ -329,6 +333,7 @@ const CreatePostPage = () => {
             {user?.role === 'farmer' && ` ${t('reviewNotice')}`}
           </p>
 
+          {/* Error Alert */}
           {error && (
             <div className={`mb-6 p-4 rounded-lg border transition-colors duration-300 ${
               theme === 'dark'
@@ -485,7 +490,7 @@ const CreatePostPage = () => {
                       ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:opacity-50' 
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
                   }`}
-                  aria-label={t('common.add')}
+                  aria-label={t('common.buttons.add')}
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -510,7 +515,7 @@ const CreatePostPage = () => {
                             ? 'text-green-400 hover:text-green-300' 
                             : 'text-green-800 hover:text-green-900'
                         }`}
-                        aria-label={t('common.remove')}
+                        aria-label={t('common.buttons.remove')}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -575,18 +580,18 @@ const CreatePostPage = () => {
                     multiple
                     onChange={handleFilesSelected}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    aria-label={t('common.chooseFile')}
+                    aria-label={t('common.messages.chooseFile')}
                   />
                   <div className={`px-4 py-2 rounded-lg border transition-colors duration-200 text-sm ${
                     theme === 'dark'
                       ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
                       : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                   }`}>
-                    {t('common.chooseFile')}
+                    {t('common.messages.chooseFile')}
                   </div>
                 </div>
                 <span className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {t('common.noFileChosen')}
+                  {t('common.messages.noFileChosen')}
                 </span>
               </div>
 
@@ -642,7 +647,7 @@ const CreatePostPage = () => {
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 } border`}
               >
-                {t('common.cancel')}
+                {t('common.buttons.cancel')}
               </button>
 
               <button
@@ -653,7 +658,7 @@ const CreatePostPage = () => {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    {t('common.saving')}
+                    {t('common.buttons.saving')}
                   </>
                 ) : (
                   t('form.submit')
@@ -663,27 +668,6 @@ const CreatePostPage = () => {
           </form>
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="mt-12 border-t border-gray-200 dark:border-gray-800">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <img 
-                src="/logo.png" 
-                alt={t('common.logoAlt')}
-                className="w-8 h-8 object-contain"
-              />
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {t('common.copyright', { year: new Date().getFullYear() })}
-              </span>
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-500">
-              {t('common.allRightsReserved')}
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 };

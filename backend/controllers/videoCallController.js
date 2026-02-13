@@ -1,6 +1,7 @@
 // controllers/videoCallController.js
 const Consultation = require('../models/Consultation');
 const ChatMessage = require('../models/ChatMessage');
+const stunTurnService = require('../services/stunTurnService');
 
 // Create ChatMessage model if not exists
 const mongoose = require('mongoose');
@@ -23,18 +24,17 @@ const videoCallController = {
   // Get WebRTC configuration
   getCallConfig: async (req, res) => {
     try {
-      const stunServers = [
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        { urls: 'stun:stun3.l.google.com:19302' }
-      ];
-      
+      // Generate TURN credentials for better connectivity
+      const iceServers = await stunTurnService.generateTurnCredentials();
+
+      const rtcConfig = {
+        iceServers,
+        iceCandidatePoolSize: 10
+      };
+
       res.status(200).json({
         success: true,
-        rtcConfig: {
-          iceServers: stunServers,
-          iceCandidatePoolSize: 10
-        }
+        rtcConfig
       });
     } catch (error) {
       console.error('Error getting call config:', error);
