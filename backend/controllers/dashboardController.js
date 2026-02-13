@@ -442,6 +442,137 @@ exports.getExpertReviews = async (req, res, next) => {
   }
 };
 
+// Get expert clients (farmers who have consulted with the expert)
+exports.getExpertClients = async (req, res, next) => {
+  try {
+    const expertId = req.user.id;
+    logger.info('Fetching expert clients', {
+      expertId
+    });
+
+    // Get all completed consultations for this expert
+    const consultations = await Consultation.find({
+      expert: expertId,
+      status: 'completed'
+    })
+      .populate('farmer', 'name email phone avatar')
+      .sort({ createdAt: -1 });
+
+    // Group consultations by farmer to get unique clients
+    const clientsMap = new Map();
+
+    consultations.forEach(consultation => {
+      const farmerId = consultation.farmer._id.toString();
+      
+      if (!clientsMap.has(farmerId)) {
+        // New client - create client entry
+        const farmer = consultation.farmer;
+        const farmerName = farmer.name || 'Unknown Client';
+        const initials = farmerName
+          .split(' ')
+          .map(n => n[0])
+          .join('')
+          .toUpperCase()
+          .slice(0, 2);
+
+        clientsMap.set(farmerId, {
+          id: farmerId,
+          name: farmerName,
+          initials: initials,
+          email: farmer.email || '',
+          phone: farmer.phone || '',
+          avatar: farmer.avatar || null,
+          consultations: [],
+          totalConsultations: 0,
+          totalSpent: 0,
+          lastConsultation: consultation.createdAt,
+          rating: 0,
+          status: 'inactive'
+        });
+      }
+
+      // Add consultation to client's consultations array
+      const client = clientsMap.get(farmerId);
+      client.consultations.push({
+        id: consultation._id,
+        date: consultation.createdAt,
+        topic: consultation.topic,
+        amount: consultation.payment?.amount || 0
+      });
+
+      // Update stats
+      client.totalConsultations += 1;
+      client.totalSpent += consultation.payment?.amount || 0;
+      
+      // Update last consultation date (most recent)
+      if (new Date(consultation.createdAt) > new Date(client.lastConsultation)) {
+        client.lastConsultation = consultation.createdAt;
+      }
+
+      // Update rating (average of all consultation ratings)
+      if (consultation.rating) {
+        client.rating = consultation.rating;
+      }
+
+      // Update status to active if consultation is within last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      if (new Date(consultation.createdAt) >= thirtyDaysAgo) {
+        client.status = 'active';
+      }
+    });
+
+    // Convert map to array
+    let clients = Array.from(clientsMap.values());
+
+    // Sort by last consultation (most recent first)
+    clients.sort((a, b) => new Date(b.lastConsultation) - new Date(a.lastConsultation));
+
+    // Format dates and calculate stats
+    const activeClients = clients.filter(client => client.status === 'active').length;
+    const totalRevenue = clients.reduce((sum, client) => sum + client.totalSpent, 0);
+
+    // Format client data for response
+    const formattedClients = clients.map(client => ({
+      id: client.id,
+      name: client.name,
+      initials: client.initials,
+      email: client.email,
+      phone: client.phone,
+      avatar: client.avatar,
+      totalConsultations: client.totalConsultations,
+      totalSpent: client.totalSpent,
+      lastConsultation: client.lastConsultation.toISOString(),
+      rating: client.rating || 0,
+      status: client.status
+    }));
+
+    const stats = {
+      totalClients: clients.length,
+      activeClients,
+      totalRevenue
+    };
+
+    logger.info('Expert clients fetched successfully', {
+      expertId,
+      count: clients.length
+    });
+
+    res.status(200).json({
+      success: true,
+      clients: formattedClients,
+      stats
+    });
+  } catch (error) {
+    logger.error('Error fetching expert clients', {
+      error: error.message,
+      expertId: req.user.id,
+      stack: error.stack
+    });
+    next(error);
+  }
+};
+
 // Helper function to format time ago
 function formatTimeAgo(date) {
   const now = new Date();

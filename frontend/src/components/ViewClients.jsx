@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, User, MessageCircle, Calendar, DollarSign, Star } from 'lucide-react';
-import api from '../api';
+import api, { dashboardAPI } from '../api';
 
 const ViewClients = ({ isOpen, onClose, expertId }) => {
   const [clients, setClients] = useState([]);
@@ -20,74 +20,17 @@ const ViewClients = ({ isOpen, onClose, expertId }) => {
   const fetchClients = async () => {
     setLoading(true);
     try {
-      // Mock data for now - replace with actual API call
-      const mockClients = [
-        {
-          id: 1,
-          name: 'John Farmer',
-          initials: 'JF',
-          email: 'john.farmer@email.com',
-          phone: '+254 712 345 678',
-          totalConsultations: 5,
-          totalSpent: 2500,
-          lastConsultation: '2024-01-15',
-          rating: 5,
-          status: 'active',
-          avatar: null
-        },
-        {
-          id: 2,
-          name: 'Mary Johnson',
-          initials: 'MJ',
-          email: 'mary.johnson@email.com',
-          phone: '+254 723 456 789',
-          totalConsultations: 3,
-          totalSpent: 1800,
-          lastConsultation: '2024-01-12',
-          rating: 4,
-          status: 'active',
-          avatar: null
-        },
-        {
-          id: 3,
-          name: 'David Smith',
-          initials: 'DS',
-          email: 'david.smith@email.com',
-          phone: '+254 734 567 890',
-          totalConsultations: 8,
-          totalSpent: 4200,
-          lastConsultation: '2024-01-10',
-          rating: 5,
-          status: 'active',
-          avatar: null
-        },
-        {
-          id: 4,
-          name: 'Sarah Wilson',
-          initials: 'SW',
-          email: 'sarah.wilson@email.com',
-          phone: '+254 745 678 901',
-          totalConsultations: 2,
-          totalSpent: 1200,
-          lastConsultation: '2024-01-08',
-          rating: 3,
-          status: 'inactive',
-          avatar: null
-        }
-      ];
-
-      setClients(mockClients);
-
-      // Calculate stats
-      const activeClients = mockClients.filter(client => client.status === 'active').length;
-      const totalRevenue = mockClients.reduce((sum, client) => sum + client.totalSpent, 0);
-
-      setStats({
-        totalClients: mockClients.length,
-        activeClients,
-        totalRevenue
-      });
-
+      // Fetch clients from API
+      const response = await dashboardAPI.getExpertClients();
+      
+      if (response.data.success) {
+        setClients(response.data.clients);
+        setStats({
+          totalClients: response.data.stats.totalClients,
+          activeClients: response.data.stats.activeClients,
+          totalRevenue: response.data.stats.totalRevenue
+        });
+      }
     } catch (error) {
       console.error('Error fetching clients:', error);
     } finally {
@@ -221,16 +164,7 @@ const ViewClients = ({ isOpen, onClose, expertId }) => {
                     </div>
                   </div>
 
-                  <div className="flex space-x-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                    <button className="flex-1 flex items-center justify-center space-x-2 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors duration-200">
-                      <MessageCircle size={16} />
-                      <span className="text-sm">Message</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center space-x-2 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200">
-                      <Calendar size={16} />
-                      <span className="text-sm">Schedule</span>
-                    </button>
-                  </div>
+                
                 </div>
               ))}
             </div>

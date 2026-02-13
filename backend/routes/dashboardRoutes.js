@@ -13,6 +13,9 @@ router.get('/expert-stats', dashboardController.getExpertStats);
 // Expert reviews (requires auth only)
 router.get('/expert-reviews', dashboardController.getExpertReviews);
 
+// Expert clients (requires auth only)
+router.get('/expert-clients', dashboardController.getExpertClients);
+
 // All other routes require admin role
 router.use(admin);
 
