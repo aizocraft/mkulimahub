@@ -3,6 +3,7 @@ import ScrollToTop from './components/ScrollToTop.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AccessibilityProvider } from './context/AccessibilityContext';
+import TextToSpeechWidget from './components/TextToSpeechWidget.jsx';
 import GoogleAuthSuccess from './components/GoogleAuthSuccess.jsx';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import SocketInitializer from './components/SocketInitializer';
@@ -184,6 +185,7 @@ export default function App() {
             pauseOnHover
           />
           <Toaster position="top-center" />
+          <TextToSpeechWidget />
         </AuthProvider>
       </AccessibilityProvider>
     </ThemeProvider>
