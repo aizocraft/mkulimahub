@@ -21,7 +21,8 @@
             "tips": [
               "Avoid waterlogged areas",
               "Test soil nutrients",
-              "Clear all weeds and debris"
+              "Clear all weeds and debris",
+              "Previous crop should not be maize to break pest cycles"
             ],
             "keyActivities": ["Soil testing", "Land clearing", "Plowing"],
             "materials": ["Plough", "Soil test kit", "Herbicide"],
@@ -35,11 +36,12 @@
             "tips": [
               "Plow to 15-20cm depth",
               "Break large soil clods",
-              "Level the field properly"
+              "Level the field properly",
+              "Incorporate organic manure"
             ],
             "keyActivities": ["Plowing", "Harrowing", "Leveling"],
-            "materials": ["Tractor", "Harrow", "Leveling board"],
-            "successIndicator": "Soil crumbles easily"
+            "materials": ["Tractor", "Harrow", "Leveling board", "Manure"],
+            "successIndicator": "Soil crumbles easily with good aeration"
           }
         ],
         "planting": [
@@ -49,13 +51,14 @@
             "duration": "2-3 days",
             "description": "Choose certified, disease-free seeds",
             "tips": [
-              "Select hybrid varieties",
+              "Select hybrid varieties (H614, SC649, DK777)",
               "Check germination rate >85%",
-              "Treat seeds with fungicide"
+              "Treat seeds with fungicide",
+              "Buy from certified seed companies"
             ],
             "keyActivities": ["Seed purchase", "Seed treatment", "Sorting"],
             "materials": ["Certified seeds", "Fungicide", "Storage bags"],
-            "successIndicator": "Healthy, viable seeds"
+            "successIndicator": "Healthy, viable seeds with >90% germination"
           },
           {
             "id": 2,
@@ -65,11 +68,12 @@
             "tips": [
               "Plant at 75cm x 30cm spacing",
               "2-3 seeds per hole at 5cm depth",
-              "Apply basal fertilizer"
+              "Apply basal fertilizer (DAP) 100kg/acre",
+              "Plant at onset of rains"
             ],
-            "keyActivities": ["Marking", "Digging", "Planting"],
-            "materials": ["Planting line", "Dibble", "Fertilizer"],
-            "successIndicator": "Uniform planting"
+            "keyActivities": ["Marking", "Digging", "Planting", "Fertilizer application"],
+            "materials": ["Planting line", "Dibble", "DAP fertilizer", "Jembe"],
+            "successIndicator": "Uniform planting with consistent spacing"
           }
         ],
         "growth": [
@@ -79,13 +83,14 @@
             "duration": "5-10 days",
             "description": "Seed sprouts and establishes",
             "tips": [
-              "Ensure adequate moisture",
-              "Control pests immediately",
-              "Thin to 2 plants per hill"
+              "Ensure adequate soil moisture",
+              "Control cutworms immediately",
+              "Thin to 2 plants per hill at 2 weeks",
+              "Gap fill within 2 weeks"
             ],
             "keyActivities": ["Monitoring", "Thinning", "Gap filling"],
-            "materials": ["Watering can", "Pesticide"],
-            "successIndicator": "80% germination rate"
+            "materials": ["Watering can", "Pesticide", "Spare seedlings"],
+            "successIndicator": "80% germination rate by day 7"
           },
           {
             "id": 2,
@@ -93,59 +98,78 @@
             "duration": "30-45 days",
             "description": "Rapid leaf and stem growth",
             "tips": [
-              "Apply top dressing fertilizer",
-              "Weed control is critical",
-              "Monitor for diseases"
+              "Apply top dressing (CAN) at 3-4 weeks",
+              "First weeding at 3 weeks",
+              "Second weeding at 6 weeks",
+              "Monitor for fall armyworm"
             ],
-            "keyActivities": ["Weeding", "Fertilizing", "Pest control"],
-            "materials": ["Weeder", "Fertilizer", "Herbicide"],
-            "successIndicator": "Healthy dark green leaves"
+            "keyActivities": ["Weeding", "Fertilizing", "Pest scouting", "Earthing up"],
+            "materials": ["Weeder", "CAN fertilizer", "Herbicide", "Knapsack sprayer"],
+            "successIndicator": "Healthy dark green leaves, vigorous growth"
+          },
+          {
+            "id": 3,
+            "title": "Tasseling & Silking",
+            "duration": "10-15 days",
+            "description": "Pollination and kernel development",
+            "tips": [
+              "Critical water period - don't stress",
+              "Avoid pesticide sprays during pollination",
+              "Monitor for stalk borers",
+              "Apply foliar fertilizer if deficient"
+            ],
+            "keyActivities": ["Irrigation", "Monitoring", "Pest control"],
+            "materials": ["Water source", "Foliar spray", "Pheromone traps"],
+            "successIndicator": "Uniform tasseling and silking"
+          },
+          {
+            "id": 4,
+            "title": "Grain Filling",
+            "duration": "25-35 days",
+            "description": "Kernels develop and harden",
+            "tips": [
+              "Water stress reduces yield significantly",
+              "Monitor for storage pests in field",
+              "Check moisture content weekly",
+              "Watch for bird damage near edges"
+            ],
+            "keyActivities": ["Moisture monitoring", "Bird scaring", "Pest control"],
+            "materials": ["Moisture meter", "Bird scarers", "Storage bags"],
+            "successIndicator": "Well-filled cobs with hard, dented kernels"
           }
         ],
         "maturity": [
           {
             "id": 1,
-            "title": "Tasseling & Silking",
-            "duration": "10-15 days",
-            "description": "Pollination and kernel development",
+            "title": "Physiological Maturity",
+            "duration": "7-10 days",
+            "description": "Grain reaches maximum dry weight",
             "tips": [
-              "Ensure adequate water",
-              "Avoid foliar sprays",
-              "Monitor pollination"
+              "Black layer formation at kernel tip",
+              "Moisture content 30-35%",
+              "Leaves begin to dry",
+              "Husks turn brown"
             ],
-            "keyActivities": ["Irrigation", "Monitoring", "Support"],
-            "materials": ["Water source", "Stakes"],
-            "successIndicator": "Proper pollination"
-          },
-          {
-            "id": 2,
-            "title": "Grain Filling",
-            "duration": "25-35 days",
-            "description": "Kernels develop and harden",
-            "tips": [
-              "Water stress reduces yield",
-              "Monitor for storage pests",
-              "Check moisture content"
-            ],
-            "keyActivities": ["Moisture check", "Pest control", "Harvest planning"],
-            "materials": ["Moisture meter", "Storage bags"],
-            "successIndicator": "Hard, dented kernels"
+            "keyActivities": ["Field inspection", "Moisture testing", "Harvest planning"],
+            "materials": ["Moisture meter", "Harvesting tools"],
+            "successIndicator": "Black layer visible, 30% moisture"
           }
         ],
         "harvest": [
           {
             "id": 1,
-            "title": "Harvest Timing",
-            "duration": "1 day",
+            "title": "Harvesting",
+            "duration": "1-3 days",
             "description": "Harvest at physiological maturity",
             "tips": [
-              "Harvest when kernels dent",
-              "Moisture content 20-25%",
-              "Use sharp harvesting tools"
+              "Harvest when kernels dent and harden",
+              "Break cobs from stalks",
+              "Remove husks immediately",
+              "Sort damaged cobs"
             ],
-            "keyActivities": ["Field inspection", "Harvesting", "Transport"],
-            "materials": ["Harvesting knife", "Baskets", "Transport"],
-            "successIndicator": "Dry, hard kernels"
+            "keyActivities": ["Breaking cobs", "Debusking", "Sorting", "Transport"],
+            "materials": ["Harvesting knife", "Baskets", "Tarpaulins", "Transport"],
+            "successIndicator": "Clean cobs, minimal damage"
           }
         ],
         "postHarvest": [
@@ -156,54 +180,1679 @@
             "description": "Reduce moisture to safe storage levels",
             "tips": [
               "Dry to 12-13% moisture",
-              "Use clean drying surfaces",
-              "Turn regularly"
+              "Use clean drying mats or concrete floor",
+              "Turn grain every 2-3 hours in sun",
+              "Cover at night to prevent re-wetting"
             ],
-            "keyActivities": ["Spreading", "Turning", "Moisture testing"],
-            "materials": ["Drying mats", "Moisture meter"],
-            "successIndicator": "12% moisture content"
+            "keyActivities": ["Spreading", "Turning", "Moisture testing", "Bagging"],
+            "materials": ["Drying mats", "Moisture meter", "Tarpaulins", "Grain bags"],
+            "successIndicator": "12-13% moisture, uniform drying"
           },
           {
             "id": 2,
+            "title": "Shelling & Winnowing",
+            "duration": "2-4 days",
+            "description": "Remove kernels from cobs",
+            "tips": [
+              "Use mechanical sheller for efficiency",
+              "Winnow to remove chaff",
+              "Remove broken/damaged grains",
+              "Grade by size if selling"
+            ],
+            "keyActivities": ["Shelling", "Winnowing", "Grading", "Cleaning"],
+            "materials": ["Maize sheller", "Winnowing trays", "Grading sieves"],
+            "successIndicator": "Clean, whole grains"
+          },
+          {
+            "id": 3,
             "title": "Storage",
-            "duration": "3-6 months",
+            "duration": "3-12 months",
             "description": "Store in clean, dry conditions",
             "tips": [
-              "Use airtight containers",
-              "Add pest control measures",
-              "Monitor regularly"
+              "Use hermetic bags (PICS) for long storage",
+              "Treat with grain protectant",
+              "Store off ground on pallets",
+              "Monitor monthly for pests"
             ],
-            "keyActivities": ["Cleaning", "Bagging", "Storage"],
-            "materials": ["Storage bags", "Pesticides", "Containers"],
-            "successIndicator": "No pest damage"
+            "keyActivities": ["Treatment", "Bagging", "Stacking", "Monitoring"],
+            "materials": ["Hermetic bags", "Grain protectant", "Pallet", "Pheromone traps"],
+            "successIndicator": "No pest damage, no mold"
           }
         ]
       },
       "requirements": {
         "temperature": "20°C - 30°C",
+        "temperatureMin": "18°C",
+        "temperatureMax": "35°C",
         "rainfall": "600 mm - 1200 mm",
         "soilType": "Deep, fertile loam soils",
         "soilPH": "5.5 - 7.5",
         "sunlight": "Full sun (6-8 hours daily)",
-        "altitude": "0-2000m above sea level"
+        "altitude": "0-2000m above sea level",
+        "spacing": "75cm x 25-30cm",
+        "plantPopulation": "44,000 - 53,000 plants/acre"
       },
       "yield": {
         "average": "2.5 - 4 tons/acre",
         "optimal": "6 tons/acre",
         "quality": "Large, well-filled kernels"
       },
-      "pests": ["Stem borers", "Fall armyworm", "Storage weevils"],
-      "diseases": ["Maize streak virus", "Leaf blight", "Rust"],
+      "pests": [
+        {"name": "Stem borers", "symptoms": "Holes in stem, dead heart", "control": "Pheromone traps, early planting"},
+        {"name": "Fall armyworm", "symptoms": "Whorl damage, frass", "control": "Early detection, registered insecticides"},
+        {"name": "Storage weevils", "symptoms": "Holes in grain", "control": "Hermetic storage, grain protectant"},
+        {"name": "Cutworms", "symptoms": "Seedlings cut at base", "control": "Soil drenching, baiting"},
+        {"name": "Aphids", "symptoms": "Curled leaves, honeydew", "control": "Natural enemies, insecticides"}
+      ],
+      "diseases": [
+        {"name": "Maize streak virus", "symptoms": "Yellow streaks on leaves", "control": "Resistant varieties, vector control"},
+        {"name": "Northern leaf blight", "symptoms": "Cigar-shaped lesions", "control": "Resistant varieties, fungicides"},
+        {"name": "Gray leaf spot", "symptoms": "Rectangular lesions", "control": "Crop rotation, resistant varieties"},
+        {"name": "Rust", "symptoms": "Pustules on leaves", "control": "Resistant varieties, timely planting"},
+        {"name": "Smut", "symptoms": "Galls on cobs", "control": "Seed treatment, remove galls"}
+      ],
       "fertilizer": {
         "basal": "DAP: 100kg/acre",
-        "topDressing": "CAN: 100kg/acre",
-        "micronutrients": ["Zinc", "Boron"]
+        "topDressing": "CAN: 100kg/acre (split application)",
+        "micronutrients": ["Zinc (5kg/acre)", "Boron (2kg/acre)"],
+        "organic": "Manure: 5-10 tons/acre"
       },
-      "tags": ["Staple", "Drought-tolerant", "Cash-crop", "High-yield"],
+      "varieties": [
+        {"name": "H614", "duration": "160 days", "yield": "4-5 t/ha", "characteristics": "Drought tolerant"},
+        {"name": "SC 649", "duration": "150 days", "yield": "5-6 t/ha", "characteristics": "Disease resistant"},
+        {"name": "DK 777", "duration": "140 days", "yield": "6-7 t/ha", "characteristics": "High yield"},
+        {"name": "WH 505", "duration": "145 days", "yield": "5-6 t/ha", "characteristics": "Early maturing"}
+      ],
+      "tags": ["Staple", "Drought-tolerant", "Cash-crop", "High-yield", "Food security"],
       "image": "https://placehold.co/600x400/FACC15/FFFFFF?text=Maize+Field"
     },
     {
       "id": 2,
+      "name": "Wheat",
+      "category": "Cereal",
+      "icon": "🌾",
+      "iconColor": "from-amber-500 to-yellow-600",
+      "description": "Major cereal crop for bread making. Thrives in cool climates with well-distributed rainfall.",
+      "season": "Cool dry season",
+      "duration": "4-5 months",
+      "difficulty": "Medium",
+      "successRate": "80%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Land Preparation",
+            "duration": "10-14 days",
+            "description": "Prepare fine seedbed",
+            "tips": [
+              "Plough at 15-20cm depth",
+              "Level field for uniform irrigation",
+              "Incorporate crop residues",
+              "Apply basal fertilizer"
+            ],
+            "keyActivities": ["Ploughing", "Harrowing", "Leveling"],
+            "materials": ["Tractor", "Disc plough", "Harrow", "Leveler"],
+            "successIndicator": "Fine, level seedbed"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Sowing",
+            "duration": "1-2 days",
+            "description": "Drill seeds at optimal depth",
+            "tips": [
+              "Seed rate: 100-120kg/ha",
+              "Depth: 3-4cm",
+              "Row spacing: 20cm",
+              "Use certified seeds"
+            ],
+            "keyActivities": ["Seed drilling", "Fertilizer placement", "Rolling"],
+            "materials": ["Seed drill", "Wheat seeds", "DAP fertilizer"],
+            "successIndicator": "Uniform emergence"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Tiller Initiation",
+            "duration": "20-25 days",
+            "description": "Side shoots development",
+            "tips": [
+              "Apply nitrogen at tillering",
+              "Control weeds early",
+              "Ensure adequate moisture"
+            ],
+            "keyActivities": ["Fertilizing", "Weeding", "Irrigation"],
+            "materials": ["Urea", "Herbicide", "Irrigation equipment"],
+            "successIndicator": "4-5 tillers per plant"
+          },
+          {
+            "id": 2,
+            "title": "Stem Elongation",
+            "duration": "25-30 days",
+            "description": "Rapid stem growth",
+            "tips": [
+              "Second nitrogen application",
+              "Monitor for rust",
+              "Avoid water stress"
+            ],
+            "keyActivities": ["Fertilizing", "Disease scouting", "Irrigation"],
+            "materials": ["Fertilizer", "Fungicide", "Sprayer"],
+            "successIndicator": "Strong, green stems"
+          },
+          {
+            "id": 3,
+            "title": "Heading & Flowering",
+            "duration": "15-20 days",
+            "description": "Ear emergence and pollination",
+            "tips": [
+              "Critical moisture period",
+              "Avoid pesticide sprays",
+              "Watch for bird damage"
+            ],
+            "keyActivities": ["Irrigation", "Bird scaring", "Monitoring"],
+            "materials": ["Water source", "Bird scarers"],
+            "successIndicator": "Uniform heading"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Grain Filling",
+            "duration": "25-30 days",
+            "description": "Kernel development",
+            "tips": [
+              "Maintain soil moisture",
+              "Stop irrigation 10 days before harvest",
+              "Watch for lodging"
+            ],
+            "keyActivities": ["Moisture monitoring", "Lodging prevention"],
+            "materials": ["Moisture meter"],
+            "successIndicator": "Plump, hard kernels"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "2-5 days",
+            "description": "Harvest at 14-16% moisture",
+            "tips": [
+              "Harvest when straw turns yellow",
+              "Combine harvester or manual",
+              "Minimize grain cracking",
+              "Immediate threshing"
+            ],
+            "keyActivities": ["Cutting", "Threshing", "Winnowing", "Bagging"],
+            "materials": ["Sickle", "Combine harvester", "Thresher", "Grain bags"],
+            "successIndicator": "Clean, undamaged grain"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Drying",
+            "duration": "3-5 days",
+            "description": "Reduce to 12% moisture",
+            "tips": [
+              "Sun dry on clean tarpaulins",
+              "Turn regularly",
+              "Test moisture frequently",
+              "Cool before storage"
+            ],
+            "keyActivities": ["Drying", "Moisture testing", "Cleaning"],
+            "materials": ["Tarpaulin", "Moisture meter", "Winnower"],
+            "successIndicator": "12% moisture"
+          },
+          {
+            "id": 2,
+            "title": "Storage",
+            "duration": "3-12 months",
+            "description": "Store in cool, dry place",
+            "tips": [
+              "Use hermetic bags",
+              "Treat with grain protectant",
+              "Store on pallets",
+              "Monitor for pests"
+            ],
+            "keyActivities": ["Bagging", "Treatment", "Stacking"],
+            "materials": ["Hermetic bags", "Grain protectant", "Pallet"],
+            "successIndicator": "No pest damage"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "15°C - 25°C",
+        "temperatureMin": "12°C",
+        "temperatureMax": "30°C",
+        "rainfall": "500 mm - 900 mm",
+        "soilType": "Well-drained loam soils",
+        "soilPH": "6.0 - 7.5",
+        "sunlight": "Full sun",
+        "altitude": "1500-2500m above sea level"
+      },
+      "yield": {
+        "average": "2-3 tons/acre",
+        "optimal": "4-5 tons/acre",
+        "quality": "Hard, vitreous grains"
+      },
+      "pests": [
+        {"name": "Aphids", "symptoms": "Curled leaves, honeydew", "control": "Natural enemies, insecticides"},
+        {"name": "Armyworms", "symptoms": "Defoliation", "control": "Early detection, chemicals"},
+        {"name": "Birds", "symptoms": "Grain loss", "control": "Scaring, netting"},
+        {"name": "Storage weevils", "symptoms": "Holes in grain", "control": "Hermetic storage"}
+      ],
+      "diseases": [
+        {"name": "Stem rust", "symptoms": "Reddish pustules on stems", "control": "Resistant varieties"},
+        {"name": "Leaf rust", "symptoms": "Orange pustules on leaves", "control": "Fungicides, resistance"},
+        {"name": "Powdery mildew", "symptoms": "White powder on leaves", "control": "Resistant varieties"},
+        {"name": "Septoria leaf spot", "symptoms": "Brown spots", "control": "Crop rotation"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 100kg/ha",
+        "topDressing": "Urea: 150kg/ha (split)",
+        "micronutrients": ["Zinc", "Copper"]
+      },
+      "varieties": [
+        {"name": "Kenya Korongo", "duration": "140 days", "yield": "3-4 t/ha", "characteristics": "Rust resistant"},
+        {"name": "Njoro BW1", "duration": "135 days", "yield": "4-5 t/ha", "characteristics": "High yield"},
+        {"name": "Eagle 10", "duration": "130 days", "yield": "3.5-4.5 t/ha", "characteristics": "Drought tolerant"}
+      ],
+      "tags": ["Staple", "Bread making", "Cool climate"],
+      "image": "https://placehold.co/600x400/EAB308/FFFFFF?text=Wheat+Field"
+    },
+    {
+      "id": 3,
+      "name": "Rice",
+      "category": "Cereal",
+      "icon": "🍚",
+      "iconColor": "from-green-600 to-emerald-700",
+      "description": "Major food crop requiring flooded conditions or heavy rainfall.",
+      "season": "Rainy season",
+      "duration": "4-6 months",
+      "difficulty": "High",
+      "successRate": "75%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Nursery Preparation",
+            "duration": "25-30 days",
+            "description": "Prepare seedling nursery",
+            "tips": [
+              "Use 100m² nursery per acre",
+              "Level seedbed perfectly",
+              "Apply compost",
+              "Flood before sowing"
+            ],
+            "keyActivities": ["Bed preparation", "Leveling", "Fertilizing"],
+            "materials": ["Hoe", "Compost", "Leveling board"],
+            "successIndicator": "Uniform germination"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Transplanting",
+            "duration": "3-5 days",
+            "description": "Transplant 25-day old seedlings",
+            "tips": [
+              "2-3 seedlings per hill",
+              "Spacing: 20cm x 20cm",
+              "Plant at 2-3cm depth",
+              "Maintain 5cm water"
+            ],
+            "keyActivities": ["Uprooting", "Transplanting", "Gap filling"],
+            "materials": ["Transplanting rope", "Seedlings", "Basket"],
+            "successIndicator": "High survival rate"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "30-45 days",
+            "description": "Tiller production",
+            "tips": [
+              "Maintain 5-10cm water",
+              "Apply nitrogen at tillering",
+              "Control weeds",
+              "Monitor for blast"
+            ],
+            "keyActivities": ["Water management", "Fertilizing", "Weeding"],
+            "materials": ["Fertilizer", "Weeder", "Water control"],
+            "successIndicator": "20-25 tillers/m²"
+          },
+          {
+            "id": 2,
+            "title": "Panicle Initiation",
+            "duration": "15-20 days",
+            "description": "Reproductive stage begins",
+            "tips": [
+              "Maintain 10-15cm water",
+              "Apply panicle fertilizer",
+              "Monitor pest complex",
+              "Drain 7 days before harvest"
+            ],
+            "keyActivities": ["Water control", "Fertilizing", "Pest control"],
+            "materials": ["Fertilizer", "Sprayer", "Pesticide"],
+            "successIndicator": "Visible panicle primordia"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Flowering & Grain Fill",
+            "duration": "25-30 days",
+            "description": "Pollination and grain development",
+            "tips": [
+              "Drain field gradually",
+              "Protect from birds",
+              "Stop nitrogen application",
+              "Monitor moisture"
+            ],
+            "keyActivities": ["Water drainage", "Bird scaring", "Monitoring"],
+            "materials": ["Bird scarers", "Moisture meter"],
+            "successIndicator": "90% yellow panicles"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "2-4 days",
+            "description": "Harvest at 20-25% moisture",
+            "tips": [
+              "Cut at ground level",
+              "Immediate threshing",
+              "Avoid soil contamination",
+              "Dry immediately"
+            ],
+            "keyActivities": ["Cutting", "Threshing", "Winnowing", "Bagging"],
+            "materials": ["Sickle", "Thresher", "Winnower", "Grain bags"],
+            "successIndicator": "Clean paddy"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Drying",
+            "duration": "3-5 days",
+            "description": "Dry to 14% moisture",
+            "tips": [
+              "Sun dry on mats",
+              "Thin layer (2-3cm)",
+              "Turn every hour",
+              "Test moisture"
+            ],
+            "keyActivities": ["Drying", "Turning", "Moisture testing"],
+            "materials": ["Drying mats", "Moisture meter", "Rake"],
+            "successIndicator": "14% moisture"
+          },
+          {
+            "id": 2,
+            "title": "Milling",
+            "duration": "1 day",
+            "description": "Remove husk and bran",
+            "tips": [
+              "Clean paddy before milling",
+              "Adjust for head rice recovery",
+              "Grade after milling",
+              "Store polished rice in airtight containers"
+            ],
+            "keyActivities": ["Cleaning", "Dehusking", "Polishing", "Grading"],
+            "materials": ["Rice mill", "Cleaner", "Grading sieves", "Storage containers"],
+            "successIndicator": ">60% head rice recovery"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "20°C - 35°C",
+        "temperatureMin": "18°C",
+        "temperatureMax": "38°C",
+        "rainfall": "1000 mm - 2000 mm",
+        "soilType": "Clay loam soils with good water retention",
+        "soilPH": "5.5 - 6.5",
+        "sunlight": "Full sun",
+        "altitude": "0-1200m above sea level",
+        "waterRequirement": "1200-1500mm per season"
+      },
+      "yield": {
+        "average": "3-4 tons/acre",
+        "optimal": "6 tons/acre",
+        "quality": "Long grain, translucent"
+      },
+      "pests": [
+        {"name": "Stem borer", "symptoms": "Dead heart, white head", "control": "Light traps, chemicals"},
+        {"name": "Brown planthopper", "symptoms": "Hopper burn", "control": "Resistant varieties"},
+        {"name": "Rice bugs", "symptoms": "Discolored grains", "control": "Netting, insecticides"},
+        {"name": "Leaf folder", "symptoms": "Rolled leaves", "control": "Early planting"}
+      ],
+      "diseases": [
+        {"name": "Rice blast", "symptoms": "Diamond lesions on leaves", "control": "Resistant varieties"},
+        {"name": "Bacterial leaf blight", "symptoms": "Yellow lesions with wavy margin", "control": "Copper fungicides"},
+        {"name": "Brown spot", "symptoms": "Brown circular spots", "control": "Seed treatment"},
+        {"name": "Rice yellow mottle virus", "symptoms": "Yellowing, stunting", "control": "Roguing, vector control"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 100kg/ha",
+        "topDressing": "Urea: 150kg/ha (split 3 times)",
+        "micronutrients": ["Zinc", "Iron"],
+        "organic": "Compost: 5 tons/ha"
+      },
+      "varieties": [
+        {"name": "Basmati 370", "duration": "150 days", "yield": "2-3 t/ha", "characteristics": "Aromatic"},
+        {"name": "IR 2793", "duration": "120 days", "yield": "5-6 t/ha", "characteristics": "High yield"},
+        {"name": "BW 196", "duration": "125 days", "yield": "4-5 t/ha", "characteristics": "Disease resistant"},
+        {"name": "Sindano", "duration": "115 days", "yield": "3-4 t/ha", "characteristics": "Drought tolerant"}
+      ],
+      "tags": ["Staple", "Paddy", "Flood tolerant", "Irrigated"],
+      "image": "https://placehold.co/600x400/22C55E/FFFFFF?text=Rice+Paddy"
+    },
+    {
+      "id": 4,
+      "name": "Beans",
+      "category": "Legume",
+      "icon": "🫘",
+      "iconColor": "from-brown-600 to-amber-700",
+      "description": "Important protein source and nitrogen-fixing crop. Intercrop with maize.",
+      "season": "All seasons",
+      "duration": "2-3 months",
+      "difficulty": "Low",
+      "successRate": "90%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Land Preparation",
+            "duration": "5-7 days",
+            "description": "Prepare well-drained seedbed",
+            "tips": [
+              "Plow to 15cm depth",
+              "Fine seedbed not required",
+              "Incorporate manure",
+              "Avoid waterlogging"
+            ],
+            "keyActivities": ["Plowing", "Harrowing", "Manure application"],
+            "materials": ["Plough", "Harrow", "Manure"],
+            "successIndicator": "Loose, weed-free soil"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Sowing",
+            "duration": "1-2 days",
+            "description": "Plant at onset of rains",
+            "tips": [
+              "Spacing: 50cm x 20cm",
+              "Depth: 2-3cm",
+              "2 seeds per hole",
+              "Inoculate with Rhizobium"
+            ],
+            "keyActivities": ["Seed selection", "Inoculation", "Planting"],
+            "materials": ["Beans seeds", "Rhizobium inoculant", "Planting line", "Jembe"],
+            "successIndicator": "80% emergence by day 7"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "20-25 days",
+            "description": "Leaf and stem development",
+            "tips": [
+              "First weeding at 2 weeks",
+              "Control cutworms",
+              "Thin to 1 plant per hill",
+              "Mulch to conserve moisture"
+            ],
+            "keyActivities": ["Weeding", "Thinning", "Pest scouting"],
+            "materials": ["Hoe", "Pesticide", "Mulch"],
+            "successIndicator": "Vigorous green growth"
+          },
+          {
+            "id": 2,
+            "title": "Flowering",
+            "duration": "10-15 days",
+            "description": "Flower production",
+            "tips": [
+              "Avoid water stress",
+              "Do not spray during flowering",
+              "Bees improve pod set",
+              "Foliar feed if pale"
+            ],
+            "keyActivities": ["Irrigation", "Pollinator protection", "Monitoring"],
+            "materials": ["Water source", "Foliar fertilizer"],
+            "successIndicator": "70% flower set"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Pod Formation",
+            "duration": "15-20 days",
+            "description": "Pod development and filling",
+            "tips": [
+              "Monitor for pod borers",
+              "Maintain moisture",
+              "Support if climbing variety",
+              "Watch for diseases"
+            ],
+            "keyActivities": ["Pest control", "Irrigation", "Staking"],
+            "materials": ["Stakes", "Sprayer", "Pesticide"],
+            "successIndicator": "Uniform pod filling"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "7-10 days",
+            "description": "Multiple harvests for green beans",
+            "tips": [
+              "Harvest when pods snap easily",
+              "For dry beans, harvest when pods yellow",
+              "Avoid harvesting in rain",
+              "Handle carefully to avoid bruising"
+            ],
+            "keyActivities": ["Picking", "Sorting", "Bagging"],
+            "materials": ["Baskets", "Crates", "Grain bags"],
+            "successIndicator": "Clean, undamaged pods"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Threshing & Drying",
+            "duration": "2-4 days",
+            "description": "Extract and dry beans",
+            "tips": [
+              "Thresh when pods fully dry",
+              "Winnow to remove chaff",
+              "Sun dry to 14% moisture",
+              "Remove damaged beans"
+            ],
+            "keyActivities": ["Threshing", "Winnowing", "Drying", "Sorting"],
+            "materials": ["Sacks", "Thresher", "Tarpaulin", "Moisture meter"],
+            "successIndicator": "Clean, dry beans"
+          },
+          {
+            "id": 2,
+            "title": "Storage",
+            "duration": "3-8 months",
+            "description": "Pest-free storage",
+            "tips": [
+              "Cool before bagging",
+              "Treat with grain protectant",
+              "Use hermetic bags",
+              "Store in cool, dry place"
+            ],
+            "keyActivities": ["Treatment", "Bagging", "Stacking"],
+            "materials": ["Hermetic bags", "Grain protectant", "Pallet"],
+            "successIndicator": "No bruchid damage"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "18°C - 26°C",
+        "temperatureMin": "15°C",
+        "temperatureMax": "30°C",
+        "rainfall": "400 mm - 800 mm",
+        "soilType": "Well-drained loam soils",
+        "soilPH": "5.8 - 6.8",
+        "sunlight": "Full sun",
+        "altitude": "0-2000m above sea level"
+      },
+      "yield": {
+        "average": "0.8-1.2 tons/acre",
+        "optimal": "1.5-2 tons/acre",
+        "quality": "Uniform size, shiny testa"
+      },
+      "pests": [
+        {"name": "Bean fly", "symptoms": "Stunted seedlings", "control": "Seed dressing, early planting"},
+        {"name": "Aphids", "symptoms": "Curled leaves, virus spread", "control": "Natural enemies, chemicals"},
+        {"name": "Pod borers", "symptoms": "Holes in pods", "control": "Early harvest, insecticides"},
+        {"name": "Bruchids", "symptoms": "Holes in stored grain", "control": "Hermetic storage"}
+      ],
+      "diseases": [
+        {"name": "Angular leaf spot", "symptoms": "Brown angular spots", "control": "Resistant varieties"},
+        {"name": "Common bean rust", "symptoms": "Rusty pustules", "control": "Fungicides, resistance"},
+        {"name": "Anthracnose", "symptoms": "Dark sunken lesions", "control": "Clean seed, crop rotation"},
+        {"name": "Bean common mosaic", "symptoms": "Mosaic patterns, stunting", "control": "Resistant varieties"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 100kg/acre",
+        "topDressing": "CAN: 50kg/acre",
+        "micronutrients": ["Molybdenum", "Boron"],
+        "organic": "Manure: 5 tons/acre"
+      },
+      "varieties": [
+        {"name": "GLP 2 (Rosecoco)", "duration": "75 days", "yield": "1.2 t/acre", "characteristics": "Market favorite"},
+        {"name": "Mwitemania", "duration": "70 days", "yield": "1.0 t/acre", "characteristics": "Drought tolerant"},
+        {"name": "KK 8", "duration": "80 days", "yield": "1.5 t/acre", "characteristics": "Disease resistant"},
+        {"name": "Nyota", "duration": "68 days", "yield": "1.3 t/acre", "characteristics": "Early maturing"}
+      ],
+      "tags": ["Protein", "Nitrogen-fixing", "Intercrop", "Dual-purpose"],
+      "image": "https://placehold.co/600x400/92400E/FFFFFF?text=Beans"
+    },
+    {
+      "id": 5,
+      "name": "Tomatoes",
+      "category": "Vegetable",
+      "icon": "🍅",
+      "iconColor": "from-red-600 to-rose-700",
+      "description": "High-value vegetable crop with good returns. Requires staking and intensive management.",
+      "season": "All year (with irrigation)",
+      "duration": "4-6 months",
+      "difficulty": "High",
+      "successRate": "70%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Nursery Establishment",
+            "duration": "25-30 days",
+            "description": "Raise healthy seedlings",
+            "tips": [
+              "Sterilize nursery soil",
+              "Sow in raised beds",
+              "Shade net protection",
+              "Water daily with fine spray"
+            ],
+            "keyActivities": ["Bed preparation", "Soil sterilization", "Sowing", "Watering"],
+            "materials": ["Seed tray", "Growing media", "Shade net", "Watering can"],
+            "successIndicator": "Vigorous seedlings with 4-5 leaves"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Transplanting",
+            "duration": "2-3 days",
+            "description": "Transplant 4-week old seedlings",
+            "tips": [
+              "Hardening off for 5 days",
+              "Spacing: 60cm x 45cm",
+              "Transplant in evening",
+              "Water immediately"
+            ],
+            "keyActivities": ["Field preparation", "Fertilizer basal", "Transplanting"],
+            "materials": ["DAP fertilizer", "Mulch", "Water source", "Seedlings"],
+            "successIndicator": "95% survival rate"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "25-35 days",
+            "description": "Rapid growth phase",
+            "tips": [
+              "Install stakes early",
+              "Prune lower leaves",
+              "Side dress with nitrogen",
+              "Control early blight"
+            ],
+            "keyActivities": ["Staking", "Pruning", "Fertilizing", "Weeding"],
+            "materials": ["Stakes", "Twine", "Fertilizer", "Sprayer"],
+            "successIndicator": "Thick main stem, dark leaves"
+          },
+          {
+            "id": 2,
+            "title": "Flowering",
+            "duration": "15-20 days",
+            "description": "First flower clusters",
+            "tips": [
+              "Apply calcium to prevent blossom end rot",
+              "Bumble bees improve set",
+              "Reduce nitrogen",
+              "Avoid water stress"
+            ],
+            "keyActivities": ["Pollination", "Calcium spray", "Irrigation"],
+            "materials": ["Calcium nitrate", "Hormone spray", "Water"],
+            "successIndicator": "High flower retention"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Fruit Setting",
+            "duration": "30-45 days",
+            "description": "Fruit development and ripening",
+            "tips": [
+              "Remove diseased fruits",
+              "Maintain consistent moisture",
+              "Support heavy trusses",
+              "Harvest at breaker stage"
+            ],
+            "keyActivities": ["Fruit thinning", "Pest control", "Harvesting"],
+            "materials": ["Harvest baskets", "Pruning shears", "Fungicide"],
+            "successIndicator": "Uniform fruit set and size"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "30-60 days",
+            "description": "Continuous harvesting",
+            "tips": [
+              "Harvest every 2-3 days",
+              "Pick at color break",
+              "Leave calyx attached",
+              "Grade by size/color"
+            ],
+            "keyActivities": ["Picking", "Grading", "Packing"],
+            "materials": ["Harvest crates", "Grading table", "Punnets"],
+            "successIndicator": "Blemish-free fruits"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Post-Harvest Handling",
+            "duration": "1-2 days",
+            "description": "Storage and marketing",
+            "tips": [
+              "Cool immediately",
+              "Avoid stacking",
+              "Store at 12-15°C",
+              "High humidity (90-95%)"
+            ],
+            "keyActivities": ["Cooling", "Storage", "Transport"],
+            "materials": ["Cold room", "Plastic crates", "Ventilated truck"],
+            "successIndicator": "10-14 days shelf life"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "20°C - 27°C",
+        "temperatureMin": "15°C",
+        "temperatureMax": "32°C",
+        "rainfall": "600 mm - 1200 mm",
+        "soilType": "Well-drained sandy loam",
+        "soilPH": "5.5 - 6.8",
+        "sunlight": "Full sun (6-8 hours)",
+        "altitude": "0-1800m above sea level"
+      },
+      "yield": {
+        "average": "8-12 tons/acre",
+        "optimal": "15-20 tons/acre",
+        "quality": "Firm, uniform red color"
+      },
+      "pests": [
+        {"name": "Whiteflies", "symptoms": "Yellowing, sooty mold", "control": "Yellow traps, insecticides"},
+        {"name": "Thrips", "symptoms": "Silver streaks on leaves", "control": "Blue traps, spinosad"},
+        {"name": "Tuta absoluta", "symptoms": "Mines in leaves/fruit", "control": "Pheromone traps, removal"},
+        {"name": "Red spider mites", "symptoms": "Stippling, webbing", "control": "Acaricides, predatory mites"}
+      ],
+      "diseases": [
+        {"name": "Late blight", "symptoms": "Water-soaked lesions", "control": "Copper fungicides, resistance"},
+        {"name": "Early blight", "symptoms": "Target spots", "control": "Fungicide rotation"},
+        {"name": "Bacterial wilt", "symptoms": "Sudden wilting", "control": "Grafting, crop rotation"},
+        {"name": "Blossom end rot", "symptoms": "Black sunken fruit bottom", "control": "Calcium spray, even moisture"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 200kg/acre",
+        "topDressing": "NPK 17:17:17: 200kg/acre (weekly fertigation)",
+        "micronutrients": ["Calcium", "Magnesium", "Boron"],
+        "organic": "Manure: 10 tons/acre"
+      },
+      "varieties": [
+        {"name": "Anna F1", "duration": "75 days", "yield": "15 t/acre", "characteristics": "Heat tolerant"},
+        {"name": "Rio Grande", "duration": "80 days", "yield": "12 t/acre", "characteristics": "Determinate, processing"},
+        {"name": "Tylka F1", "duration": "85 days", "yield": "18 t/acre", "characteristics": "Bacterial wilt resistant"},
+        {"name": "Money Maker", "duration": "70 days", "yield": "10 t/acre", "characteristics": "Home garden"},
+        {"name": "Marglobe", "duration": "75 days", "yield": "11 t/acre", "characteristics": "Disease resistant"}
+      ],
+      "tags": ["High-value", "Vegetable", "Greenhouse", "Fresh market"],
+      "image": "https://placehold.co/600x400/DC2626/FFFFFF?text=Tomatoes"
+    },
+    {
+      "id": 6,
+      "name": "Potatoes",
+      "category": "Tuber",
+      "icon": "🥔",
+      "iconColor": "from-amber-800 to-stone-700",
+      "description": "Important food and cash crop. Requires cool temperatures and well-drained soils.",
+      "season": "Cool season",
+      "duration": "3-4 months",
+      "difficulty": "Medium",
+      "successRate": "80%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Seed Selection",
+            "duration": "3-5 days",
+            "description": "Select certified disease-free seed tubers",
+            "tips": [
+              "Use certified seeds",
+              "Cut tubers 50-60g",
+              "Allow suberization",
+              "Treat with fungicide"
+            ],
+            "keyActivities": ["Seed purchase", "Cutting", "Treatment", "Sprouting"],
+            "materials": ["Seed potatoes", "Fungicide", "Knife", "Trays"],
+            "successIndicator": "Uniform sprouted tubers"
+          },
+          {
+            "id": 2,
+            "title": "Land Preparation",
+            "duration": "7-10 days",
+            "description": "Deep plowing and ridging",
+            "tips": [
+              "Plow deep (25-30cm)",
+              "Form ridges 75cm apart",
+              "Incorporate manure",
+              "Ensure good drainage"
+            ],
+            "keyActivities": ["Plowing", "Ridging", "Manuring"],
+            "materials": ["Tractor", "Ridger", "Manure"],
+            "successIndicator": "Well-formed ridges"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Planting",
+            "duration": "2-3 days",
+            "description": "Plant sprouted tubers",
+            "tips": [
+              "Spacing: 30cm in ridge",
+              "Depth: 10-15cm",
+              "Sprouts facing up",
+              "Apply basal fertilizer"
+            ],
+            "keyActivities": ["Fertilizer application", "Planting", "Covering"],
+            "materials": ["Seed tubers", "DAP", "Hoe"],
+            "successIndicator": "Emergence in 2-3 weeks"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "30-40 days",
+            "description": "Shoot and root development",
+            "tips": [
+              "First weeding at 20cm height",
+              "Earth up at 30cm",
+              "Monitor for blight",
+              "Top dressing"
+            ],
+            "keyActivities": ["Weeding", "Earthing up", "Fertilizing", "Irrigation"],
+            "materials": ["Hoe", "Fertilizer", "Sprayer"],
+            "successIndicator": "75% ground cover"
+          },
+          {
+            "id": 2,
+            "title": "Tuber Initiation",
+            "duration": "15-20 days",
+            "description": "Tuber formation begins",
+            "tips": [
+              "Critical water period",
+              "Stop nitrogen application",
+              "Maintain soil moisture",
+              "Control late blight"
+            ],
+            "keyActivities": ["Irrigation", "Disease control", "Monitoring"],
+            "materials": ["Fungicide", "Water source"],
+            "successIndicator": "Small tubers visible"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Tuber Bulking",
+            "duration": "30-45 days",
+            "description": "Rapid tuber growth",
+            "tips": [
+              "Regular irrigation",
+              "Continue blight control",
+              "Cut vines before harvest",
+              "Wait 2 weeks before harvest"
+            ],
+            "keyActivities": ["Irrigation", "Pest control", "Vine killing"],
+            "materials": ["Fungicide", "Desiccant", "Mower"],
+            "successIndicator": "Large tubers, yellowing vines"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "5-10 days",
+            "description": "Lift tubers carefully",
+            "tips": [
+              "Harvest when skins set",
+              "Use fork not hoe",
+              "Avoid mechanical damage",
+              "Sort immediately"
+            ],
+            "keyActivities": ["Lifting", "Picking", "Sorting", "Bagging"],
+            "materials": ["Garden fork", "Baskets", "Gunny bags"],
+            "successIndicator": "Minimal bruising"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Curing",
+            "duration": "7-10 days",
+            "description": "Heal harvest wounds",
+            "tips": [
+              "Store at 15°C, 95% humidity",
+              "Good ventilation",
+              "Dark conditions",
+              "Remove rotting tubers"
+            ],
+            "keyActivities": ["Curing", "Sorting", "Storage preparation"],
+            "materials": ["Storage crates", "Ventilation", "Thermometer"],
+            "successIndicator": "Healed periderm"
+          },
+          {
+            "id": 2,
+            "title": "Storage",
+            "duration": "3-6 months",
+            "description": "Cool, dark storage",
+            "tips": [
+              "Temperature 4-8°C",
+              "90% relative humidity",
+              "Sprout suppressants",
+              "Regular inspection"
+            ],
+            "keyActivities": ["Temperature control", "Humidity control", "Monitoring"],
+            "materials": ["Cold store", "Sprout suppressant", "Pallet"],
+            "successIndicator": "Firm, non-sprouted tubers"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "15°C - 20°C",
+        "temperatureMin": "10°C",
+        "temperatureMax": "25°C",
+        "rainfall": "600 mm - 1200 mm",
+        "soilType": "Well-drained, deep loam soils",
+        "soilPH": "5.5 - 6.5",
+        "sunlight": "Full sun",
+        "altitude": "1500-3000m above sea level"
+      },
+      "yield": {
+        "average": "4-6 tons/acre",
+        "optimal": "8-10 tons/acre",
+        "quality": "Uniform size, shallow eyes"
+      },
+      "pests": [
+        {"name": "Potato tuber moth", "symptoms": "Mines in tubers", "control": "Deep planting, hilling"},
+        {"name": "Aphids", "symptoms": "Virus vectors", "control": "Systemic insecticides"},
+        {"name": "Cutworms", "symptoms": "Stems cut at base", "control": "Soil drenching"},
+        {"name": "Nematodes", "symptoms": "Stunted growth, galls", "control": "Crop rotation, nematicides"}
+      ],
+      "diseases": [
+        {"name": "Late blight", "symptoms": "Dark lesions on leaves", "control": "Resistant varieties, fungicides"},
+        {"name": "Early blight", "symptoms": "Concentric rings", "control": "Fungicide rotation"},
+        {"name": "Bacterial wilt", "symptoms": "Wilting, vascular browning", "control": "Clean seed, rotation"},
+        {"name": "Potato virus Y", "symptoms": "Mosaic, leaf drop", "control": "Certified seed, aphid control"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 150kg/acre",
+        "topDressing": "NPK 17:17:17: 100kg/acre, CAN: 100kg/acre",
+        "micronutrients": ["Zinc", "Boron"],
+        "organic": "Manure: 8 tons/acre"
+      },
+      "varieties": [
+        {"name": "Tigoni", "duration": "120 days", "yield": "6-8 t/acre", "characteristics": "Processing, chips"},
+        {"name": "Shangi", "duration": "90 days", "yield": "5-7 t/acre", "characteristics": "Early maturing, table"},
+        {"name": "Dutch Robijn", "duration": "110 days", "yield": "7-9 t/acre", "characteristics": "High yield"},
+        {"name": "Arizona", "duration": "100 days", "yield": "6-8 t/acre", "characteristics": "Blight tolerant"},
+        {"name": "Unica", "duration": "95 days", "yield": "5-6 t/acre", "characteristics": "Heat tolerant"}
+      ],
+      "tags": ["Tuber", "Staple", "Cool climate", "Processing"],
+      "image": "https://placehold.co/600x400/92400E/FFFFFF?text=Potatoes"
+    },
+    {
+      "id": 7,
+      "name": "Onions",
+      "category": "Vegetable",
+      "icon": "🧅",
+      "iconColor": "from-purple-600 to-amber-500",
+      "description": "High-value bulb crop with good storage life. Requires well-drained soils.",
+      "season": "Dry season",
+      "duration": "4-5 months",
+      "difficulty": "Medium",
+      "successRate": "75%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Nursery",
+            "duration": "35-45 days",
+            "description": "Raise quality seedlings",
+            "tips": [
+              "Raised beds 1m wide",
+              "Fine seedbed essential",
+              "Shade after sowing",
+              "Remove shade after emergence"
+            ],
+            "keyActivities": ["Bed preparation", "Sowing", "Watering", "Weeding"],
+            "materials": ["Onion seeds", "Seedbed", "Shade net", "Watering can"],
+            "successIndicator": "Pencil-thick seedlings"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Transplanting",
+            "duration": "3-5 days",
+            "description": "Plant at 6-8 leaf stage",
+            "tips": [
+              "Trim leaves and roots",
+              "Spacing: 15cm x 10cm",
+              "Plant at correct depth",
+              "Water immediately"
+            ],
+            "keyActivities": ["Field preparation", "Transplanting", "Irrigation"],
+            "materials": ["Seedlings", "Fertilizer", "Mulch", "Water source"],
+            "successIndicator": "Fast re-establishment"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "50-70 days",
+            "description": "Leaf and root development",
+            "tips": [
+              "Regular irrigation",
+              "Top dressing at 30 days",
+              "Control thrips",
+              "Weed management"
+            ],
+            "keyActivities": ["Fertilizing", "Irrigation", "Pest control", "Weeding"],
+            "materials": ["Fertilizer", "Sprayer", "Insecticide", "Hoe"],
+            "successIndicator": "Dark green, upright leaves"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Bulb Formation",
+            "duration": "30-40 days",
+            "description": "Bulb swelling and maturation",
+            "tips": [
+              "Stop nitrogen at bulbing",
+              "Reduce irrigation",
+              "Fold necks to accelerate",
+              "Withhold water 2 weeks pre-harvest"
+            ],
+            "keyActivities": ["Water management", "Neck folding", "Monitoring"],
+            "materials": ["Irrigation equipment"],
+            "successIndicator": "50% neck fall"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "7-14 days",
+            "description": "Lift and field cure",
+            "tips": [
+              "Harvest when 70% tops fall",
+              "Lift carefully",
+              "Cure in field for 1 week",
+              "Leave tops on for curing"
+            ],
+            "keyActivities": ["Lifting", "Field curing", "Top trimming", "Sorting"],
+            "materials": ["Garden fork", "Crates", "Knife", "Tarpaulin"],
+            "successIndicator": "Dry outer scales, tight neck"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Curing & Storage",
+            "duration": "2-4 weeks",
+            "description": "Final curing and storage",
+            "tips": [
+              "Cure in well-ventilated shed",
+              "Remove loose skins",
+              "Grade by size",
+              "Store in mesh bags"
+            ],
+            "keyActivities": ["Curing", "Cleaning", "Grading", "Bagging"],
+            "materials": ["Mesh bags", "Storage rack", "Grading sieve"],
+            "successIndicator": "3-6 months storage"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "13°C - 24°C",
+        "temperatureMin": "10°C",
+        "temperatureMax": "30°C",
+        "rainfall": "500 mm - 700 mm",
+        "soilType": "Sandy loam, well-drained",
+        "soilPH": "6.0 - 7.0",
+        "sunlight": "Full sun (long day requirements)",
+        "altitude": "0-1500m above sea level"
+      },
+      "yield": {
+        "average": "6-8 tons/acre",
+        "optimal": "12-15 tons/acre",
+        "quality": "Uniform size, tight skin"
+      },
+      "pests": [
+        {"name": "Thrips", "symptoms": "Silvery streaks", "control": "Spinosad, systemic insecticides"},
+        {"name": "Onion fly", "symptoms": "Larvae in bulbs", "control": "Crop rotation, insecticides"},
+        {"name": "Nematodes", "symptoms": "Stunting, galls", "control": "Soil fumigation, rotation"}
+      ],
+      "diseases": [
+        {"name": "Purple blotch", "symptoms": "Purple lesions", "control": "Fungicides, clean seed"},
+        {"name": "Downy mildew", "symptoms": "Purple-gray growth", "control": "Resistant varieties"},
+        {"name": "Neck rot", "symptoms": "Soft neck in storage", "control": "Proper curing, drying"},
+        {"name": "Black mold", "symptoms": "Black spores", "control": "Storage conditions"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 150kg/acre",
+        "topDressing": "CAN: 100kg/acre at 30 days, 50kg/acre at 60 days",
+        "micronutrients": ["Sulfur", "Zinc"],
+        "organic": "Manure: 5 tons/acre"
+      },
+      "varieties": [
+        {"name": "Red Creole", "duration": "140 days", "yield": "8 t/acre", "characteristics": "Red bulbs, pungent"},
+        {"name": "Bombay Red", "duration": "135 days", "yield": "7 t/acre", "characteristics": "Early, good storage"},
+        {"name": "Texas Early Grano", "duration": "130 days", "yield": "9 t/acre", "characteristics": "Mild, large bulbs"},
+        {"name": "Yellow Granex", "duration": "145 days", "yield": "10 t/acre", "characteristics": "Sweet, Vidalia type"}
+      ],
+      "tags": ["Bulb", "Condiment", "Storage crop", "High-value"],
+      "image": "https://placehold.co/600x400/9333EA/FFFFFF?text=Onions"
+    },
+    {
+      "id": 8,
+      "name": "Cabbage",
+      "category": "Vegetable",
+      "icon": "🥬",
+      "iconColor": "from-green-600 to-emerald-600",
+      "description": "Cool season vegetable with high yields. Popular in fresh markets.",
+      "season": "Cool season",
+      "duration": "3-4 months",
+      "difficulty": "Medium",
+      "successRate": "85%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Nursery",
+            "duration": "25-30 days",
+            "description": "Seedling production",
+            "tips": [
+              "Sow in seed trays",
+              "Use sterilized media",
+              "Regular watering",
+              "Harden before transplant"
+            ],
+            "keyActivities": ["Media preparation", "Sowing", "Watering", "Hardening"],
+            "materials": ["Seed trays", "Growing media", "Cabbage seeds", "Watering can"],
+            "successIndicator": "4-5 true leaves"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Transplanting",
+            "duration": "2-3 days",
+            "description": "Field establishment",
+            "tips": [
+              "Spacing: 60cm x 45cm",
+              "Plant in evening",
+              "Water thoroughly",
+              "Mulch to conserve moisture"
+            ],
+            "keyActivities": ["Field prep", "Transplanting", "Irrigation", "Mulching"],
+            "materials": ["Seedlings", "Fertilizer", "Mulch", "Water source"],
+            "successIndicator": "Fast recovery"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "40-50 days",
+            "description": "Leaf production",
+            "tips": [
+              "Regular irrigation",
+              "Side dress with nitrogen",
+              "Control caterpillars",
+              "Control weeds"
+            ],
+            "keyActivities": ["Fertilizing", "Irrigation", "Pest control", "Weeding"],
+            "materials": ["Fertilizer", "Sprayer", "Insecticide", "Hoe"],
+            "successIndicator": "Vigorous outer leaves"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Head Formation",
+            "duration": "20-30 days",
+            "description": "Cabbage head development",
+            "tips": [
+              "Consistent moisture",
+              "Reduce nitrogen",
+              "Control aphids",
+              "Harvest before splitting"
+            ],
+            "keyActivities": ["Irrigation", "Pest monitoring", "Harvest planning"],
+            "materials": ["Irrigation equipment", "Sprayer"],
+            "successIndicator": "Firm, compact head"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "14-21 days",
+            "description": "Cut mature heads",
+            "tips": [
+              "Harvest when firm",
+              "Leave 2-3 wrapper leaves",
+              "Cool immediately",
+              "Grade by size"
+            ],
+            "keyActivities": ["Cutting", "Trimming", "Grading", "Packing"],
+            "materials": ["Harvest knife", "Crates", "Cooling facility"],
+            "successIndicator": "Heavy, compact heads"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Storage",
+            "duration": "2-4 weeks",
+            "description": "Cool storage",
+            "tips": [
+              "Temperature: 0-2°C",
+              "High humidity (95%)",
+              "Good ventilation",
+              "Remove damaged leaves"
+            ],
+            "keyActivities": ["Cooling", "Storage", "Inventory management"],
+            "materials": ["Cold room", "Plastic crates", "Humidity control"],
+            "successIndicator": "Fresh appearance"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "15°C - 20°C",
+        "temperatureMin": "10°C",
+        "temperatureMax": "25°C",
+        "rainfall": "600 mm - 900 mm",
+        "soilType": "Well-drained fertile loam",
+        "soilPH": "6.0 - 6.8",
+        "sunlight": "Full sun",
+        "altitude": "0-2000m above sea level"
+      },
+      "yield": {
+        "average": "8-12 tons/acre",
+        "optimal": "15-20 tons/acre",
+        "quality": "Firm, round heads"
+      },
+      "pests": [
+        {"name": "Diamondback moth", "symptoms": "Ragged holes", "control": "Bt, rotation"},
+        {"name": "Cabbage aphids", "symptoms": "Clusters on leaves", "control": "Natural enemies, insecticides"},
+        {"name": "Cutworms", "symptoms": "Seedlings cut off", "control": "Soil drenching"},
+        {"name": "Slugs", "symptoms": "Irregular holes, slime", "control": "Traps, bait"}
+      ],
+      "diseases": [
+        {"name": "Black rot", "symptoms": "V-shaped yellow lesions", "control": "Clean seed, rotation"},
+        {"name": "Clubroot", "symptoms": "Root galls", "control": "Lime, long rotation"},
+        {"name": "Downy mildew", "symptoms": "Purple-gray sporulation", "control": "Fungicides, spacing"},
+        {"name": "Alternaria leaf spot", "symptoms": "Target spots", "control": "Copper fungicides"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 200kg/acre",
+        "topDressing": "CAN: 100kg/acre at 30 days, 50kg/acre at 50 days",
+        "micronutrients": ["Boron", "Molybdenum"],
+        "organic": "Manure: 10 tons/acre"
+      },
+      "varieties": [
+        {"name": "Gloria F1", "duration": "85 days", "yield": "12 t/acre", "characteristics": "Large heads, tolerant"},
+        {"name": "Copenhagen Market", "duration": "80 days", "yield": "10 t/acre", "characteristics": "Round, early"},
+        {"name": "Drumhead", "duration": "95 days", "yield": "15 t/acre", "characteristics": "Large, flat heads"},
+        {"name": "Oxylus", "duration": "90 days", "yield": "14 t/acre", "characteristics": "Heat tolerant"}
+      ],
+      "tags": ["Brassica", "Vegetable", "Cool climate", "Leafy"],
+      "image": "https://placehold.co/600x400/16A34A/FFFFFF?text=Cabbage"
+    },
+    {
+      "id": 9,
+      "name": "Carrots",
+      "category": "Vegetable",
+      "icon": "🥕",
+      "iconColor": "from-orange-600 to-amber-600",
+      "description": "Root vegetable rich in vitamin A. Requires deep, loose soils.",
+      "season": "Cool season",
+      "duration": "3-4 months",
+      "difficulty": "Medium",
+      "successRate": "80%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Soil Preparation",
+            "duration": "10-14 days",
+            "description": "Deep cultivation, stone-free",
+            "tips": [
+              "Plough to 30cm depth",
+              "Remove stones and clods",
+              "Raised beds for heavy soils",
+              "Incorporate well-rotted compost"
+            ],
+            "keyActivities": ["Deep plowing", "Bed forming", "Composting", "Leveling"],
+            "materials": ["Tractor", "Bed former", "Compost", "Rake"],
+            "successIndicator": "Fine, deep tilth"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Direct Sowing",
+            "duration": "1-2 days",
+            "description": "Sow seeds directly",
+            "tips": [
+              "Shallow sowing (1cm)",
+              "Row spacing: 25-30cm",
+              "Thin to 5cm apart",
+              "Keep soil moist until germination"
+            ],
+            "keyActivities": ["Drilling", "Watering", "Mulching"],
+            "materials": ["Carrot seeds", "Seed drill", "Mulch", "Water source"],
+            "successIndicator": "Uniform emergence in 10-14 days"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "30-45 days",
+            "description": "Leaf development",
+            "tips": [
+              "Regular weeding",
+              "Thin to final spacing",
+              "Consistent moisture",
+              "Side dress with nitrogen"
+            ],
+            "keyActivities": ["Thinning", "Weeding", "Fertilizing", "Irrigation"],
+            "materials": ["Hoe", "Fertilizer", "Irrigation equipment"],
+            "successIndicator": "Healthy green tops"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Root Development",
+            "duration": "30-45 days",
+            "description": "Root thickening",
+            "tips": [
+              "Reduce nitrogen",
+              "Maintain even moisture",
+              "Mulch to cool soil",
+              "Monitor for splitting"
+            ],
+            "keyActivities": ["Irrigation", "Mulching", "Monitoring"],
+            "materials": ["Mulch", "Irrigation", "Garden fork"],
+            "successIndicator": "Cylindrical, bright orange roots"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "14-21 days",
+            "description": "Pull mature carrots",
+            "tips": [
+              "Harvest at 2-3cm diameter",
+              "Water before harvest",
+              "Pull carefully",
+              "Remove tops immediately"
+            ],
+            "keyActivities": ["Pulling", "Top trimming", "Washing", "Grading"],
+            "materials": ["Garden fork", "Knife", "Wash tank", "Crates"],
+            "successIndicator": "Smooth, straight roots"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Storage",
+            "duration": "2-6 months",
+            "description": "Cool storage",
+            "tips": [
+              "Temperature: 0-1°C",
+              "High humidity (98%)",
+              "Remove damaged roots",
+              "Store in perforated bags"
+            ],
+            "keyActivities": ["Cooling", "Packing", "Storage"],
+            "materials": ["Cold room", "Perforated bags", "Plastic crates"],
+            "successIndicator": "Crisp, fresh roots"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "15°C - 21°C",
+        "temperatureMin": "10°C",
+        "temperatureMax": "27°C",
+        "rainfall": "500 mm - 800 mm",
+        "soilType": "Deep, sandy loam",
+        "soilPH": "6.0 - 6.8",
+        "sunlight": "Full sun",
+        "altitude": "0-2000m above sea level"
+      },
+      "yield": {
+        "average": "8-10 tons/acre",
+        "optimal": "15-20 tons/acre",
+        "quality": "Uniform color, smooth skin"
+      },
+      "pests": [
+        {"name": "Carrot fly", "symptoms": "Rusty tunnels", "control": "Floating row covers, rotation"},
+        {"name": "Aphids", "symptoms": "Curled leaves", "control": "Insecticidal soap"},
+        {"name": "Nematodes", "symptoms": "Forked roots", "control": "Crop rotation"}
+      ],
+      "diseases": [
+        {"name": "Alternaria leaf blight", "symptoms": "Dark leaf spots", "control": "Resistant varieties"},
+        {"name": "Powdery mildew", "symptoms": "White powder", "control": "Sulfur sprays"},
+        {"name": "Soft rot", "symptoms": "Watery decay", "control": "Harvest carefully, cool quickly"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 100kg/acre",
+        "topDressing": "NPK: 100kg/acre at 30 days",
+        "micronutrients": ["Boron"],
+        "organic": "Compost: 5 tons/acre"
+      },
+      "varieties": [
+        {"name": "Nantes", "duration": "70 days", "yield": "10 t/acre", "characteristics": "Cylindrical, sweet"},
+        {"name": "Chantenay", "duration": "75 days", "yield": "12 t/acre", "characteristics": "Conical, good for heavy soil"},
+        {"name": "Danvers", "duration": "80 days", "yield": "11 t/acre", "characteristics": "High yield"},
+        {"name": "Imperator", "duration": "85 days", "yield": "13 t/acre", "characteristics": "Long, tapered"}
+      ],
+      "tags": ["Root", "Vegetable", "Vitamin A", "Storage"],
+      "image": "https://placehold.co/600x400/F97316/FFFFFF?text=Carrots"
+    },
+    {
+      "id": 10,
+      "name": "Peas",
+      "category": "Legume",
+      "icon": "🫛",
+      "iconColor": "from-green-500 to-emerald-600",
+      "description": "Cool season legume with nitrogen-fixing ability. Quick returns.",
+      "season": "Cool season",
+      "duration": "3-4 months",
+      "difficulty": "Low",
+      "successRate": "85%",
+      "stages": {
+        "preparation": [
+          {
+            "id": 1,
+            "title": "Land Preparation",
+            "duration": "5-7 days",
+            "description": "Prepare seedbed",
+            "tips": [
+              "Fine seedbed not needed",
+              "Avoid waterlogging",
+              "Incorporate manure",
+              "Rhizobium inoculation"
+            ],
+            "keyActivities": ["Plowing", "Harrowing", "Manuring", "Inoculation"],
+            "materials": ["Plough", "Harrow", "Manure", "Rhizobium"],
+            "successIndicator": "Weed-free seedbed"
+          }
+        ],
+        "planting": [
+          {
+            "id": 1,
+            "title": "Sowing",
+            "duration": "1-2 days",
+            "description": "Direct seeding",
+            "tips": [
+              "Spacing: 30cm x 10cm",
+              "Depth: 3-4cm",
+              "Provide supports for climbing varieties",
+              "Inoculate with Rhizobium"
+            ],
+            "keyActivities": ["Seed dressing", "Planting", "Staking"],
+            "materials": ["Pea seeds", "Rhizobium", "Stakes", "Twine"],
+            "successIndicator": "80% emergence"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Vegetative Stage",
+            "duration": "25-35 days",
+            "description": "Vine growth",
+            "tips": [
+              "Train on supports",
+              "Control weeds",
+              "Consistent moisture",
+              "Monitor for aphids"
+            ],
+            "keyActivities": ["Training", "Weeding", "Irrigation", "Pest scouting"],
+            "materials": ["Twine", "Hoe", "Water source", "Sprayer"],
+            "successIndicator": "Vigorous vine growth"
+          },
+          {
+            "id": 2,
+            "title": "Flowering",
+            "duration": "10-15 days",
+            "description": "Blossom production",
+            "tips": [
+              "Avoid water stress",
+              "Do not spray during flowering",
+              "Bees improve pod set",
+              "Support heavy vines"
+            ],
+            "keyActivities": ["Irrigation", "Pollinator protection", "Training"],
+            "materials": ["Irrigation", "Support strings"],
+            "successIndicator": "High flower retention"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Pod Formation",
+            "duration": "15-20 days",
+            "description": "Pod development",
+            "tips": [
+              "Harvest regularly",
+              "Pick at correct size",
+              "Monitor for pod borers",
+              "Don't let pods overmature"
+            ],
+            "keyActivities": ["Harvesting", "Pest control", "Irrigation"],
+            "materials": ["Harvest baskets", "Sprayer", "Insecticide"],
+            "successIndicator": "Tender, sweet pods"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Harvesting",
+            "duration": "14-21 days",
+            "description": "Multiple harvests",
+            "tips": [
+              "Harvest every 2-3 days",
+              "Pick in cool morning",
+              "Handle gently",
+              "Cool immediately"
+            ],
+            "keyActivities": ["Picking", "Sorting", "Packing", "Cooling"],
+            "materials": ["Baskets", "Crates", "Cooling facility"],
+            "successIndicator": "Tender, bright green pods"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Storage",
+            "duration": "7-14 days",
+            "description": "Cold storage",
+            "tips": [
+              "Temperature: 0-1°C",
+              "High humidity (95%)",
+              "Quick cooling essential",
+              "Use perforated bags"
+            ],
+            "keyActivities": ["Cooling", "Storage", "Inventory"],
+            "materials": ["Cold room", "Perforated bags", "Plastic crates"],
+            "successIndicator": "Fresh, sweet pods"
+          }
+        ]
+      },
+      "requirements": {
+        "temperature": "13°C - 20°C",
+        "temperatureMin": "5°C",
+        "temperatureMax": "25°C",
+        "rainfall": "400 mm - 700 mm",
+        "soilType": "Well-drained loam",
+        "soilPH": "6.0 - 7.0",
+        "sunlight": "Full sun",
+        "altitude": "1000-2500m above sea level"
+      },
+      "yield": {
+        "average": "2-3 tons/acre (pods)",
+        "optimal": "4-5 tons/acre",
+        "quality": "Tender, sweet"
+      },
+      "pests": [
+        {"name": "Aphids", "symptoms": "Curled leaves, virus vectors", "control": "Natural enemies, soap sprays"},
+        {"name": "Pod borers", "symptoms": "Holes in pods", "control": "Bt, early harvest"},
+        {"name": "Thrips", "symptoms": "Silver streaks", "control": "Blue traps, spinosad"}
+      ],
+      "diseases": [
+        {"name": "Powdery mildew", "symptoms": "White powder", "control": "Resistant varieties"},
+        {"name": "Fusarium wilt", "symptoms": "Yellowing, wilting", "control": "Rotation, resistance"},
+        {"name": "Ascochyta blight", "symptoms": "Dark spots with margins", "control": "Clean seed"}
+      ],
+      "fertilizer": {
+        "basal": "DAP: 100kg/acre",
+        "topDressing": "Minimal - nitrogen fixation",
+        "micronutrients": ["Molybdenum", "Boron"],
+        "organic": "Manure: 3 tons/acre"
+      },
+      "varieties": [
+        {"name": "Sugar Snap", "duration": "65 days", "yield": "3 t/acre", "characteristics": "Sweet, edible pod"},
+        {"name": "Oregon Sugar Pod", "duration": "70 days", "yield": "4 t/acre", "characteristics": "Flat pod, stringless"},
+        {"name": "Green Arrow", "duration": "75 days", "yield": "3 t/acre", "characteristics": "Shelling pea"},
+        {"name": "Wando", "duration": "70 days", "yield": "3 t/acre", "characteristics": "Heat tolerant"}
+      ],
+      "tags": ["Legume", "Cool season", "Nitrogen-fixing", "Fresh market"],
+      "image": "https://placehold.co/600x400/22C55E/FFFFFF?text=Peas"
+    },
+    {
+      "id": 11,
       "name": "Coffee Arabica",
       "category": "Cash Crop",
       "icon": "☕",
@@ -223,11 +1872,27 @@
             "tips": [
               "Altitude 1200-2000m",
               "Gentle slopes (10-30%)",
-              "Good shade cover"
+              "Good shade cover",
+              "Wind protection essential"
             ],
-            "keyActivities": ["Site survey", "Shade assessment", "Soil analysis"],
-            "materials": ["Compass", "Soil test kit", "GPS"],
-            "successIndicator": "Suitable microclimate"
+            "keyActivities": ["Site survey", "Shade assessment", "Soil analysis", "Windbreak planting"],
+            "materials": ["Compass", "Soil test kit", "GPS", "Tree seedlings"],
+            "successIndicator": "Suitable microclimate identified"
+          },
+          {
+            "id": 2,
+            "title": "Land Preparation",
+            "duration": "30-45 days",
+            "description": "Prepare planting holes",
+            "tips": [
+              "Dig holes 60cm x 60cm x 60cm",
+              "Separate topsoil and subsoil",
+              "Add manure and phosphate",
+              "Refill and mark"
+            ],
+            "keyActivities": ["Hole digging", "Soil amendment", "Refilling", "Marking"],
+            "materials": ["Jembe", "Fork", "Manure", "DAP", "Marking pegs"],
+            "successIndicator": "Properly prepared planting stations"
           }
         ],
         "planting": [
@@ -237,38 +1902,220 @@
             "duration": "8-12 months",
             "description": "Raise healthy seedlings in nursery",
             "tips": [
-              "Use polythene tubes",
+              "Use polythene tubes (18cm x 24cm)",
               "Regular watering",
+              "30-50% shade",
+              "Root prune regularly",
+              "Hardening off before planting"
+            ],
+            "keyActivities": ["Seed sowing", "Potting", "Watering", "Shading", "Hardening"],
+            "materials": ["Nursery bed", "Polythene tubes", "Shade net", "Coffee seeds", "Watering can"],
+            "successIndicator": "20-30cm tall seedlings with 6-8 pairs of leaves"
+          },
+          {
+            "id": 2,
+            "title": "Transplanting",
+            "duration": "10-15 days",
+            "description": "Plant at onset of rains",
+            "tips": [
+              "Plant at start of long rains",
+              "Remove polythene carefully",
+              "Plant slightly deeper than nursery",
+              "Shade immediately",
+              "Water thoroughly"
+            ],
+            "keyActivities": ["Transport", "Planting", "Shading", "Mulching"],
+            "materials": ["Seedlings", "Shade materials", "Mulch", "Water source"],
+            "successIndicator": "95% survival after 1 month"
+          }
+        ],
+        "growth": [
+          {
+            "id": 1,
+            "title": "Establishment Phase",
+            "duration": "12-18 months",
+            "description": "Vegetative growth before first harvest",
+            "tips": [
+              "Regular weeding",
+              "Mulch to conserve moisture",
+              "Apply fertilizer quarterly",
+              "Control leaf miners",
               "Shade management"
             ],
-            "keyActivities": ["Seed sowing", "Watering", "Shading"],
-            "materials": ["Nursery bed", "Polythene tubes", "Shade net"],
-            "successIndicator": "20-30cm tall seedlings"
+            "keyActivities": ["Weeding", "Mulching", "Fertilizing", "Pest control", "Pruning"],
+            "materials": ["Hoe", "Mulch", "Fertilizer", "Sprayer", "Pruning shears"],
+            "successIndicator": "Strong framework, 1.5m tall"
+          },
+          {
+            "id": 2,
+            "title": "Pruning & Training",
+            "duration": "2-3 years",
+            "description": "Establish single stem or multiple stem system",
+            "tips": [
+              "Single stem for high density",
+              "Remove suckers regularly",
+              "Limit to 2-3 primaries",
+              "Remove diseased branches",
+              "Rejuvenation pruning at 5-7 years"
+            ],
+            "keyActivities": ["Sucker removal", "Capping", "Primary selection", "Sanitation"],
+            "materials": ["Pruning saw", "Secateurs", "Wound paste"],
+            "successIndicator": "Balanced frame with good bearing wood"
+          }
+        ],
+        "maturity": [
+          {
+            "id": 1,
+            "title": "Flowering",
+            "duration": "7-14 days",
+            "description": "Blossom after rain",
+            "tips": [
+              "Blossom appears after dry spell",
+              "Critical moisture period",
+              "Avoid pesticide sprays",
+              "Monitor for berry borer",
+              "Bee activity essential"
+            ],
+            "keyActivities": ["Pollination monitoring", "Water stress management", "Pest scouting"],
+            "materials": ["Irrigation if needed", "Pheromone traps"],
+            "successIndicator": "80% flower set"
+          },
+          {
+            "id": 2,
+            "title": "Berry Development",
+            "duration": "6-8 months",
+            "description": "Fruit growth and ripening",
+            "tips": [
+              "Regular fertilizer application",
+              "Control coffee berry borer",
+              "Monitor leaf rust",
+              "Shade adjustment",
+              "Selective harvesting starts"
+            ],
+            "keyActivities": ["Fertilizing", "Pest control", "Shade management", "Selective picking"],
+            "materials": ["Fertilizer", "Sprayer", "Traps", "Harvest baskets"],
+            "successIndicator": "Uniform red berries"
+          }
+        ],
+        "harvest": [
+          {
+            "id": 1,
+            "title": "Selective Harvesting",
+            "duration": "3-4 months",
+            "description": "Pick only ripe cherries",
+            "tips": [
+              "Harvest every 10-14 days",
+              "Only red, ripe cherries",
+              "Don't include green berries",
+              "Float test for quality",
+              "Process same day"
+            ],
+            "keyActivities": ["Selective picking", "Sorting", "Floatation", "Transport"],
+            "materials": ["Harvest baskets", "Floatation tank", "Tarpaulin", "Transport containers"],
+            "successIndicator": "100% ripe cherries"
+          }
+        ],
+        "postHarvest": [
+          {
+            "id": 1,
+            "title": "Processing",
+            "duration": "7-21 days",
+            "description": "Wet or dry processing",
+            "tips": [
+              "Wet process: Pulp, ferment, wash",
+              "Dry process: Sun dry whole cherry",
+              "Ferment 24-48 hours",
+              "Wash until water runs clear",
+              "Pre-grade parchment"
+            ],
+            "keyActivities": ["Pulping", "Fermentation", "Washing", "Soaking", "Grading"],
+            "materials": ["Pulper", "Fermentation tank", "Washing channels", "Grading sieves"],
+            "successIndicator": "Clean parchment coffee"
+          },
+          {
+            "id": 2,
+            "title": "Drying",
+            "duration": "7-15 days",
+            "description": "Reduce moisture to 10-12%",
+            "tips": [
+              "Sun dry on raised tables",
+              "Thin layer (2-3cm)",
+              "Turn every 30 minutes",
+              "Cover at night and rain",
+              "Test moisture regularly"
+            ],
+            "keyActivities": ["Spreading", "Turning", "Moisture testing", "Bagging"],
+            "materials": ["Drying tables", "Tarpaulins", "Moisture meter", "Grain bags", "Rake"],
+            "successIndicator": "10-12% moisture, blue-green color"
+          },
+          {
+            "id": 3,
+            "title": "Milling & Storage",
+            "duration": "1-2 days",
+            "description": "Remove parchment and grade",
+            "tips": [
+              "Rest parchment for 30-45 days",
+              "Hull to remove parchment",
+              "Grade by size and density",
+              "Store in hermetic bags",
+              "Export quality requires sorting"
+            ],
+            "keyActivities": ["Resting", "Hulling", "Grading", "Sorting", "Bagging"],
+            "materials": ["Huller", "Grading machine", "Color sorter", "Hermetic bags", "Pallet"],
+            "successIndicator": "Grade AA/AB green beans"
           }
         ]
       },
       "requirements": {
         "temperature": "15°C - 25°C",
+        "temperatureMin": "12°C",
+        "temperatureMax": "28°C",
         "rainfall": "1500 mm - 2000 mm",
-        "soilType": "Volcanic red earth",
+        "soilType": "Volcanic red earth, deep and fertile",
         "soilPH": "5.0 - 6.5",
-        "sunlight": "Partial shade",
-        "altitude": "1200-2000m above sea level"
+        "sunlight": "Partial shade (30-50%)",
+        "altitude": "1200-2000m above sea level",
+        "spacing": "2m x 2m (single stem), 2.5m x 2.5m (multiple stem)",
+        "plantPopulation": "2500 trees/ha"
       },
       "yield": {
-        "average": "1-2 kg/tree",
-        "optimal": "5 kg/tree",
-        "quality": "Grade AA beans"
+        "average": "1-2 kg/tree (clean coffee)",
+        "optimal": "5 kg/tree (clean coffee)",
+        "quality": "Grade AA beans with blue-green color",
+        "roastProfile": "Medium-dark, chocolate notes"
       },
-      "pests": ["Coffee berry borer", "Leaf miner", "Mealybugs"],
-      "diseases": ["Coffee leaf rust", "Berry disease", "Wilt"],
+      "pests": [
+        {"name": "Coffee berry borer", "symptoms": "Holes in berries, bore dust", "control": "Traps, biological control, timely harvest"},
+        {"name": "Leaf miner", "symptoms": "Serpentine mines in leaves", "control": "Systemic insecticides, natural enemies"},
+        {"name": "Mealybugs", "symptoms": "White waxy clusters", "control": "Pruning, ants control, oils"},
+        {"name": "Antestia bugs", "symptoms": "Potato taste in beans", "control": "Insecticides, shade management"},
+        {"name": "Stem borers", "symptoms": "Wilting branches, holes in stem", "control": "Prune and burn, insecticides"}
+      ],
+      "diseases": [
+        {"name": "Coffee leaf rust", "symptoms": "Orange-yellow powdery spots", "control": "Resistant varieties, fungicides"},
+        {"name": "Coffee berry disease (CBD)", "symptoms": "Dark sunken lesions on berries", "control": "Resistant varieties, copper sprays"},
+        {"name": "Bacterial blight", "symptoms": "Water-soaked lesions, dieback", "control": "Pruning, copper sprays"},
+        {"name": "Fusarium wilt", "symptoms": "Sudden wilting, vascular discoloration", "control": "Remove infected trees, resistant rootstocks"},
+        {"name": "Armillaria root rot", "symptoms": "Mushrooms at base, sudden death", "control": "Remove stumps, resistant rootstocks"}
+      ],
       "fertilizer": {
-        "basal": "NPK 17:17:17",
-        "topDressing": "CAN",
-        "micronutrients": ["Boron", "Zinc"]
+        "basal": "DAP: 200g/tree per year",
+        "topDressing": "CAN: 300g/tree per year (split)",
+        "NPK": "NPK 17:17:17: 400g/tree per year",
+        "micronutrients": ["Zinc", "Boron", "Copper"],
+        "organic": "Manure: 5-10kg/tree per year",
+        "schedule": "Apply at start of rains, split applications"
       },
-      "tags": ["Export", "Shade-grown", "Premium", "High-value"],
-      "image": "https://placehold.co/600x400/7C2D12/FFFFFF?text=Coffee+Beans"
+      "varieties": [
+        {"name": "SL 28", "duration": "3 years to first harvest", "yield": "1.5-2 kg/tree", "characteristics": "Excellent cup quality, drought tolerant"},
+        {"name": "SL 34", "duration": "3 years", "yield": "1.5-2 kg/tree", "characteristics": "Good quality, adapted to high rainfall"},
+        {"name": "Ruiru 11", "duration": "2.5 years", "yield": "2-3 kg/tree", "characteristics": "Dwarf, CBD resistant, early maturing"},
+        {"name": "Batian", "duration": "2.5 years", "yield": "2.5-3 kg/tree", "characteristics": "Rust and CBD resistant, compact"},
+        {"name": "K7", "duration": "3 years", "yield": "1.5-2 kg/tree", "characteristics": "Rust tolerant, vigorous"},
+        {"name": "Geisha", "duration": "3.5 years", "yield": "1-1.5 kg/tree", "characteristics": "Premium specialty, floral notes"}
+      ],
+      "tags": ["Export", "Shade-grown", "Premium", "High-value", "Specialty", "Arabica", "Wet-processed"],
+      "image": "https://placehold.co/600x400/7C2D12/FFFFFF?text=Coffee+Arabica"
     }
   ]
 }
