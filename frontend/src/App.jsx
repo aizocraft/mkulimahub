@@ -5,7 +5,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import GoogleAuthSuccess from './components/GoogleAuthSuccess.jsx';
 import RoleSelectionPage from './pages/RoleSelectionPage';
 import SocketInitializer from './components/SocketInitializer';
-
+import TermsPage from './components/Terms.jsx';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -105,6 +105,12 @@ export default function App() {
                 <SettingsPage />
               </PageLayout>
             } />
+            <Route path="/terms" element={
+              <PageLayout>
+                <TermsPage />
+              </PageLayout>
+             } />
+
             <Route path="/notifications" element={
               <PageLayout>
                 <NotificationPage />

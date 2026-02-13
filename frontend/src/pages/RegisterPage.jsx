@@ -19,6 +19,7 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -49,6 +50,11 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!acceptedTerms) {
+      setError('You must accept the Terms and Conditions to register');
+      return;
+    }
 
     if (formData.password !== formData.repeatPassword) {
       setError('Passwords do not match');
@@ -327,17 +333,45 @@ const RegisterPage = () => {
                     <p className={`text-xs text-center ${
                       formData.role === role.value ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'
                     }`}>
-                      {role.description}
+                    
                     </p>
                   </label>
                 ))}
               </div>
             </div>
 
+            {/* Terms & Conditions Disclaimer */}
+            <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+              <div className="flex items-start gap-3">
+                <div className="flex items-center h-5">
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="w-4 h-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 dark:focus:ring-emerald-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    required
+                  />
+                </div>
+                <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-300">
+                  I agree to the{' '}
+                  <Link 
+                    to="/terms" 
+                    target="_blank"
+                    className="font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 underline underline-offset-2"
+                  >
+                    Terms and Conditions
+                  </Link>{' '}
+                 
+                  of Mkulima Hub. 
+                </label>
+              </div>
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !acceptedTerms}
               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3.5 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
