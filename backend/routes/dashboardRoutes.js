@@ -22,4 +22,7 @@ router.get('/activities', dashboardController.getRecentActivities);
 // Get user distribution
 router.get('/user-distribution', dashboardController.getUserDistribution);
 
+// Get analytics data for charts (admin only)
+router.get('/analytics', dashboardController.getAnalyticsData);
+
 module.exports = router;

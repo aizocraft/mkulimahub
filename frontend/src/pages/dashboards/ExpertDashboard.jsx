@@ -77,8 +77,7 @@ const ExpertDashboard = () => {
     { id: 'consultations', label: 'Consultations', icon: MessageCircle },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
     { id: 'forum', label: 'Forum', icon: MessageSquare },
-    { id: 'weather', label: 'Weather', icon: Cloud },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp }
+    { id: 'weather', label: 'Weather', icon: Cloud }
   ];
 
   // Function to get verification display text
@@ -272,7 +271,6 @@ const ExpertDashboard = () => {
           {activeTab === 'transactions' && <Transactions />}
           {activeTab === 'forum' && <ForumPages />}
           {activeTab === 'weather' && <Weather />}
-          {activeTab === 'analytics' && <SystemAnalytics />}
 
         </div>
 
