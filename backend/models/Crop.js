@@ -15,7 +15,7 @@ const cropSchema = new mongoose.Schema(
     type: {
       type: String,
       required: [true, 'Crop type is required'],
-      enum: ['Cereal', 'Legume', 'Vegetable', 'Fruit', 'Other'],
+      enum: ['Cereal', 'Legume', 'Vegetable', 'Fruit', 'Cash Crop', 'Other'],
       default: 'Other'
     },
     plantingDate: {
