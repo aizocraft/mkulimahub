@@ -4,7 +4,6 @@ import UserManagement from '../../components/UserManagement';
 import AccessDenied from '../../components/AccessDenied';
 import LoadingSpinner from '../../components/LoadingSpinner';
 import Overview from './admin/Overview';
-import Weather from './admin/Weather';
 import Logs from './admin/Logs';
 import Transactions from './admin/Transactions';
 import SystemAnalytics from '../../components/SystemAnalytics';
@@ -44,7 +43,6 @@ const AdminDashboard = () => {
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'users', label: 'User Management', icon: Users },
-    { id: 'weather', label: 'Weather', icon: Cloud },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
     { id: 'logs', label: 'System Logs', icon: FileText },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
@@ -142,7 +140,6 @@ const AdminDashboard = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           {activeTab === 'overview' && <Overview />}
           {activeTab === 'users' && <UserManagement />}
-          {activeTab === 'weather' && <Weather />}
           {activeTab === 'transactions' && <Transactions />}
           {activeTab === 'logs' && <Logs />}
           {activeTab === 'analytics' && <SystemAnalytics />}
