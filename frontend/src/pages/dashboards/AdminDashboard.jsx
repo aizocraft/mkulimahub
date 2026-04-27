@@ -22,6 +22,12 @@ import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { user, isLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('adminDashboardActiveTab') || 'overview');
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('adminDashboardActiveTab', activeTab);
+  }, [activeTab]);
 
   // Show loading spinner while auth is initializing
   if (isLoading) {
@@ -32,13 +38,6 @@ const AdminDashboard = () => {
   if (!user || user.role !== 'admin') {
     return <AccessDenied />;
   }
-
-  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('adminDashboardActiveTab') || 'overview');
-
-  // Save active tab to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('adminDashboardActiveTab', activeTab);
-  }, [activeTab]);
 
   const navigationTabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },

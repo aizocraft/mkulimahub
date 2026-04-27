@@ -28,17 +28,6 @@ import {
 
 const FarmerDashboard = () => {
   const { user, isLoading } = useAuth();
-
-  // Show loading spinner while auth is initializing
-  if (isLoading) {
-    return <LoadingSpinner text="Loading dashboard..." />;
-  }
-
-  // Check if user is farmer
-  if (!user || user.role !== 'farmer') {
-    return <AccessDenied restrictedTo="farmer" />;
-  }
-
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('farmerDashboardActiveTab') || 'crops');
   const [farmerData, setFarmerData] = useState({
@@ -62,6 +51,16 @@ const FarmerDashboard = () => {
   useEffect(() => {
     localStorage.setItem('farmerDashboardActiveTab', activeTab);
   }, [activeTab]);
+
+  // Show loading spinner while auth is initializing
+  if (isLoading) {
+    return <LoadingSpinner text="Loading dashboard..." />;
+  }
+
+  // Check if user is farmer
+  if (!user || user.role !== 'farmer') {
+    return <AccessDenied restrictedTo="farmer" />;
+  }
 
   const navigationTabs = [
     { id: 'crops', label: 'My Crops', icon: Sprout },

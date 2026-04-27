@@ -16,6 +16,7 @@ const mpesaRoutes = require('./mpesaRoutes');
 const transactionRoutes = require('./transactionRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
 const notificationRoutes = require('./notificationRoutes');
+const healthRoutes = require('./healthRoutes');
 
 const { requestLogger, errorLogger } = require('../middleware/logger');
 
@@ -38,6 +39,7 @@ router.use('/mpesa', mpesaRoutes);
 router.use('/transactions', transactionRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/notifications', notificationRoutes);
+router.use('/health', healthRoutes);
 
 // Apply error logger
 router.use(errorLogger);
