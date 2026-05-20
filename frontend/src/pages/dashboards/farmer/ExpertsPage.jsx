@@ -230,24 +230,7 @@ const ExpertsPage = () => {
       <div className="pt-16 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/25">
-                  <Users className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-2 h-2 text-white" />
-                </div>
-              </div>
-              <div className="text-left">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
-                  Expert <span className="bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Advisors</span>
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
-                  Connect with certified agricultural specialists. Book consultations 24/7.
-                </p>
-              </div>
-            </div>
+            
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 max-w-2xl mx-auto">

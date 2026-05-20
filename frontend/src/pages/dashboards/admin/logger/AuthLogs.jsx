@@ -112,15 +112,15 @@ const AuthLogs = () => {
       ];
 
       try {
-        // Try to fetch from actual service
+        // Try to fetch from actual service (normalized)
         const response = await logService.getAllLogs();
         console.log('Raw logs response:', response);
-        
+
         let authLogs = [];
-        if (response && Array.isArray(response)) {
-          authLogs = response;
-        } else if (response && response.logs && Array.isArray(response.logs)) {
+        if (response?.logs && Array.isArray(response.logs)) {
           authLogs = response.logs;
+        } else if (Array.isArray(response)) {
+          authLogs = response;
         } else {
           console.warn('Unexpected response format, using mock data');
           authLogs = mockLogs;
@@ -128,9 +128,9 @@ const AuthLogs = () => {
 
         // Filter for authentication-related logs
         const filteredAuthLogs = authLogs.filter(log => {
-          const message = log.message || '';
+          const message = log?.message || '';
           const lowerMessage = message.toLowerCase();
-          
+
           return (
             lowerMessage.includes('login') ||
             lowerMessage.includes('register') ||

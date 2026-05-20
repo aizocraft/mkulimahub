@@ -51,10 +51,10 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
     });
   };
 
+  const now = Date.now();
   const formatRelativeTime = (timestamp) => {
-    const now = new Date();
     const logTime = new Date(timestamp);
-    const diffInSeconds = Math.floor((now - logTime) / 1000);
+    const diffInSeconds = Math.floor((now - logTime.getTime()) / 1000);
 
     if (diffInSeconds < 60) return 'Just now';
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
@@ -62,21 +62,32 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
-  const toggleLogExpansion = (index) => {
+  const toggleLogExpansion = (key) => {
     const newExpanded = new Set(expandedLogs);
-    if (newExpanded.has(index)) {
-      newExpanded.delete(index);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
     } else {
-      newExpanded.add(index);
+      newExpanded.add(key);
     }
     setExpandedLogs(newExpanded);
   };
 
   const getUserDisplayName = (log) => {
+    // Prefer explicit user identity
     if (log.meta?.name) return log.meta.name;
-    if (log.meta?.email) return log.meta.email.split('@')[0];
-    if (log.userId && log.userId !== 'anonymous') return `User ${log.userId.substring(0, 8)}`;
-    return 'Anonymous';
+
+    const email = log.meta?.email || log.meta?.userEmail || log.meta?.username;
+    if (email && typeof email === 'string') {
+      if (email.includes('@')) return email.split('@')[0];
+      return email;
+    }
+
+    if (log.meta?.userId) return `User ${String(log.meta.userId).substring(0, 8)}`;
+    if (log.userId && log.userId !== 'anonymous') return `User ${String(log.userId).substring(0, 8)}`;
+
+    // Fallbacks for system logs with no user fields
+    if (log.method && log.url) return 'System';
+    return 'Unknown User';
   };
 
   const getUserAvatar = (log) => {
@@ -135,7 +146,8 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
           </thead>
           <tbody className="divide-y divide-gray-700">
             {currentLogs.map((log, index) => (
-              <tr key={index} className="hover:bg-gray-700/30 transition-all duration-150 group">
+              <tr key={log?.id || log?._id || index} className="hover:bg-gray-700/30 transition-all duration-150 group">
+
                 {/* User Column */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
@@ -202,7 +214,8 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
                     )}
 
                     {/* Expanded View */}
-                    {expandedLogs.has(index) && (
+                    {expandedLogs.has(log?.id || log?._id || index) && (
+
                       <div className="mt-3 p-4 bg-gray-700/50 rounded-xl border border-gray-600">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                           <div>
@@ -237,11 +250,13 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => toggleLogExpansion(index)}
+                      onClick={() => toggleLogExpansion(log?.id || log?._id || index)}
+
                       className="p-2 text-gray-400 hover:text-white hover:bg-gray-600 rounded-lg transition-all duration-200 group/expand"
-                      title={expandedLogs.has(index) ? 'Collapse' : 'Expand'}
+                    title={expandedLogs.has(log?.id || log?._id || index) ? 'Collapse' : 'Expand'}
+
                     >
-                      {expandedLogs.has(index) ? 
+                      {expandedLogs.has(log?.id || log?._id || index) ? 
                         <ChevronUp size={16} className="group-hover/expand:scale-110 transition-transform" /> : 
                         <ChevronDown size={16} className="group-hover/expand:scale-110 transition-transform" />
                       }

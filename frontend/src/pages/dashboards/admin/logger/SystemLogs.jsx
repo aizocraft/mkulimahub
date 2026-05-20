@@ -52,18 +52,18 @@ const SystemLogs = () => {
     try {
       setLoading(true);
       const response = await logService.getAllLogs();
-      const systemLogs = (response.logs || []).filter(log => 
-        log.method && log.url || // API requests
-        log.level === 'error' || // Errors
-        log.message?.includes('system') ||
-        log.message?.includes('database') ||
-        log.message?.includes('server') ||
-        log.message?.includes('API') ||
-        log.message?.includes('startup') ||
-        log.message?.includes('shutdown') ||
-        log.message?.includes('performance') ||
-        log.message?.includes('memory') ||
-        log.message?.includes('cpu')
+      const systemLogs = (response?.logs || []).filter(log =>
+        (log?.method && log?.url) || // API requests
+        log?.level === 'error' || // Errors
+        log?.message?.includes('system') ||
+        log?.message?.includes('database') ||
+        log?.message?.includes('server') ||
+        log?.message?.includes('API') ||
+        log?.message?.includes('startup') ||
+        log?.message?.includes('shutdown') ||
+        log?.message?.includes('performance') ||
+        log?.message?.includes('memory') ||
+        log?.message?.includes('cpu')
       );
       setLogs(systemLogs);
     } catch (err) {

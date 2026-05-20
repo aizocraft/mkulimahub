@@ -141,15 +141,15 @@ const UserLogs = () => {
       ];
 
       try {
-        // Try to fetch from actual service
+        // Try to fetch from actual service (normalized)
         const response = await logService.getAllLogs();
         console.log('Raw user logs response:', response);
-        
+
         let userLogs = [];
-        if (response && Array.isArray(response)) {
-          userLogs = response;
-        } else if (response && response.logs && Array.isArray(response.logs)) {
+        if (response?.logs && Array.isArray(response.logs)) {
           userLogs = response.logs;
+        } else if (Array.isArray(response)) {
+          userLogs = response;
         } else {
           console.warn('Unexpected response format, using mock data');
           userLogs = mockLogs;
