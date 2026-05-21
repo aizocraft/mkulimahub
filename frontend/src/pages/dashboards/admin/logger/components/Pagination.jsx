@@ -31,16 +31,17 @@ const Pagination = ({
   );
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-700 bg-gray-800/30">
+    <div className="flex items-center justify-between px-4 py-3 border-t border-white/10 bg-white/[0.02]">
       <div className="text-sm text-gray-400">
         Showing {startItem} to {endItem} of {totalItems} results
       </div>
-      
+
       <div className="flex items-center space-x-1">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 rounded-lg hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+          aria-label="Previous page"
         >
           <ChevronLeft size={16} />
         </button>
@@ -50,11 +51,12 @@ const Pagination = ({
             key={index}
             onClick={() => typeof pageNum === 'number' && onPageChange(pageNum)}
             disabled={typeof pageNum !== 'number'}
-            className={`min-w-[40px] px-3 py-2 text-sm rounded transition-all ${
+            className={`min-w-[40px] px-3 py-2 text-sm rounded-xl transition-all duration-200 outline-none focus:ring-2 focus:ring-purple-500/40 ${
               currentPage === pageNum
-                ? 'bg-purple-600 text-white shadow-lg'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                ? 'bg-purple-500/20 text-white border border-purple-400/30 shadow-[0_0_0_1px_rgba(167,139,250,0.25)]'
+                : 'text-gray-400 hover:text-white hover:bg-white/[0.04] border border-transparent'
             } ${typeof pageNum !== 'number' ? 'cursor-default' : ''}`}
+            aria-current={currentPage === pageNum ? 'page' : undefined}
           >
             {pageNum}
           </button>
@@ -63,7 +65,8 @@ const Pagination = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="p-2 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 rounded-lg hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+          aria-label="Next page"
         >
           <ChevronRight size={16} />
         </button>

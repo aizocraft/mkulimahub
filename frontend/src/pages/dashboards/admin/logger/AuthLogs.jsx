@@ -523,7 +523,7 @@ const AuthLogs = () => {
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 rounded-xl flex items-center justify-center">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <span>Authentication Monitor</span>
@@ -534,7 +534,7 @@ const AuthLogs = () => {
           <button
             onClick={exportLogs}
             disabled={filteredLogs.length === 0}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-2 px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] border border-white/10 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={16} />
             <span>Export ({filteredLogs.length})</span>
@@ -542,7 +542,7 @@ const AuthLogs = () => {
           <button
             onClick={fetchLogs}
             disabled={loading}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl transition-all duration-200 disabled:opacity-50"
+            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-500/30 to-blue-500/30 hover:from-purple-500/40 hover:to-blue-500/40 border border-white/10 rounded-xl transition-all duration-200 disabled:opacity-50"
           >
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
@@ -559,10 +559,10 @@ const AuthLogs = () => {
               key={index}
               onClick={() => handleQuickAction(action)}
               disabled={loading}
-              className={`flex items-center space-x-3 p-4 bg-gray-800 border ${action.color} rounded-xl transition-all duration-200 group hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+              className={`flex items-center space-x-3 p-4 bg-white/[0.02] border ${action.color} rounded-xl transition-all duration-200 group hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <div className="p-2 bg-gray-700 rounded-lg group-hover:scale-110 transition-transform">
-                <Icon size={18} className="text-gray-400 group-hover:text-white" />
+              <div className="p-2 bg-white/[0.03] border border-white/10 rounded-lg group-hover:scale-110 transition-transform">
+                <Icon size={18} className="text-gray-400 group-hover:text-white transition-colors" />
               </div>
               <span className="text-sm font-medium text-gray-300 group-hover:text-white">
                 {action.label}

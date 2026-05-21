@@ -50,26 +50,44 @@ const LogStats = ({ stats }) => {
     <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
+        const accent =
+          stat.trend === 'positive'
+            ? 'text-emerald-400'
+            : stat.trend === 'negative'
+              ? 'text-rose-400'
+              : 'text-gray-400';
+
+        const labelAccent =
+          stat.trend === 'positive'
+            ? 'text-emerald-300'
+            : stat.trend === 'negative'
+              ? 'text-rose-300'
+              : 'text-gray-400';
+
         return (
-          <div key={index} className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 border border-gray-700 shadow-2xl transform hover:scale-105 transition-all duration-300">
+          <div
+            key={index}
+            className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-purple-400/20"
+          >
             <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-400 mb-1">{stat.label}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-400 mb-1 truncate">{stat.label}</p>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
-                <div className="flex items-center space-x-1 mt-2">
-                  <TrendingUp size={12} className={
-                    stat.trend === 'positive' ? 'text-green-400' : 
-                    stat.trend === 'negative' ? 'text-red-400' : 'text-gray-400'
-                  } />
-                  <span className={`text-xs ${
-                    stat.trend === 'positive' ? 'text-green-400' : 
-                    stat.trend === 'negative' ? 'text-red-400' : 'text-gray-400'
-                  }`}>
-                    {stat.trend === 'positive' ? 'Optimal' : stat.trend === 'negative' ? 'Needs attention' : 'Stable'}
+                <div className="flex items-center space-x-2 mt-2">
+                  <TrendingUp size={12} className={accent} />
+                  <span className={`text-xs ${labelAccent}`}>
+                    {stat.trend === 'positive'
+                      ? 'Optimal'
+                      : stat.trend === 'negative'
+                        ? 'Needs attention'
+                        : 'Stable'}
                   </span>
                 </div>
               </div>
-              <div className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl shadow-lg`}>
+
+              <div
+                className={`p-3 bg-gradient-to-br ${stat.color} rounded-xl shadow-sm transition-transform duration-300 group-hover:scale-[1.02]`}
+              >
                 <Icon className="w-6 h-6 text-white" />
               </div>
             </div>

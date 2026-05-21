@@ -211,15 +211,26 @@ const SystemLogs = () => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-400/30 rounded-xl flex items-center justify-center">
+            <Server className="w-5 h-5 text-white" />
+          </div>
+          System Monitor
+        </h2>
+        <p className="text-gray-400 mt-1">API requests, performance signals, and critical system events</p>
+      </div>
+
       {/* Quick Actions */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {quickActions.map((action, index) => (
           <button
             key={index}
             onClick={() => handleQuickAction(action)}
-            className="p-4 bg-gray-700/50 border border-gray-600 rounded-xl hover:border-orange-500/50 transition-all duration-200 text-left group"
+            className="p-4 bg-white/[0.02] border border-white/10 rounded-xl hover:border-purple-400/20 transition-all duration-200 text-left group"
           >
-            <div className="text-sm font-medium text-gray-300 group-hover:text-white">
+            <div className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
               {action.label}
             </div>
           </button>
@@ -246,7 +257,7 @@ const SystemLogs = () => {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 animate-pulse">
           <div className="flex items-center space-x-2 text-red-400">
             <AlertTriangle size={16} />
             <span>{error}</span>

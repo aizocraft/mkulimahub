@@ -1,55 +1,76 @@
-// src/services/logService.js
-import api from '../api';
+import { apiClient } from '../api';
+
+// NOTE: if your /src/api.js does not export `apiClient`, this file will throw at import time.
+// In that case, change to: `import api from '../api'` or export apiClient from api.js.
+
+
+// This service expects the backend to return NDJSON-parsed logs with at least:
+// { timestamp, level, message, ... }
+// Admin endpoints are protected (auth + admin).
+
+const normalizeLog = (log) => {
+  if (!log || typeof log !== 'object') return null;
+
+  const meta = log.meta && typeof log.meta === 'object' ? log.meta : {};
+
+  // Backend controller logs often use top-level keys:
+  // - userEmail, userName
+  // Request logs use:
+  // - userId
+  // Map everything into meta.* so the UI can render consistently.
+  const email = meta.email ?? meta.userEmail ?? log.userEmail;
+  const name = meta.name ?? meta.userName ?? log.userName;
+  const ip = meta.ip ?? meta.userIp ?? log.ip;
+  const userAgent = meta.userAgent ?? log.userAgent;
+  const role = meta.role ?? meta.userRole ?? log.userRole;
+
+  return {
+    ...log,
+    meta: {
+      ...meta,
+      email: email ?? meta.email,
+      name: name ?? meta.name,
+      ip: ip ?? meta.ip,
+      userAgent: userAgent ?? meta.userAgent,
+      role: role ?? meta.role
+    },
+    // Keep userId available for UI fallbacks
+    userId: log.userId ?? log.user?.id ?? log.userId
+  };
+};
 
 export const logService = {
-  // Get all logs (normalized)
-  // Backend returns: { success, logs, total }
-  // Frontend callers expect: { logs: [], total } or just { logs }.
-  getAllLogs: async () => {
-    try {
-      const response = await api.get('/logs');
-      const data = response?.data;
+  async getAllLogs() {
+    const res = await apiClient.get('/logs');
+    // Backend returns: { success: true, logs: [...], total }
+    const payload = res?.data;
 
-      if (!data) return { logs: [], total: 0, success: false };
-      if (Array.isArray(data)) return { logs: data, total: data.length, success: true };
-
-      const logs = Array.isArray(data.logs) ? data.logs : [];
-      const total = typeof data.total === 'number' ? data.total : logs.length;
-
-      return { success: data.success !== false, logs, total };
-    } catch (error) {
-      console.error('Error fetching logs:', error);
-      throw error;
+    if (payload?.logs && Array.isArray(payload.logs)) {
+      return { ...payload, logs: payload.logs.map(normalizeLog).filter(Boolean) };
     }
+
+    // Fallback: if backend returns an array directly
+    if (Array.isArray(payload)) {
+      return payload.map(normalizeLog).filter(Boolean);
+    }
+
+    return { success: false, message: 'Unexpected logs response format', logs: [] };
   },
 
-  // Get logs by level (normalized)
-  getLogsByLevel: async (level) => {
-    try {
-      const response = await api.get(`/logs/level/${level}`);
-      const data = response?.data;
+  async getLogsByLevel(level) {
+    const res = await apiClient.get(`/logs/level/${encodeURIComponent(level)}`);
+    const payload = res?.data;
 
-      if (!data) return { logs: [], total: 0, success: false };
-      if (Array.isArray(data)) return { logs: data, total: data.length, success: true };
-
-      const logs = Array.isArray(data.logs) ? data.logs : [];
-      const total = typeof data.total === 'number' ? data.total : logs.length;
-
-      return { success: data.success !== false, logs, total };
-    } catch (error) {
-      console.error('Error fetching logs by level:', error);
-      throw error;
+    if (payload?.logs && Array.isArray(payload.logs)) {
+      return { ...payload, logs: payload.logs.map(normalizeLog).filter(Boolean) };
     }
+
+    return { success: false, message: 'Unexpected logs response format', logs: [] };
   },
 
-  // Clear logs
-  clearLogs: async () => {
-    try {
-      const response = await api.delete('/logs');
-      return response.data;
-    } catch (error) {
-      console.error('Error clearing logs:', error);
-      throw error;
-    }
+  async clearLogs() {
+    const res = await apiClient.delete('/logs');
+    return res?.data;
   }
 };
+

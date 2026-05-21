@@ -14,39 +14,41 @@ const LogFilters = ({
   setLogsPerPage
 }) => {
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4 space-y-4">
-      <div className="flex items-center space-x-2 text-gray-400">
-        <Filter size={16} />
-        <span className="text-sm font-medium">Filters & Search</span>
+    <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 md:p-5 space-y-4 backdrop-blur">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center space-x-2 text-gray-400">
+          <Filter size={16} />
+          <span className="text-sm font-medium">Filters & Search</span>
+        </div>
+        <div className="text-xs text-gray-500">Instant update</div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Search */}
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Search
-          </label>
+          <label className="block text-sm font-medium text-gray-400 mb-2">Search</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+              size={16}
+            />
             <input
               type="text"
               placeholder="Search logs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+              className="w-full pl-10 pr-4 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-white placeholder:text-gray-500 focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 transition-all duration-200"
             />
           </div>
         </div>
 
         {/* Type Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Type
-          </label>
+          <label className="block text-sm font-medium text-gray-400 mb-2">Type</label>
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            className="w-full px-3 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 transition-all duration-200"
           >
             {types.map(type => (
               <option key={type.id} value={type.id}>
@@ -58,13 +60,11 @@ const LogFilters = ({
 
         {/* Level Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Level
-          </label>
+          <label className="block text-sm font-medium text-gray-400 mb-2">Level</label>
           <select
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            className="w-full px-3 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 transition-all duration-200"
           >
             <option value="all">All Levels</option>
             <option value="error">Error</option>
@@ -83,7 +83,7 @@ const LogFilters = ({
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            className="w-full px-3 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 transition-all duration-200"
           >
             <option value="all">All Time</option>
             <option value="1h">Last Hour</option>
@@ -94,14 +94,12 @@ const LogFilters = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-        <div className="text-sm text-gray-400">
-          Filtering results...
-        </div>
+      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <div className="text-sm text-gray-400">Filtering results...</div>
         <select
           value={logsPerPage}
           onChange={(e) => setLogsPerPage(Number(e.target.value))}
-          className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm"
+          className="px-3 py-2 bg-white/[0.03] border border-white/10 rounded-xl text-white text-sm focus:ring-2 focus:ring-purple-500/40 focus:border-purple-500/40 transition-all duration-200"
         >
           <option value={10}>10 per page</option>
           <option value={20}>20 per page</option>

@@ -1,4 +1,4 @@
-// src/api.js - COMPLETE WITH ALL ENDPOINTS INCLUDING VIDEO CALL
+// src/api.js 
 import axios from 'axios';
 
 // Base URL from environment or fallback
@@ -40,6 +40,8 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+export const apiClient = api;
+
 
 // ========== AUTH API ==========
 export const authAPI = {

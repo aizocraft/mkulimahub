@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { 
-  ChevronDown, 
-  ChevronUp, 
+import {
+  ChevronDown,
+  ChevronUp,
   FileText,
-  User,
-  Clock,
   AlertTriangle,
   Info,
   CheckCircle,
@@ -132,10 +130,10 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
   }
 
   return (
-    <div className="bg-gray-800/30 border border-gray-700 rounded-xl overflow-hidden shadow-2xl">
+    <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden backdrop-blur shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-700/50">
+          <thead className="bg-white/[0.03] border-b border-white/10">
             <tr>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">User</th>
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Level</th>
@@ -144,7 +142,7 @@ const LogTable = ({ logs, currentPage, logsPerPage, loading }) => {
               <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-white/10">
             {currentLogs.map((log, index) => (
               <tr key={log?.id || log?._id || index} className="hover:bg-gray-700/30 transition-all duration-150 group">
 
