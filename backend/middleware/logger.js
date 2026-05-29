@@ -11,17 +11,13 @@ if (!fs.existsSync(logsDir)) {
 const logFile = path.join(logsDir, 'app.log');
 
 const normalizeMetaIdentity = (meta = {}) => {
-  // Backward/forward compatible mapping so the UI can always read from meta.email/meta.name.
-  // Existing controller logs often use top-level fields like `userEmail` / `userName`.
-  // Some request logs put identity in `userId`.
+
   const out = { ...meta };
 
-  // Support top-level-ish keys included inside `meta` (defensive)
   if (out.userEmail && !out.email) out.email = out.userEmail;
   if (out.userName && !out.name) out.name = out.userName;
 
-  // Support controllers that might pass `email`/`name` under different keys
-  // Also map common IP/userAgent keys to the UI expected shape
+
   if (out.userAgent && !out.userAgent) {
     // no-op
   }
@@ -31,18 +27,16 @@ const normalizeMetaIdentity = (meta = {}) => {
   }
 
 
-  // Ensure canonical keys exist where possible
   if (!out.userAgent && meta.userAgent) out.userAgent = meta.userAgent;
   if (!out.ip && meta.ip) out.ip = meta.ip;
 
-  // Canonical meta for UI
   if (!out.email && meta.email) out.email = meta.email;
   if (!out.name && meta.name) out.name = meta.name;
 
   return out;
 };
 
-// Enhanced logger function
+// logger function
 const logToFile = (level, message, meta = {}) => {
   const normalizedMeta = normalizeMetaIdentity(meta);
   
@@ -63,7 +57,7 @@ const logToFile = (level, message, meta = {}) => {
     }
   });
   
-  // Also log to console for development
+  // log to console for development
   console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
 };
 

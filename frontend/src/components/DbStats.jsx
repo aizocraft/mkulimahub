@@ -804,37 +804,44 @@ const DbStats = () => {
               <Workflow className="text-purple-500" />
               Collection Relationships
             </h3>
-            
             <div className="space-y-6">
-              {collections.slice(0, 6).map((collection, index) => {
-                // Find related collections (simulated based on name patterns)
+
+              {collections.slice(0, 8).map((collection) => {
+                const collectionName = (collection?.name || "").toLowerCase();
+
                 const relatedCollections = collections
-                  .filter(c => c.name !== collection.name)
-                  .filter(c => {
-                    const commonWords = ['user', 'post', 'comment', 'booking', 'message', 'forum'];
-                    return commonWords.some(word => 
-                      (c.name.toLowerCase().includes(word) && collection.name.toLowerCase().includes(word)) ||
-                      c.name.toLowerCase().includes(collection.name.toLowerCase().substring(0, 3))
-                    );
+                  .filter((c) => c?.name && c.name !== collection?.name)
+                  .map((c) => {
+                    const otherName = (c.name || "").toLowerCase();
+                    const tokens = [collectionName, otherName, "user", "role", "post", "comment", "booking", "message", "forum"];
+
+
+                    const score = tokens.some((t) => t && otherName.includes(t)) ? 1 : 0;
+                    return { c, score };
                   })
-                  .slice(0, 3);
-                
-                if (relatedCollections.length === 0) return null;
-                
+                  .filter((x) => x.score > 0)
+                  .slice(0, 4)
+                  .map((x) => x.c);
+
+                if (!relatedCollections.length) return null;
+
                 return (
-                  <div key={collection.name} className={`p-5 rounded-xl ${
-                    isDark ? "bg-gray-700/50" : "bg-gray-50"
-                  }`}>
+                  <div
+                    key={collection?.name}
+                    className={`p-5 rounded-xl ${
+                      isDark ? "bg-gray-700/50" : "bg-gray-50"
+                    }`}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-blue-500/10">
                           <Table className="text-blue-500" size={20} />
                         </div>
                         <div>
-                          <h4 className="font-semibold">{collection.name}</h4>
+                          <h4 className="font-semibold">{collection?.name}</h4>
                           <div className="text-sm opacity-70">
-                            {collection.count?.toLocaleString() || 0} documents • 
-                            {(collection.storageSize / 1024 / 1024).toFixed(2)} MB
+                            {collection?.count?.toLocaleString?.() || 0} documents •
+                            {((collection?.storageSize || 0) / 1024 / 1024).toFixed(2)} MB
                           </div>
                         </div>
                       </div>
@@ -843,42 +850,45 @@ const DbStats = () => {
                         <span className="text-sm">{relatedCollections.length} connections</span>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-4">
+
+                    <div className="flex flex-col md:flex-row gap-4 md:items-center">
                       <div className="flex-1">
                         <div className="text-sm mb-2 opacity-70">Related to:</div>
                         <div className="flex flex-wrap gap-2">
                           {relatedCollections.map((related) => (
-                            <div 
-                              key={related.name}
+                            <div
+                              key={related?.name}
                               className={`px-3 py-1.5 rounded-full text-sm flex items-center gap-2 ${
-                                isDark 
-                                  ? 'bg-gray-800 text-gray-300' 
-                                  : 'bg-white text-gray-700 border border-gray-200'
+                                isDark ? "bg-gray-800 text-gray-300" : "bg-white text-gray-700 border border-gray-200"
                               }`}
                             >
-                              <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                              <span>{related.name}</span>
-                              <span className="opacity-60 text-xs">
-                                ({related.count?.toLocaleString() || 0})
-                              </span>
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              <span>{related?.name}</span>
+                              <span className="opacity-60 text-xs">({related?.count?.toLocaleString?.() || 0})</span>
                             </div>
                           ))}
                         </div>
                       </div>
-                      
+
                       <div className="text-right">
                         <div className="text-xs opacity-70 mb-1">Relationship Type</div>
                         <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isDark ? 'bg-purple-900/30 text-purple-300' : 'bg-purple-100 text-purple-700'
+                          isDark ? "bg-purple-900/30 text-purple-300" : "bg-purple-100 text-purple-700"
                         }`}>
-                          One-to-Many
+                          Best-effort map
                         </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
+
+              {collections.length > 0 && (
+                <div className={`text-sm ${isDark ? "text-gray-400" : "text-gray-600"} pt-2`}>
+                  Relationship graph is inferred safely from collection naming signals (schema refs are limited in this view).
+                  Click a collection to inspect full schema field types.
+                </div>
+              )}
             </div>
           </div>
 

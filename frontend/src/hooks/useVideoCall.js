@@ -1,4 +1,4 @@
-// src/hooks/useVideoCall.js - COMPLETE FIX
+// src/hooks/useVideoCall.js 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { videoCallAPI } from '../api';
 import socketService from '../services/socketService';

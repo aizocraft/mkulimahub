@@ -1,10 +1,10 @@
-// GoogleAuthSuccess.jsx - UPDATED with axios
+// GoogleAuthSuccess.jsx 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { CheckCircle, Loader } from 'lucide-react';
-import { authAPI } from '../api'; // Import the API
+import { authAPI } from '../api'; 
 
 const GoogleAuthSuccess = () => {
   const { login } = useAuth();

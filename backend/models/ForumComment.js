@@ -132,7 +132,7 @@ forumCommentSchema.virtual('replyCount', {
   count: true
 });
 
-// FIXED: Method to check if user can edit/delete
+// Method to check if user can edit/delete
 forumCommentSchema.methods.canModify = function(userId, userRole) {
   // Check if userId exists
   if (!userId) return false;
@@ -148,7 +148,7 @@ forumCommentSchema.methods.canModify = function(userId, userRole) {
   return commentAuthorId === requestingUserId;
 };
 
-// FIXED: Method to check if user has voted
+// Method to check if user has voted
 forumCommentSchema.methods.hasVoted = function(userId) {
   if (!userId) return false;
   
@@ -159,7 +159,7 @@ forumCommentSchema.methods.hasVoted = function(userId) {
   });
 };
 
-// FIXED: Method to get user's vote type
+// Method to get user's vote type
 forumCommentSchema.methods.getUserVote = function(userId) {
   if (!userId) return null;
   

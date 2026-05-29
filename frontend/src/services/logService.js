@@ -1,23 +1,13 @@
 import { apiClient } from '../api';
 
-// NOTE: if your /src/api.js does not export `apiClient`, this file will throw at import time.
-// In that case, change to: `import api from '../api'` or export apiClient from api.js.
 
-
-// This service expects the backend to return NDJSON-parsed logs with at least:
-// { timestamp, level, message, ... }
-// Admin endpoints are protected (auth + admin).
 
 const normalizeLog = (log) => {
   if (!log || typeof log !== 'object') return null;
 
   const meta = log.meta && typeof log.meta === 'object' ? log.meta : {};
 
-  // Backend controller logs often use top-level keys:
-  // - userEmail, userName
-  // Request logs use:
-  // - userId
-  // Map everything into meta.* so the UI can render consistently.
+  // Support multiple possible field names for backward compatibility
   const email = meta.email ?? meta.userEmail ?? log.userEmail;
   const name = meta.name ?? meta.userName ?? log.userName;
   const ip = meta.ip ?? meta.userIp ?? log.ip;

@@ -37,7 +37,7 @@ mkulimahub/
 │   └── vite.config.js
 │
 ├── package.json       # Root configuration
-└── README.md          # This file 😄
+└── README.md          
 ```
 
  Quick Start

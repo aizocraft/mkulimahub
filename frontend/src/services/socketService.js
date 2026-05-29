@@ -106,7 +106,7 @@ class SocketService {
       this.isConnected = false;
       console.log('⚠️ Socket disconnected:', reason);
 
-      // Only try to reconnect if it wasn't a manual disconnect
+      // If the server disconnected us, try to reconnect manually
       if (reason === 'io server disconnect') {
         // Server disconnected, manually reconnect
         this.socket.connect();

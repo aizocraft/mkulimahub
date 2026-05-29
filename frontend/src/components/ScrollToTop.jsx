@@ -10,11 +10,11 @@ const ScrollToTop = () => {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'instant' // Use 'instant' for immediate scrolling
+      behavior: 'instant' // Use 'smooth' for a smooth scroll
     });
   }, [pathname]);
 
-  return null; // This component doesn't render anything
+  return null; 
 };
 
 export default ScrollToTop;

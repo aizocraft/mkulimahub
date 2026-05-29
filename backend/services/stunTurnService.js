@@ -2,7 +2,7 @@ const axios = require('axios');
 
 class StunTurnService {
   constructor() {
-    // Free STUN servers (you can add your own TURN servers for production)
+    // Free STUN servers
     this.stunServers = [
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
@@ -10,7 +10,7 @@ class StunTurnService {
       { urls: 'stun:stun4.l.google.com:19302' }
     ];
     
-    // For production, use paid TURN servers (Twilio, Xirsys, etc.)
+
     this.turnServers = [];
   }
 
@@ -25,7 +25,7 @@ class StunTurnService {
     };
   }
 
-  // Generate TURN credentials (for paid services)
+  // Generate TURN credentials
   async generateTurnCredentials() {
     try {
       // Example with Xirsys service
